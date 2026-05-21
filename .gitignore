@@ -2,3 +2,6 @@
 Thumbs.db
 *.log
 site/backup/
+.deepseek/
+chat-images/
+/site/data.json
