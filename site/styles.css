@@ -1220,8 +1220,6 @@ html.js .resume-document[data-js-ready="false"] {
     border-radius: 0;
     box-shadow: none;
     overflow: hidden;
-    break-after: page;
-    page-break-after: always;
   }
 
   .resume-page-content {
@@ -1232,10 +1230,7 @@ html.js .resume-document[data-js-ready="false"] {
     break-inside: avoid;
   }
 
-  .resume-page:last-child {
-    break-after: auto;
-    page-break-after: auto;
-  }
+
 
   .floating-toolbar,
   .toast-container {
