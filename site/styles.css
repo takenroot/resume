@@ -145,7 +145,10 @@ html.js .resume-document[data-js-ready="false"] {
   background: var(--paper-bg);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  break-after: page;
 }
+
+.resume-page:last-child { break-after: auto; }
 
 .resume-source {
   display: block;
@@ -179,7 +182,8 @@ html.js .resume-document[data-js-ready="false"] {
 }
 
 .resume-page--continuation {
-  padding-top: 12mm;
+  padding-top: 14mm;
+  padding-bottom: 14mm;
 }
 
 .resume-page-banner {
@@ -301,55 +305,45 @@ html.js .resume-document[data-js-ready="false"] {
 .timeline-strip {
   grid-column: 1 / -1;
   margin-top: 12px;
-  padding: 16px 0 6px;
+  padding: 16px 0 8px;
   border-top: 1px solid var(--line-soft);
-  color: var(--text-soft);
-  font-size: 11px;
-  text-align: center;
-  letter-spacing: 0.04em;
   display: flex;
   justify-content: center;
-  align-items: flex-end;
-}
-
-.timeline-strip.auto {
-  justify-content: space-between;
-  padding: 24px 0 8px;
-  position: relative;
-}
-
-.timeline-strip.auto::before {
-  content: '';
-  position: absolute;
-  top: 8px;
-  left: 6%;
-  right: 6%;
-  height: 1px;
-  background: var(--line-soft);
-}
-
-.tl-node {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  position: relative;
-  z-index: 1;
-}
-
-.tl-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-  margin-bottom: 6px;
-}
-
-.tl-label {
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 0;
   text-align: center;
-  font-size: 10px;
-  line-height: 1.4;
   color: var(--text-soft);
-  max-width: 56px;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+}
+
+.tl-seg {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.tl-year {
+  font-style: normal;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.tl-item {
+  color: var(--text-soft);
+}
+
+.tl-arrow {
+  margin: 0 5px;
+  color: #cbd5e1;
+  font-size: 10px;
+}
+
+.tl-editor-preview {
+  padding: 6px 0;
+  text-align: center;
+  font-size: 12px;
 }
 
 .timeline-strip:empty {
@@ -1179,12 +1173,12 @@ html.js .resume-document[data-js-ready="false"] {
 @media print {
   @page {
     size: A4;
-    margin: 5mm;
+    margin: 8mm;
   }
 
   :root {
     --page-height: 287mm;
-    --page-padding: 10mm;
+    --page-padding: 14mm;
   }
 
   html,
@@ -1228,6 +1222,15 @@ html.js .resume-document[data-js-ready="false"] {
     box-shadow: none;
     break-after: page;
     page-break-after: always;
+    overflow: hidden;
+  }
+
+  .resume-page-content {
+    overflow: hidden;
+  }
+
+  .resume-section {
+    break-inside: avoid;
   }
 
   .resume-page:last-child {

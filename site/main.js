@@ -5,7 +5,7 @@
 
 var STORAGE_KEY = 'cv_data', DEFAULT_JSON = './data.json';
 var MIN_SCALE = 1, MAX_SCALE = 1.3, STEP = 0.1, DEFAULT_SCALE = 1;
-var MOBILE_BREAKPOINT = 767, TABLET_BREAKPOINT = 1024, PAGINATION_OVERFLOW_TOLERANCE = 72;
+var MOBILE_BREAKPOINT = 767, TABLET_BREAKPOINT = 1024, PAGINATION_OVERFLOW_TOLERANCE = 0;
 var currentScale = DEFAULT_SCALE, currentLayoutMode = 'desktop', cvData = null;
 
 /* ===========================================================
@@ -94,7 +94,7 @@ function createPage(pn) { var rp = document.getElementById('resumePages'), p = c
 function cloneSectionShell(ss) { var s = ss.cloneNode(false); var hd = Array.from(ss.children).find(function (c) { return c.classList && c.classList.contains('section-heading'); }); if (hd) s.appendChild(hd.cloneNode(true)); var rl = ss.querySelector('[data-render-list]'); if (rl) s.appendChild(rl.cloneNode(false)); return s; }
 function ensureItemContainer(ps, ss, si) { if (ps.sections.has(si)) return ps.sections.get(si); var s = cloneSectionShell(ss); ps.content.appendChild(s); var ct = s.querySelector('[data-render-list]') || s; ps.sections.set(si, ct); return ct; }
 function isOverflowing(ps) { return ps.content.scrollHeight > ps.content.clientHeight + PAGINATION_OVERFLOW_TOLERANCE; }
-function updatePageBanners() { var rp = document.getElementById('resumePages'); if (!rp) return; var pages = Array.from(rp.children), total = pages.length; pages.forEach(function (p, i) { if (i === 0) return; var l = p.querySelector('.resume-page-banner span'); if (l) l.textContent = '第 ' + (i + 1) + ' 页 / 共 ' + total + ' 页'; }); }
+function updatePageBanners() { var rp = document.getElementById('resumePages'); if (!rp) return; var pages = Array.from(rp.children), total = pages.length; pages.forEach(function (p, i) { if (i === 0) return; var l = p.querySelector('.resume-page-banner span'); if (l) l.textContent = '第 ' + (i + 1) + ' 页 / 共 ' + total + ' 页'; }); pages.forEach(function (p, i) { if (i < pages.length - 1) { p.classList.add('html2pdf__page-break'); p.style.breakAfter = 'page'; } else { p.classList.remove('html2pdf__page-break'); } }); }
 function paginateResume() { var rs = document.getElementById('resumeSource'), rp = document.getElementById('resumePages'); if (!rs || !rp) return; rp.replaceChildren(); var hd = rs.querySelector('.resume-header'); if (!hd) return; var pss = [], cp = createPage(1); pss.push(cp); cp.content.appendChild(hd.cloneNode(true)); var secs = Array.from(rs.children).filter(function (c) { return c.classList && c.classList.contains('resume-section'); }); secs.forEach(function (ss, si) { var rl = ss.querySelector('[data-render-list]'), items = rl ? Array.from(rl.children) : []; if (items.length === 0) return; items.forEach(function (is) { var ct = ensureItemContainer(cp, ss, si), ic = is.cloneNode(true); ct.appendChild(ic); if (isOverflowing(cp)) { ct.removeChild(ic); if (ct.children.length === 0) { var sec = ct.closest('.resume-section'); if (sec) sec.remove(); cp.sections.delete(si); } cp = createPage(pss.length + 1); pss.push(cp); ct = ensureItemContainer(cp, ss, si); ct.appendChild(ic); } }); }); updatePageBanners(); }
 function syncResumeLayout() { var rd = document.getElementById('resumeDocument'); if (!rd) return; currentLayoutMode = getLayoutMode(); rd.dataset.layoutMode = currentLayoutMode; if (currentLayoutMode === 'mobile') { var rp = document.getElementById('resumePages'); if (rp) rp.replaceChildren(); rd.dataset.jsReady = 'true'; return; } rd.dataset.jsReady = 'true'; paginateResume(); }
 function handleViewportChange() { syncResumeLayout(); updateStageSize(); }
@@ -188,11 +188,10 @@ function autoTimeline() {
   });
   if (nodes.length === 0) return '';
   nodes.sort(function(a, b) { return a.d.localeCompare(b.d); });
-  var hh = '';
-  for (var i = 0; i < nodes.length; i++) {
-    hh += '<div class="tl-node"><span class="tl-dot"></span><span class="tl-label">' + esc(nodes[i].d.substring(0,4)) + '<br>' + esc(nodes[i].l) + '</span></div>';
-  }
-  return hh;
+  var segs = nodes.map(function(n) {
+    return '<span class="tl-seg"><em class="tl-year">' + esc(n.d.substring(0,4)) + '</em><span class="tl-item">' + esc(n.l) + '</span></span>';
+  });
+  return segs.join('<span class="tl-arrow"> → </span>');
 }
 
 function renderCv() {
@@ -226,7 +225,6 @@ function buildMarkdown(d) {
    10. 偏好设置
    =========================================================== */
 var PREFS_KEY = 'cv_prefs', THEMES = { default: { name: '默认', vars: {} }, academic: { name: '学术', vars: { '--accent': '#8b0000', '--canvas-bg': '#f5f5f0', '--paper-bg': '#fffff8' } }, modern: { name: '现代', vars: { '--accent': '#0ea5e9', '--canvas-bg': '#f0f9ff', '--text-soft': '#475569' } }, simple: { name: '简约', vars: { '--accent': '#6b7280', '--canvas-bg': '#f9fafb', '--line-soft': '#d1d5db' } } }, FONT_SIZES = { small: { name: '小', vars: { '--fs-body': '11.5px', '--fs-meta': '11px', '--fs-h1': '27px', '--fs-h2': '13px', '--fs-h3': '13px' } }, medium: { name: '中', vars: { '--fs-body': '12.5px', '--fs-meta': '12px', '--fs-h1': '30px', '--fs-h2': '14px', '--fs-h3': '14px' } }, large: { name: '大', vars: { '--fs-body': '13.5px', '--fs-meta': '13px', '--fs-h1': '33px', '--fs-h2': '15px', '--fs-h3': '15px' } } }, FONT_FAMILIES = { default: { name: '默认', value: '"Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif' }, yahei: { name: '微软雅黑', value: '"Microsoft YaHei", "PingFang SC", sans-serif' }, serif: { name: '衬线体', value: 'Georgia, "SimSun", serif' } }, cvPrefs = null;
-function loadPrefs() { var st = localStorage.getItem(PREFS_KEY); if (st) { try { cvPrefs = JSON.parse(st); } catch (e) { cvPrefs = null; } } if (!cvPrefs) cvPrefs = { fontFamily: 'default', fontSize: 'medium', theme: 'default' }; if (!FONT_FAMILIES[cvPrefs.fontFamily]) cvPrefs.fontFamily = 'default'; }
 function loadPrefs() { var st = localStorage.getItem(PREFS_KEY); if (st) { try { cvPrefs = JSON.parse(st); } catch (e) { cvPrefs = null; } } if (!cvPrefs) cvPrefs = { fontFamily: 'default', fontSize: 'medium', theme: 'default' }; if (!FONT_FAMILIES[cvPrefs.fontFamily]) cvPrefs.fontFamily = 'default'; if (!cvPrefs.timelineEduField) cvPrefs.timelineEduField = 'degree'; if (!cvPrefs.timelineExpField) cvPrefs.timelineExpField = 'position'; }
 function savePrefs() { localStorage.setItem(PREFS_KEY, JSON.stringify(cvPrefs)); }
 function applyPrefs() { var r = document.documentElement, th = THEMES[cvPrefs.theme] || THEMES.default, fs = FONT_SIZES[cvPrefs.fontSize] || FONT_SIZES.medium, ff = FONT_FAMILIES[cvPrefs.fontFamily] || FONT_FAMILIES.default; Object.entries(th.vars).forEach(function (kv) { r.style.setProperty(kv[0], kv[1]); }); Object.entries(fs.vars).forEach(function (kv) { r.style.setProperty(kv[0], kv[1]); }); r.style.setProperty('--font-family', ff.value); }
@@ -237,6 +235,7 @@ function applyPrefs() { var r = document.documentElement, th = THEMES[cvPrefs.th
 function buildEditorForm() {
   if (!cvData) return; var ec = document.getElementById('editorContent'); if (!ec) return;
   var hh = buildEditorPrefs() + '<div class="editor-section"><h3>个人信息</h3>' + buildProfileFields(cvData.profile) + '</div>';
+  hh += '<div class="editor-section"><h3>顶部时间轴预览</h3><div class="tl-editor-preview">' + (autoTimeline() || '<span style="color:var(--text-soft)">（无足够时间数据）</span>') + '</div></div>';
   (cvData.sections || []).forEach(function (sec, idx) { hh += buildEditorSectionForm(sec, idx); });
   hh += '<div class="editor-add-section"><button type="button" class="editor-add-btn" id="addSectionBtn">+ 添加模块</button><div class="add-section-menu" id="addSectionMenu" hidden>' + Object.keys(SECTION_CONFIG).map(function (t) { return '<button type="button" class="dropdown-item" data-add-type="' + t + '">' + (SECTION_CONFIG[t] ? SECTION_CONFIG[t].label : t) + '</button>'; }).join('') + '</div></div>';
   ec.innerHTML = hh;
@@ -326,7 +325,8 @@ function bindEditorEvents() {
   document.getElementById('saveData') && document.getElementById('saveData').addEventListener('click', function () { collectFormData(); closeEditor(); });
   document.addEventListener('click', function (ev) {
     var ab = ev.target.closest('[data-action]'); if (ab) { var a = ab.dataset.action; if (a === 'move-section-up' || a === 'move-section-down' || a === 'remove-section') { var i = parseInt(ab.dataset.index, 10); if (a === 'move-section-up') { moveSection(i, -1); return; } if (a === 'move-section-down') { moveSection(i, 1); return; } if (a === 'remove-section') { removeSection(i); return; } } else { var si = parseInt(ab.dataset.sectionIndex, 10), ii = parseInt(ab.dataset.itemIndex, 10); if (a === 'move-item-up') { moveItem(si, ii, -1); return; } if (a === 'move-item-down') { moveItem(si, ii, 1); return; } if (a === 'copy-item') { copyItem(si, ii); return; } } }
-    var ab2 = ev.target.closest('[data-action]'); if (ab2) { var a2 = ab2.dataset.action; if (a2 === 'import-json') { document.getElementById('fileImportInput').click(); return; } if (a2 === 'import-md') { document.getElementById('fileImportInput').click(); return; } if (a2 === 'export-json') { collectFormData(); exportJson(); return; } if (a2 === 'export-md') { collectFormData(); exportMarkdown(); return; } if (a2 === 'print') { window.print(); return; } }
+    var ab2 = ev.target.closest('[data-action]'); if (ab2) { var a2 = ab2.dataset.action; if (a2 === 'import-json') { document.getElementById('fileImportInput').click(); return; } if (a2 === 'import-md') { document.getElementById('fileImportInput').click(); return; } if (a2 === 'export-json') { collectFormData(); exportJson(); return; } if (a2 === 'export-md') { collectFormData(); exportMarkdown(); return; } if (a2 === 'print') { exportPdf(); return; } }
+function exportPdf() { var el = document.getElementById('resumeDocument'); if (!el || typeof html2pdf === 'undefined') return; var name = (cvData && cvData.profile && cvData.profile.name ? cvData.profile.name : '简历') + '.pdf'; html2pdf().set({ margin: 8, filename: name, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, letterRendering: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: 'css' } }).from(el).save(); }
     var aib = ev.target.closest('[data-add-item]'); if (aib) { addItem(parseInt(aib.dataset.addItem, 10)); return; }
     var rib = ev.target.closest('.editor-item-remove'); if (rib) { removeItem(parseInt(rib.dataset.sectionIndex, 10), parseInt(rib.dataset.itemIndex, 10)); return; }
     if (ev.target.closest('#addSectionBtn')) return;
@@ -352,4 +352,4 @@ function onPrefTlExp() { cvPrefs.timelineExpField = this.value; savePrefs(); }
    13. 初始化
    =========================================================== */
 function init() { loadPrefs(); applyPrefs(); var rd = document.getElementById('resumeDocument'); if (rd) { handleViewportChange(); window.addEventListener('resize', handleViewportChange); window.addEventListener('load', handleViewportChange); } var tb = document.querySelector('.floating-toolbar'); if (tb) updateScale(DEFAULT_SCALE); bindCopyActions(); bindToolbarActions(); bindEditorEvents(); if (new URLSearchParams(location.search).get('edit') === '1') openEditor(); }
-loadCvData().then(function () { renderCv(); init(); });
+loadCvData().then(function () { loadPrefs(); renderCv(); init(); });
