@@ -59,21 +59,18 @@ function buildPdfDef(d) {
     ]
   });
 
-  // 联系信息
-  var contactItems = [];
-  if (p.phone) contactItems.push('📞 ' + p.phone);
-  if (p.email) contactItems.push('✉ ' + p.email);
-  if (p.所在地) contactItems.push('📍 ' + p.所在地);
-  if (p.gender && p.age) contactItems.push(p.gender + ' / ' + p.age + '岁');
-  if (p.experience) contactItems.push('💼 ' + p.experience);
-
-  if (contactItems.length) {
-    headerStack.push({
-      text: contactItems.join('    '),
-      style: 'contact',
-      margin: [0, 6, 0, 0]
-    });
-  }
+  // 联系信息（分行显示，不用 emoji）
+  var contactRows = [];
+  var row1 = [];
+  if (p.phone) row1.push(p.phone);
+  if (p.email) row1.push(p.email);
+  if (row1.length) contactRows.push({ text: row1.join('  |  '), style: 'contact', margin: [0, 3, 0, 0] });
+  var row2 = [];
+  if (p.所在地) row2.push(p.所在地);
+  if (p.gender && p.age) row2.push(p.gender + ' / ' + p.age + '岁');
+  if (p.experience) row2.push(p.experience + '经验');
+  if (row2.length) contactRows.push({ text: row2.join('  |  '), style: 'contact' });
+  headerStack = headerStack.concat(contactRows);
 
   // 时间轴
   if (p.timeline) {
@@ -177,25 +174,25 @@ function buildPdfDef(d) {
     pageMargins: [50, 40, 50, 40],
     defaultStyle: {
       font: 'noto',
-      fontSize: 9.5,
+      fontSize: 9,
       color: '#334155',
-      lineHeight: 1.45
+      lineHeight: 1.35
     },
     styles: {
-      name:       { fontSize: 22, bold: true, color: '#1e293b' },
-      subtitle:   { fontSize: 12, color: '#64748b' },
-      contact:    { fontSize: 8.5, color: '#64748b' },
-      timeline:   { fontSize: 8.5, color: '#94a3b8' },
-      sectionTitle: { fontSize: 13, bold: true, color: '#1e293b', margin: [0, 8, 0, 4] },
-      itemTitle:  { fontSize: 10.5, bold: true, color: '#1e293b' },
-      itemMeta:   { fontSize: 9, color: '#64748b', margin: [0, 1, 0, 0] },
-      itemDate:   { fontSize: 9, color: '#94a3b8' },
-      itemSummary:{ fontSize: 9, color: '#475569', margin: [0, 1, 0, 0] },
-      itemBullet: { fontSize: 9, color: '#334155', margin: [0, 0, 0, 1] },
-      itemTags:   { fontSize: 8.5, color: '#64748b' },
-      skillName:  { fontSize: 10, bold: true, color: '#1e293b' },
-      skillDetail:{ fontSize: 9, color: '#475569', margin: [0, 1, 0, 0] },
-      summary:    { fontSize: 9.5, color: '#334155' }
+      name:       { fontSize: 20, bold: true, color: '#1e293b' },
+      subtitle:   { fontSize: 11, color: '#64748b' },
+      contact:    { fontSize: 8, color: '#64748b' },
+      timeline:   { fontSize: 8, color: '#94a3b8' },
+      sectionTitle: { fontSize: 12, bold: true, color: '#1e293b', margin: [0, 6, 0, 3] },
+      itemTitle:  { fontSize: 10, bold: true, color: '#1e293b' },
+      itemMeta:   { fontSize: 8.5, color: '#64748b', margin: [0, 1, 0, 0] },
+      itemDate:   { fontSize: 8.5, color: '#94a3b8' },
+      itemSummary:{ fontSize: 8.5, color: '#475569', margin: [0, 1, 0, 0] },
+      itemBullet: { fontSize: 8.5, color: '#334155', margin: [0, 0, 0, 1] },
+      itemTags:   { fontSize: 8, color: '#64748b' },
+      skillName:  { fontSize: 9.5, bold: true, color: '#1e293b' },
+      skillDetail:{ fontSize: 8.5, color: '#475569', margin: [0, 1, 0, 0] },
+      summary:    { fontSize: 9, color: '#334155' }
     },
     content: content
   };
