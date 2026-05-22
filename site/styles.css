@@ -145,13 +145,11 @@ html.js .resume-document[data-js-ready="false"] {
   background: var(--paper-bg);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
-  break-after: page;
 }
-
-.resume-page:last-child { break-after: auto; }
 
 .resume-source {
   display: block;
+  break-after: auto;
 }
 
 .resume-pages {
@@ -1209,6 +1207,7 @@ html.js .resume-document[data-js-ready="false"] {
 
   .resume-source {
     display: none;
+    break-after: auto;
   }
 
   .resume-pages {
@@ -1220,8 +1219,6 @@ html.js .resume-document[data-js-ready="false"] {
     height: var(--page-height);
     border-radius: 0;
     box-shadow: none;
-    break-after: page;
-    page-break-after: always;
     overflow: hidden;
   }
 
@@ -1231,11 +1228,6 @@ html.js .resume-document[data-js-ready="false"] {
 
   .resume-section {
     break-inside: avoid;
-  }
-
-  .resume-page:last-child {
-    break-after: auto;
-    page-break-after: auto;
   }
 
   .floating-toolbar,
