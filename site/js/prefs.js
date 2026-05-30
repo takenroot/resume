@@ -1,0 +1,17 @@
+/* ===========================================================
+   CV 简历网页 — 偏好设置（主题 / 字号 / 字体）
+   =========================================================== */
+const PREFS_KEY = 'cv_prefs', THEMES = { default: { name: '默认', vars: {} }, academic: { name: '学术', vars: { '--accent': '#8b0000', '--canvas-bg': '#f5f5f0', '--paper-bg': '#fffff8' } }, modern: { name: '现代', vars: { '--accent': '#0ea5e9', '--canvas-bg': '#f0f9ff', '--text-soft': '#475569' } }, simple: { name: '简约', vars: { '--accent': '#6b7280', '--canvas-bg': '#f9fafb', '--line-soft': '#d1d5db' } } }, FONT_SIZES = { small: { name: '小', vars: { '--fs-body': '11.5px', '--fs-meta': '11px', '--fs-h1': '27px', '--fs-h2': '13px', '--fs-h3': '13px' } }, medium: { name: '中', vars: { '--fs-body': '12.5px', '--fs-meta': '12px', '--fs-h1': '30px', '--fs-h2': '14px', '--fs-h3': '14px' } }, large: { name: '大', vars: { '--fs-body': '13.5px', '--fs-meta': '13px', '--fs-h1': '33px', '--fs-h2': '15px', '--fs-h3': '15px' } } }, FONT_FAMILIES = { default: { name: '默认', value: '"Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif' }, yahei: { name: '微软雅黑', value: '"Microsoft YaHei", "PingFang SC", sans-serif' }, serif: { name: '衬线体', value: 'Georgia, "SimSun", serif' } };
+let cvPrefs = null;
+
+function loadPrefs() { const st = localStorage.getItem(PREFS_KEY); if (st) { try { cvPrefs = JSON.parse(st); } catch (e) { cvPrefs = null; } } if (!cvPrefs) cvPrefs = { fontFamily: 'default', fontSize: 'medium', theme: 'default' }; if (!FONT_FAMILIES[cvPrefs.fontFamily]) cvPrefs.fontFamily = 'default'; if (!cvPrefs.timelineEduField) cvPrefs.timelineEduField = 'degree'; if (!cvPrefs.timelineExpField) cvPrefs.timelineExpField = 'position'; }
+function savePrefs() { localStorage.setItem(PREFS_KEY, JSON.stringify(cvPrefs)); }
+function applyPrefs() { const r = document.documentElement, th = THEMES[cvPrefs.theme] || THEMES.default, fs = FONT_SIZES[cvPrefs.fontSize] || FONT_SIZES.medium, ff = FONT_FAMILIES[cvPrefs.fontFamily] || FONT_FAMILIES.default; Object.entries(th.vars).forEach(function (kv) { r.style.setProperty(kv[0], kv[1]); }); Object.entries(fs.vars).forEach(function (kv) { r.style.setProperty(kv[0], kv[1]); }); r.style.setProperty('--font-family', ff.value); }
+
+function bindPrefChangeEvents() { const ts = document.getElementById('prefTheme'), ss = document.getElementById('prefFontSize'), fs = document.getElementById('prefFontFamily'); if (ts) { ts.removeEventListener('change', onPrefThemeChange); ts.addEventListener('change', onPrefThemeChange); } if (ss) { ss.removeEventListener('change', onPrefSizeChange); ss.addEventListener('change', onPrefSizeChange); } if (fs) { fs.removeEventListener('change', onPrefFontChange); fs.addEventListener('change', onPrefFontChange); } }
+const te = document.getElementById('prefTlEdu'), tx = document.getElementById('prefTlExp'); if (te) { te.removeEventListener('change', onPrefTlEdu); te.addEventListener('change', onPrefTlEdu); } if (tx) { tx.removeEventListener('change', onPrefTlExp); tx.addEventListener('change', onPrefTlExp); }
+function onPrefThemeChange() { cvPrefs.theme = this.value; savePrefs(); applyPrefs(); }
+function onPrefSizeChange() { cvPrefs.fontSize = this.value; savePrefs(); applyPrefs(); }
+function onPrefFontChange() { cvPrefs.fontFamily = this.value; savePrefs(); applyPrefs(); }
+function onPrefTlEdu() { cvPrefs.timelineEduField = this.value; savePrefs(); }
+function onPrefTlExp() { cvPrefs.timelineExpField = this.value; savePrefs(); }
