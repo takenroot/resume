@@ -40,6 +40,17 @@ const SECTION_CONFIG = {
     mdBlock: function (c) { return c || ''; },
     editorContent: function (c) { return '<div class="editor-field"><label>内容</label><textarea name="sectionText.{idx}" rows="6">' + esc(c) + '</textarea></div>'; },
     defaultSection: function () { return { type: 'text', title: SECTION_CONFIG.text.label, content: '' }; }
+  },
+  certificate: { label: '证书', fields: [{ n: 'name', l: '证书名称' }, { n: 'issuer', l: '颁发机构' }, { n: 'period', l: '获得时间' }, { n: 'serial', l: '证书编号' }, { n: 'url', l: '验证链接' }],
+    renderItem: function (i) {
+      const a = cE('article', 'timeline-item');
+      const serialHtml = i.serial ? '<span class="cert-serial">编号：' + esc(i.serial) + '</span>' : '';
+      const urlHtml = i.url ? '<a href="' + esc(i.url) + '" target="_blank" rel="noopener" class="cert-url">验证链接 ↗</a>' : '';
+      a.innerHTML = '<div class="item-head"><div><h3>' + esc(i.name) + '</h3><p class="item-subtitle">' + esc(i.issuer) + '</p></div><span class="item-time">' + esc(i.period) + '</span></div>' + (serialHtml || urlHtml ? '<div class="cert-meta">' + serialHtml + urlHtml + '</div>' : '');
+      return a;
+    },
+    mdItem: function (i) { return '**' + (i.period || '') + '** | ' + (i.name || '') + (i.issuer ? ' | ' + i.issuer : '') + (i.serial ? ' | 编号：' + i.serial : ''); },
+    defaultItem: { name: '', issuer: '', period: '', serial: '', url: '' }
   }
 };
 const SECTION_TYPES = Object.keys(SECTION_CONFIG);

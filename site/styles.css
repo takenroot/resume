@@ -451,6 +451,30 @@ html.js .resume-document[data-js-ready="false"] {
   line-height: 1.35;
 }
 
+/* ========== 证书 ========== */
+
+.cert-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+  font-size: var(--fs-meta);
+  color: var(--text-soft);
+}
+
+.cert-serial {
+  font-family: monospace;
+}
+
+.cert-url {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.cert-url:hover {
+  text-decoration: underline;
+}
+
 /* ========== 技能网格 ========== */
 
 .skills-grid {
