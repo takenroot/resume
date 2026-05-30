@@ -1171,11 +1171,10 @@ html.js .resume-document[data-js-ready="false"] {
 @media print {
   @page {
     size: A4;
-    margin: 8mm;
+    margin: 0;
   }
 
   :root {
-    --page-height: 287mm;
     --page-padding: 14mm;
   }
 
