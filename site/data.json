@@ -1,0 +1,54 @@
+{
+  "profile": {
+    "name": "张三",
+    "title": "全栈开发工程师",
+    "phone": "138-0000-0000",
+    "email": "example@qq.com",
+    "所在地": "北京市",
+    "experience": "5年",
+    "gender": "男",
+    "age": "28",
+    "avatar": "",
+    "github": "https://github.com/example"
+  },
+  "sections": [
+    {
+      "type": "education",
+      "title": "教育背景",
+      "items": [
+        {
+          "school": "某大学",
+          "degree": "本科",
+          "major": "计算机科学与技术",
+          "time": "2015 – 2019"
+        }
+      ]
+    },
+    {
+      "type": "experience",
+      "title": "工作经历",
+      "items": [
+        {
+          "company": "某科技有限公司",
+          "position": "高级前端工程师",
+          "time": "2022 – 至今",
+          "highlights": ["负责前端架构设计与性能优化", "主导前端团队技术选型"]
+        }
+      ]
+    },
+    {
+      "type": "skills",
+      "title": "专业技能",
+      "items": [
+        { "name": "前端开发", "detail": "Vue / React / TypeScript / CSS3" },
+        { "name": "后端开发", "detail": "Node.js / Python / MySQL / Redis" },
+        { "name": "工具链", "detail": "Git / Docker / CI/CD" }
+      ]
+    },
+    {
+      "type": "summary",
+      "title": "自我评价",
+      "items": ["具备良好的编码习惯和团队协作能力，熟悉从前端到后端的全栈开发流程。"]
+    }
+  ]
+}
