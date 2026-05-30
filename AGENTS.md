@@ -2,24 +2,35 @@
 
 This file provides context for AI assistants working on this project.
 
-## Project Type: Unknown
+## Project Type: CV Resume Web (Vanilla HTML/CSS/JS)
 
-<!-- Add build/test commands here -->
+## Build / Test Commands
 
-### Documentation
-See README.md for project overview.
+No build step — edit source files directly, reload browser.
 
-### Version Control
-This project uses Git. See .gitignore for excluded files.
+- **Dev server:** `cd site && python3 -m http.server 8000` (or `bash start.sh`)
+- **Font subset:** `python subset_font.py` (requires fontTools)
 
+## Project Structure
 
-## Guidelines
+| Path | Purpose |
+|---|---|
+| `site/` | Document root — deploy this directory |
+| `site/index.html` | Resume page shell, CDN imports (html2canvas, jsPDF) |
+| `site/styles.css` | All styles (layout, editor, toolbar, print @media) |
+| `site/js/` | Modular JS — app.js (entry), editor.js, render.js, layout.js, zoom.js, export.js |
+| `site/data.json` | Default resume data |
+| `example/` | Sample data |
+| `docs/` | Requirements |
 
-- Follow existing code style and patterns
-- Write tests for new functionality
-- Keep changes focused and atomic
-- Document public APIs
+## PDF Export
+
+Two modes available:
+- **导出为图片（PDF）** — html2canvas + jsPDF (screenshot, text not searchable)
+- **导出 PDF（浏览器打印）** — `window.print()` via `@media print` (text searchable)
 
 ## Important Notes
 
-<!-- Add project-specific notes here -->
+- Font files (`NotoSansSC-*.subset.ttf`) are subsets — re-run `subset_font.py` after adding new Chinese text
+- `site/data.json` is initial seed only — after first browser edit, `localStorage` takes over
+- `site/backup/` and `site/data.json` are gitignored — backups and user data stay local
