@@ -82,11 +82,11 @@
         <div class="dropdown-menu" hidden>
           <button type="button" class="dropdown-item" data-action="export-json">导出 JSON</button>
           <button type="button" class="dropdown-item" data-action="export-md">导出 Markdown</button>
-          <button type="button" class="dropdown-item" data-action="export-pdf-searchable">导出 PDF</button>
+          <button type="button" class="dropdown-item" data-action="export-pdf-image">导出为图片（PDF）</button>
         </div>
       </div>
       <button type="button" class="editor-btn" data-action="reset-data">重置默认</button>
-      <button type="button" class="editor-btn" data-action="print">导出 PDF</button>
+      <button type="button" class="editor-btn" data-action="print">导出 PDF（浏览器打印）</button>
       <button type="button" class="editor-btn primary" id="saveData">保存</button>
     </div>
   </div>
@@ -94,7 +94,6 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
   <script src="js/config.js"></script>
   <script src="js/utils.js"></script>
   <script src="js/pagination.js"></script>

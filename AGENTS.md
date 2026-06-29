@@ -18,10 +18,8 @@ No build step — edit source files directly, reload browser.
 | `site/` | Document root — deploy this directory |
 | `site/index.html` | Resume page shell, CDN imports (html2canvas, jsPDF) |
 | `site/styles.css` | All styles (layout, editor, toolbar, print @media) |
-| `site/js/` | Modular JS — app.js (entry), editor.js, render.js, layout.js, zoom.js, export.js |
+| `site/js/` | Modular JS — app.js (entry), editor.js, renderer.js, pagination.js, zoom.js, config.js, utils.js, markdown.js, data.js, prefs.js |
 | `site/data.json` | Default resume data |
-| `example/` | Sample data |
-| `docs/` | Requirements |
 
 ## PDF Export
 

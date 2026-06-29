@@ -34,10 +34,6 @@ cv/
 │   ├── data.json                   # 简历数据（JSON）
 │   └── assets/
 │       └── icons/                  # SVG 图标
-├── example/
-│   └── resume-data.json            # 数据示例
-├── docs/
-│   └── requirement.md             # 需求文档
 ├── subset_font.py                  # 字体子集化脚本
 ├── start.sh / start.bat            # 本地启动脚本
 └── README.md
