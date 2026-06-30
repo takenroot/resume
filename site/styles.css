@@ -1,3 +1,20 @@
+/* NotoSansSC subset 字体 - 屏幕不引用 (屏幕保留系统字体, 视觉零回归)
+   @media print 内通过 --font-family 临时覆盖引用 */
+@font-face {
+  font-family: 'NotoSansSC';
+  src: url('./NotoSansSC-Regular.subset.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'NotoSansSC';
+  src: url('./NotoSansSC-Bold.subset.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --page-width: 210mm;
   --page-height: 297mm;
@@ -18,7 +35,7 @@
   --fs-body: 12.5px;
   --fs-meta: 12px;
   --fs-h1: 30px;
-  --fs-h2: 14px;
+  --fs-h2: 16px;
   --fs-h3: 14px;
   --lh-body: 1.5;
   --page-padding: 14mm;
@@ -1200,6 +1217,15 @@ html.js .resume-document[data-js-ready="false"] {
 
   :root {
     --page-padding: 14mm;
+    /* 打印用 NotoSansSC, 屏幕保留系统字体避免视觉回归 */
+    --font-family: 'NotoSansSC', "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    /* 字号锁死, 与视口无关, 保证 OCR 命中 */
+    --fs-body: 13px;
+    --fs-meta: 12.5px;
+    --fs-h1: 28px;
+    --fs-h2: 16px;
+    --fs-h3: 14px;
+    --lh-body: 1.55;
   }
 
   html,
