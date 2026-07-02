@@ -495,21 +495,27 @@ html.js .resume-document[data-js-ready="false"] {
 /* ========== 技能网格 ========== */
 
 .skills-grid {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 6px 16px;
+  display: block;
   font-size: var(--fs-meta);
   line-height: 1.5;
 }
 
 .skills-grid .skill-item {
-  display: contents;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.skills-grid .skill-item:last-child {
+  margin-bottom: 0;
 }
 
 .skills-grid .skill-name {
   font-weight: 600;
   color: var(--text-main);
-  white-space: nowrap;
+}
+
+.skills-grid .skill-name::after {
+  content: '：';
 }
 
 .skills-grid .skill-detail {
