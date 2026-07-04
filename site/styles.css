@@ -2,14 +2,14 @@
    @media print 内通过 --font-family 临时覆盖引用 */
 @font-face {
   font-family: 'NotoSansSC';
-  src: url('./NotoSansSC-Regular.subset.ttf') format('truetype');
+  src: url('./NotoSansSC-Regular.subset.ttf') format('opentype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: 'NotoSansSC';
-  src: url('./NotoSansSC-Bold.subset.ttf') format('truetype');
+  src: url('./NotoSansSC-Bold.subset.ttf') format('opentype');
   font-weight: 700;
   font-style: normal;
   font-display: swap;
