@@ -41,6 +41,7 @@
   --space-tag-top: 8px;
   --space-tag-bottom: 6px;
   --space-after-banner: 16px;
+  --page-margin: 0mm;
 }
 
 * {
@@ -1201,7 +1202,7 @@ html.js .resume-document[data-js-ready="false"] {
 @media print {
   @page {
     size: A4;
-    margin: 0;
+    margin: var(--page-margin, 0mm);
   }
 
   :root {
