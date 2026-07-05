@@ -41,7 +41,6 @@
   --space-tag-top: 8px;
   --space-tag-bottom: 6px;
   --space-after-banner: 16px;
-  --page-margin: 0mm;
 }
 
 * {
@@ -753,6 +752,17 @@ html.js .resume-document[data-js-ready="false"] {
   transition: border-color 140ms ease;
 }
 
+.prefs-hint {
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text-soft, #64748b);
+  background: var(--accent-light, #eff4ff);
+  border-left: 3px solid var(--accent, #2563eb);
+  border-radius: 4px;
+  line-height: 1.55;
+}
+
 .prefs-row select:focus {
   outline: none;
   border-color: var(--accent);
@@ -1202,7 +1212,7 @@ html.js .resume-document[data-js-ready="false"] {
 @media print {
   @page {
     size: A4;
-    margin: var(--page-margin, 0mm);
+    margin: 0;
   }
 
   :root {
