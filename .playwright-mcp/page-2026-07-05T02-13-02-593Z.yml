@@ -1,0 +1,58 @@
+- main [ref=f12e4]:
+  - text: ： ： ：
+  - generic [ref=f12e7]:
+    - generic [ref=f12e8]:
+      - generic [ref=f12e9]:
+        - heading "张三" [level=1] [ref=f12e10]
+        - text: 全栈开发工程师 5年 北京市
+      - generic "个人信息" [ref=f12e11]:
+        - generic [ref=f12e12]:
+          - img [ref=f12e13]
+          - generic [ref=f12e15]: 男
+          - text: /
+          - generic [ref=f12e16]: "28"
+        - button "复制手机号" [ref=f12e17] [cursor=pointer]:
+          - img [ref=f12e18]
+          - generic [ref=f12e20]: 138-0000-0000
+        - button "复制邮箱" [ref=f12e21] [cursor=pointer]:
+          - img [ref=f12e22]
+          - generic [ref=f12e24]: example@qq.com
+        - link "打开 GitHub 主页" [ref=f12e25] [cursor=pointer]:
+          - /url: https://github.com/example
+          - img [ref=f12e26]
+          - generic [ref=f12e28]: https://github.com/example
+      - generic [ref=f12e29]:
+        - generic [ref=f12e30]:
+          - emphasis [ref=f12e31]: "2015"
+          - generic [ref=f12e32]: 本科
+        - generic [ref=f12e33]: →
+        - generic [ref=f12e34]:
+          - emphasis [ref=f12e35]: "2022"
+          - generic [ref=f12e36]: 高级前端工程师
+    - generic [ref=f12e37]:
+      - heading "教育背景" [level=2] [ref=f12e39]
+      - article [ref=f12e41]:
+        - generic [ref=f12e42]:
+          - generic [ref=f12e43]:
+            - heading "某大学 · 计算机科学与技术 · 本科" [level=3] [ref=f12e44]
+            - paragraph
+          - generic [ref=f12e45]: 2015.09 - 2019.06
+    - generic [ref=f12e46]:
+      - heading "工作经历" [level=2] [ref=f12e48]
+      - article [ref=f12e50]:
+        - generic [ref=f12e51]:
+          - heading "某科技有限公司 · 高级前端工程师" [level=3] [ref=f12e53]
+          - generic [ref=f12e54]: 2022.01 - 至今
+        - list [ref=f12e55]:
+          - listitem [ref=f12e56]: 负责前端架构设计与性能优化
+          - listitem [ref=f12e57]: 主导前端团队技术选型
+    - generic [ref=f12e58]:
+      - heading "专业技能" [level=2] [ref=f12e60]
+      - generic [ref=f12e61]:
+        - article [ref=f12e62]: 前端开发：Vue / React / TypeScript / CSS3
+        - article [ref=f12e63]: 后端开发：Node.js / Python / MySQL / Redis
+        - article [ref=f12e64]: 工具链：Git / Docker / CI/CD
+    - generic [ref=f12e65]:
+      - heading "自我评价" [level=2] [ref=f12e67]
+      - list [ref=f12e69]:
+        - listitem [ref=f12e70]: 具备良好的编码习惯和团队协作能力，熟悉从前端到后端的全栈开发流程。

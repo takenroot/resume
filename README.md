@@ -32,8 +32,7 @@ cv/
 │   │   ├── zoom.js                 # 缩放控制
 │   │   └── export.js               # PDF 导出（截图模式 + 打印模式）
 │   ├── data.json                   # 简历数据（JSON）
-│   └── assets/
-│       └── icons/                  # SVG 图标
+│   └── assets/                     # 用户头像等上传文件
 ├── subset_font.py                  # 字体子集化脚本
 ├── start.sh / start.bat            # 本地启动脚本
 └── README.md
@@ -126,7 +125,7 @@ python -m http.server 8000
 - **Netlify**
 - **任意 Nginx / Caddy / Apache 静态目录**
 
-部署时确保上传 `site/` 目录全部文件（含 `assets/` 和字体文件）。
+部署时确保上传 `site/` 目录全部文件（含用户头像 `assets/` 和字体文件）。
 
 ## 技术支持
 
