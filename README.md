@@ -26,14 +26,17 @@ cv/
 │   ├── styles.css                  # 布局 / 样式 / 工具栏 / 编辑器 / 打印样式
 │   ├── js/                          # 模块化 JS（渲染、编辑器、工具栏、PDF 导出等）
 │   │   ├── app.js                   # 入口模块
+│   │   ├── config.js               # 模块配置表
+│   │   ├── data.js                 # 默认数据与 localStorage 管理
 │   │   ├── editor.js               # 编辑器
-│   │   ├── render.js               # 渲染引擎
-│   │   ├── layout.js               # 分页布局
-│   │   ├── zoom.js                 # 缩放控制
-│   │   └── export.js               # PDF 导出（截图模式 + 打印模式）
-│   ├── data.json                   # 简历数据（JSON）
+│   │   ├── markdown.js             # Markdown 导入/导出
+│   │   ├── pagination.js           # 自动分页布局
+│   │   ├── prefs.js                # 页面偏好设置
+│   │   ├── renderer.js             # 渲染引擎
+│   │   ├── utils.js                # 工具函数
+│   │   └── zoom.js                 # 缩放控制
+│   ├── data.json                   # 简历初始数据（JSON）
 │   └── assets/                     # 用户头像等上传文件
-├── subset_font.py                  # 字体子集化脚本
 ├── start.sh / start.bat            # 本地启动脚本
 └── README.md
 ```
@@ -77,7 +80,7 @@ python -m http.server 8000
 | 工作经历 | 公司、职位、时间、工作描述、亮点 |
 | 教育背景 | 学校、专业、学历、时间、主修课程 |
 | 项目经验 | 项目名、时间、技术栈、描述、亮点 |
-| 专业技能 | 技能名 + 详情（网格布局） |
+| 专业技能 | 技能名 + 详情（单列布局，便于 OCR/智能解析） |
 | 自我评价 | 自由文本条目 |
 | 时间轴 | 时间、标题、标签、描述、亮点 |
 | 自由文本 | 纯文本段落 |
@@ -125,7 +128,7 @@ python -m http.server 8000
 - **Netlify**
 - **任意 Nginx / Caddy / Apache 静态目录**
 
-部署时确保上传 `site/` 目录全部文件（含用户头像 `assets/` 和字体文件）。
+部署时确保上传 `site/` 目录全部文件（含用户头像 `assets/`）。项目已改用系统字体，无需额外上传字体文件。
 
 ## 技术支持
 
