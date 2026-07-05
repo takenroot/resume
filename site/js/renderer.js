@@ -51,6 +51,7 @@ function autoTimeline() {
 function renderCv() {
   if (!cvData) return; const d = cvData;
   document.querySelectorAll('[data-render]').forEach(function (el) {
+    if (el.classList.contains('timeline-strip')) return;
     const key = el.dataset.render, ps = key.split('.'); let v = d[ps[0]];
     for (let i = 1; v != null && i < ps.length; i++) v = v[ps[i]];
     if (el.tagName === 'A') { if (v) el.href = (v.startsWith('http') ? '' : 'https://') + v; }
@@ -62,5 +63,14 @@ function renderCv() {
   const rs = document.getElementById('resumeSource'); if (!rs) return;
   const hd = rs.querySelector('.resume-header'); rs.replaceChildren(); if (hd) rs.appendChild(hd);
   (d.sections || []).forEach(function (sec, i) { const dom = createSectionDOM(i); const h2 = dom.querySelector('h2'); if (h2) h2.textContent = sec.title || (SECTION_CONFIG[sec.type] || {}).label || ''; rs.appendChild(dom); const le = dom.querySelector('[data-render-list]'); if (le) renderSectionContent(le, i); });
-  const ts = document.querySelector('.timeline-strip'); if (ts && !(d.profile && d.profile.timeline)) { ts.innerHTML = autoTimeline(); ts.classList.add('auto'); }
+  const ts = document.querySelector('.timeline-strip');
+  if (ts) {
+    if (d.profile && d.profile.timeline) {
+      ts.textContent = d.profile.timeline;
+      ts.classList.remove('auto');
+    } else {
+      ts.innerHTML = autoTimeline();
+      ts.classList.add('auto');
+    }
+  }
 }
