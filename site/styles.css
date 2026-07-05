@@ -1234,7 +1234,7 @@ html.js .resume-document[data-js-ready="false"] {
 
   .page-shell {
     width: auto;
-    padding: 0;
+    padding: 0 !important;
     display: block;
   }
 
