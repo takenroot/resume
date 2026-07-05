@@ -18,7 +18,7 @@
   --fs-body: 12.5px;
   --fs-meta: 12px;
   --fs-h1: 30px;
-  --fs-h2: 14px;
+  --fs-h2: 16px;
   --fs-h3: 14px;
   --lh-body: 1.5;
   --page-padding: 14mm;
@@ -478,21 +478,27 @@ html.js .resume-document[data-js-ready="false"] {
 /* ========== 技能网格 ========== */
 
 .skills-grid {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 6px 16px;
+  display: block;
   font-size: var(--fs-meta);
   line-height: 1.5;
 }
 
 .skills-grid .skill-item {
-  display: contents;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.skills-grid .skill-item:last-child {
+  margin-bottom: 0;
 }
 
 .skills-grid .skill-name {
   font-weight: 600;
   color: var(--text-main);
-  white-space: nowrap;
+}
+
+.skills-grid .skill-name::after {
+  content: '：';
 }
 
 .skills-grid .skill-detail {
@@ -744,6 +750,17 @@ html.js .resume-document[data-js-ready="false"] {
   color: var(--text-main);
   cursor: pointer;
   transition: border-color 140ms ease;
+}
+
+.prefs-hint {
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: var(--text-soft, #64748b);
+  background: var(--accent-light, #eff4ff);
+  border-left: 3px solid var(--accent, #2563eb);
+  border-radius: 4px;
+  line-height: 1.55;
 }
 
 .prefs-row select:focus {
@@ -1200,6 +1217,13 @@ html.js .resume-document[data-js-ready="false"] {
 
   :root {
     --page-padding: 14mm;
+    /* 字号锁死, 与视口无关, 保证 OCR 命中 */
+    --fs-body: 13px;
+    --fs-meta: 12.5px;
+    --fs-h1: 28px;
+    --fs-h2: 16px;
+    --fs-h3: 14px;
+    --lh-body: 1.55;
   }
 
   html,
@@ -1210,7 +1234,7 @@ html.js .resume-document[data-js-ready="false"] {
 
   .page-shell {
     width: auto;
-    padding: 0;
+    padding: 0 !important;
     display: block;
   }
 

@@ -9,7 +9,6 @@ This file provides context for AI assistants working on this project.
 No build step — edit source files directly, reload browser.
 
 - **Dev server:** `cd site && python3 -m http.server 8000` (or `bash start.sh`)
-- **Font subset:** `python subset_font.py` (requires fontTools)
 
 ## Project Structure
 
@@ -29,6 +28,6 @@ Two modes available:
 
 ## Important Notes
 
-- Font files (`NotoSansSC-*.subset.ttf`) are subsets — re-run `subset_font.py` after adding new Chinese text
+- 字体策略：屏幕 + 打印均使用系统字体（`PingFang SC`、`Microsoft YaHei`、`Segoe UI` 等），不再引入 `@font-face` 自定义字体；早期 NotoSansSC 子集字体方案已在 `027ba5c` 撤回（Chrome print 会把自定义中文字体转路径，导致 PDF 文字层丢失）
 - `site/data.json` is initial seed only — after first browser edit, `localStorage` takes over
 - `site/backup/` and `site/data.json` are gitignored — backups and user data stay local

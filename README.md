@@ -32,8 +32,7 @@ cv/
 │   │   ├── zoom.js                 # 缩放控制
 │   │   └── export.js               # PDF 导出（截图模式 + 打印模式）
 │   ├── data.json                   # 简历数据（JSON）
-│   └── assets/
-│       └── icons/                  # SVG 图标
+│   └── assets/                     # 用户头像等上传文件
 ├── subset_font.py                  # 字体子集化脚本
 ├── start.sh / start.bat            # 本地启动脚本
 └── README.md
@@ -83,6 +82,8 @@ python -m http.server 8000
 | 时间轴 | 时间、标题、标签、描述、亮点 |
 | 自由文本 | 纯文本段落 |
 
+> **时间字段约定**：建议使用 `YYYY.MM - YYYY.MM` 或 `YYYY.MM - 至今` 格式（如 `2022.01 - 至今`、`2015.09 - 2019.06`）。这种统一格式便于招聘平台（智联、Boss直聘）智能解析时正确识别。
+
 ## 编辑简历
 
 ### 在线编辑器
@@ -124,7 +125,7 @@ python -m http.server 8000
 - **Netlify**
 - **任意 Nginx / Caddy / Apache 静态目录**
 
-部署时确保上传 `site/` 目录全部文件（含 `assets/` 和字体文件）。
+部署时确保上传 `site/` 目录全部文件（含用户头像 `assets/` 和字体文件）。
 
 ## 技术支持
 
