@@ -294,3 +294,41 @@ main
 - 不直接 push 到 main; feat 分支本地工作, 用户满意后由用户决定是否合并
 - 不 force-push; 不重写历史
 - spec 文件 (本文档) 在 Phase 4 实施时一并 commit
+
+## 13. 实施历史与关键教训
+
+### 任务总览（已完成）
+
+| 任务 | 内容 | 状态 |
+|---|---|---|
+| T1 | commit spec + plan | ✅ |
+| T2 | 时间格式 `YYYY.MM` | ✅ |
+| T3 | CSS 基础（h2 字号 + print 字号锁定） | ✅ |
+| T3b | 撤回 `@font-face`，改用系统字体 | ✅ |
+| T4 | Playwright PDF 验证 | ✅ |
+| T5-T9 | skills 单列化 + 用户 gate | ✅ |
+| T-fix-1 | print 右偏修复 | ✅ |
+| T-fix-2 | GitHub SVG viewBox 修复 | ✅ |
+| T-fix-3 | 删除 `site/assets/icons/` 死代码 | ✅ |
+| T-fix-4 | gitignore `.playwright-mcp/` | ✅ |
+| T-fix-5 | import JSON 顶部时间轴刷新修复 | ✅ |
+| T-edge-1 | 撤回打印边距下拉 UI（JS 不可控） | ↩️ |
+| T10/T11/T12 | 智联/Boss 真实上传验证 | ✅ 通过 |
+
+### 最终验证结论
+
+- **Boss 直聘**：项目导出 PDF 全字段自动填充正确 ✅
+- **智联招聘**：项目导出 PDF 可被识别 ✅，前提是 PDF 中姓名、手机号、邮箱等个人信息与求职者本人一致
+
+### 踩坑教训
+
+1. **不要试图用 JS 控制浏览器原生对话框**（打印边距、缩放等），不可控。
+2. **不要试图 `@font-face` + print**：Chrome 会把自定义中文字体转路径，导致 PDF 文字层为 0 字符。
+3. **推断 PDF 解析失败根因时，不要直接动代码**，先看真实样本。
+4. **文字层完整 ≠ OCR 解析成功**：字段分隔符、字段顺序、信息真实性都会影响解析。
+5. **智联有真实性校验**：用 sample/假数据测试会失败，不代表版式失败。
+
+### 过程文档归档
+
+- `docs/plan-ocr-friendly-resume.md` 和 `docs/tasks-ocr-friendly-resume.md` 已完成历史使命，已删除。
+- 关键决策、验证结论和教训已合并到本节。
