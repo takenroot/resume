@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Avatar storage moved from `data.json` to browser `localStorage`, keyed by profile name. New uploads overwrite the old one; no history is kept.
+- JSON/Markdown export no longer includes avatar data, significantly reducing export file size.
+
+### Added
+
+- Editor now shows a "清除头像" (Clear Avatar) button when a local avatar exists.
+- Resume automatically loads the local avatar for the current profile name on render.
+
 ## [1.1.0] - 2026-07-05
 
 ### Added

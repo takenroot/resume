@@ -56,7 +56,11 @@ function renderCv() {
     for (let i = 1; v != null && i < ps.length; i++) v = v[ps[i]];
     if (el.tagName === 'A') { if (v) el.href = (v.startsWith('http') ? '' : 'https://') + v; }
     else if (el.tagName === 'BUTTON') { if (v) el.dataset.copy = v; }
-    else if (el.classList.contains('resume-avatar')) { if (v) el.style.setProperty('--avatar-image', "url('" + v + "')"); }
+    else if (el.classList.contains('resume-avatar')) {
+      let url = v;
+      if (!url && d.profile && d.profile.name) { const local = loadAvatar(d.profile.name); if (local) url = local; }
+      if (url) el.style.setProperty('--avatar-image', "url('" + url + "')");
+    }
     else { if (v && !(el.children.length > 0 && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) el.textContent = v; }
   });
   if (d.profile && d.profile.title) document.title = d.profile.name + ' - ' + d.profile.title;
