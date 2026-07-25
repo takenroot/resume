@@ -355,6 +355,17 @@ html.js .resume-document[data-js-ready="false"] {
   margin-top: var(--space-section-top);
 }
 
+/* 编辑器联动定位高亮: focusin 触发, 1.5s 淡出 */
+.preview-highlight {
+  animation: preview-flash 1.5s ease-out;
+  border-radius: 4px;
+}
+
+@keyframes preview-flash {
+  0% { background-color: rgba(37, 99, 235, 0.2); }
+  100% { background-color: transparent; }
+}
+
 .section-heading {
   display: flex;
   align-items: center;
@@ -429,6 +440,32 @@ html.js .resume-document[data-js-ready="false"] {
 
 .timeline-item ul {
   margin-top: var(--space-list-top);
+}
+
+/* 教育背景条目内部 section: 主修课程 / 校园经历 等带小标题 */
+.item-section {
+  margin-top: 6px;
+}
+
+.item-section-label {
+  font-size: var(--fs-meta);
+  font-weight: 600;
+  color: var(--text-soft);
+  margin: 0 0 2px;
+}
+
+.item-section-content {
+  margin: 0;
+}
+
+.item-section-list {
+  margin: 0;
+  padding-left: 18px;
+  list-style: disc;
+}
+
+.item-section-list li {
+  margin-top: 2px;
 }
 
 /* ========== 标签 ========== */

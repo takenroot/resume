@@ -62,7 +62,7 @@ function buildProfileFields(profile) {
   return hh;
 }
 
-function collectFormData() {
+function collectFormData(opts) {
   const ec = document.getElementById('editorContent'); if (!ec) return;
   const nd = { profile: Object.assign({}, cvData.profile || {}), sections: cvData.sections ? cvData.sections.map(function (s) { return Object.assign({}, s); }) : [] };
   ec.querySelectorAll('[name^="profile."]').forEach(function (el) { nd.profile[el.name.split('.')[1]] = el.value; });
@@ -71,8 +71,11 @@ function collectFormData() {
   ec.querySelectorAll('[name^="sectionText."]').forEach(function (el) { const i = parseInt(el.name.split('.')[1], 10); if (nd.sections[i]) nd.sections[i].content = el.value; });
   ec.querySelectorAll('[name^="item."]').forEach(function (el) { const ps = el.name.split('.'), si = parseInt(ps[1], 10), ii = parseInt(ps[2], 10), fi = ps[3]; if (!nd.sections[si]) return; if (!nd.sections[si].items) nd.sections[si].items = []; if (!nd.sections[si].items[ii]) nd.sections[si].items[ii] = {}; nd.sections[si].items[ii][fi] = el.value; });
   (nd.sections || []).forEach(function (s) { if (s.type === 'text' || s.type === 'summary') return; (s.items || []).forEach(function (item) { if (item.highlights && typeof item.highlights === 'string') item.highlights = item.highlights.split('\n').map(function (l) { return l.trim(); }).filter(Boolean); if (item.tags && typeof item.tags === 'string') item.tags = item.tags.split(/[,\n]+/).map(function (t) { return t.trim(); }).filter(Boolean); }); });
-  cvData = nd; saveCvData();
+  cvData = nd; if (!(opts && opts.skipSave)) saveCvData();
 }
+let liveSyncTimer = null;
+function liveSyncPreview() { if (liveSyncTimer) clearTimeout(liveSyncTimer); liveSyncTimer = setTimeout(function () { collectFormData({ skipSave: true }); renderCv(); syncResumeLayout(); const focused = document.activeElement; if (focused && focused.matches && focused.matches('input, textarea, select')) scrollPreviewToSection(focused); }, 50); }
+function scrollPreviewToSection(input) { if (!input || !input.closest) return; const section = input.closest('.editor-section'); if (!section) return; if (section.classList.contains('editor-section-prefs')) return; let el = null; const itemMatch = (input.name || '').match(/^item\.(\d+)\.(\d+)\./); if (itemMatch) { const items = document.querySelectorAll('.resume-pages .resume-section[data-section-index="' + itemMatch[1] + '"] [data-render-list] > *'); el = items[parseInt(itemMatch[2], 10)] || null; } else { const dataIdx = section.dataset.sectionIndex; if (dataIdx !== undefined) el = document.querySelector('.resume-pages .resume-section[data-section-index="' + dataIdx + '"]'); else { const h3 = section.querySelector('h3'); if (h3 && h3.textContent.trim() === '个人信息') el = document.querySelector('.resume-pages .resume-header'); } } if (!el) return; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.remove('preview-highlight'); void el.offsetWidth; el.classList.add('preview-highlight'); }
 
 function openEditor() { const ep = document.getElementById('editorPanel'), mb = document.getElementById('menuBtn'); if (!ep) return; ep.classList.add('is-open'); if (mb) mb.textContent = '×'; buildEditorForm(); updateStageSize(); }
 function closeEditor() { const ep = document.getElementById('editorPanel'), mb = document.getElementById('menuBtn'); if (!ep) return; ep.classList.remove('is-open'); if (mb) mb.textContent = '☰'; renderCv(); syncResumeLayout(); updateStageSize(); }
@@ -94,6 +97,11 @@ function bindEditorEvents() {
   document.getElementById('menuBtn') && document.getElementById('menuBtn').addEventListener('click', toggleEditor);
   document.getElementById('saveData') && document.getElementById('saveData').addEventListener('click', function () { collectFormData(); closeEditor(); });
   document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { const ep = document.getElementById('editorPanel'); if (ep && ep.classList.contains('is-open')) closeEditor(); } });
+  const editorPanelForSync = document.getElementById('editorPanel');
+  if (editorPanelForSync) {
+    editorPanelForSync.addEventListener('focusin', function (ev) { if (ev.target.matches && ev.target.matches('input, textarea, select')) scrollPreviewToSection(ev.target); });
+    editorPanelForSync.addEventListener('input', liveSyncPreview);
+  }
   document.addEventListener('click', function (ev) {
     const ab = ev.target.closest('[data-action]'); if (ab) { const a = ab.dataset.action; if (a === 'move-section-up' || a === 'move-section-down' || a === 'remove-section') { const i = parseInt(ab.dataset.index, 10); if (a === 'move-section-up') { moveSection(i, -1); return; } if (a === 'move-section-down') { moveSection(i, 1); return; } if (a === 'remove-section') { removeSection(i); return; } } else { const si = parseInt(ab.dataset.sectionIndex, 10), ii = parseInt(ab.dataset.itemIndex, 10); if (a === 'move-item-up') { moveItem(si, ii, -1); return; } if (a === 'move-item-down') { moveItem(si, ii, 1); return; } if (a === 'copy-item') { copyItem(si, ii); return; } } }
     const ab2 = ev.target.closest('[data-action]'); if (ab2) { const a2 = ab2.dataset.action; if (a2 === 'import-json') { document.getElementById('fileImportInput').click(); return; } if (a2 === 'import-md') { document.getElementById('fileImportInput').click(); return; } if (a2 === 'export-json') { collectFormData(); exportJson(); return; } if (a2 === 'export-md') { collectFormData(); exportMarkdown(); return; } if (a2 === 'print') { exportPdf(); return; } if (a2 === 'export-pdf-image') { collectFormData(); exportPdfImage(); return; } }
