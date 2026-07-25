@@ -56,9 +56,9 @@ function buildProfileFields(profile) {
   const av = profile && profile.avatar ? profile.avatar : '';
   const localAvatar = av ? av : loadAvatar(name);
   const hasLocalAvatar = !!loadAvatar(name);
-  const flds = [{ n: 'name', l: '姓名' }, { n: 'title', l: '岗位' }, { n: 'experience', l: '工作经验' }, { n: '所在地', l: '所在地' }, { n: 'gender', l: '性别' }, { n: 'age', l: '年龄' }, { n: 'phone', l: '电话' }, { n: 'email', l: '邮箱' }, { n: 'github', l: 'GitHub' }, { n: 'timeline', l: '顶部时间线', p: '留空则自动从经历中提取' }];
+  const flds = [{ n: 'name', l: '姓名' }, { n: 'title', l: '岗位' }, { n: 'experience', l: '工作经验' }, { n: '所在地', l: '所在地' }, { n: 'gender', l: '性别' }, { n: 'birthDate', l: '出生日期', t: 'date' }, { n: 'phone', l: '电话' }, { n: 'email', l: '邮箱' }, { n: 'github', l: 'GitHub' }, { n: 'timeline', l: '顶部时间线', p: '留空则自动从经历中提取' }];
   let hh = '<div class="editor-field editor-field-avatar"><label>头像</label><div class="avatar-upload"><div class="avatar-preview" id="avatarPreview" style="' + (localAvatar ? "background-image: url('" + esc(localAvatar) + "')" : '') + '"></div><div class="avatar-upload-inputs"><input type="file" id="avatarFileInput" accept="image/*">' + (hasLocalAvatar ? '<button type="button" class="editor-btn" id="clearAvatarBtn" style="font-size:12px;padding:4px 8px">清除头像</button>' : '') + '<input type="text" name="profile.avatar" value="' + esc(av) + '" placeholder="留空则使用浏览器本地头像"></div><p style="font-size:11px;color:var(--text-soft);margin:4px 0 0">选择图片后自动转为 base64 存入浏览器本地，导出 JSON/Markdown 时不含头像</p></div></div>';
-  hh += flds.map(function (f) { return '<div class="editor-field"><label>' + f.l + '</label><input type="text" name="profile.' + f.n + '" value="' + esc(profile && profile[f.n] ? profile[f.n] : '') + '"' + (f.p ? ' placeholder="' + f.p + '"' : '') + '></div>'; }).join('');
+  hh += flds.map(function (f) { return '<div class="editor-field"><label>' + f.l + '</label><input type="' + (f.t === 'date' ? 'date' : 'text') + '" name="profile.' + f.n + '" value="' + esc(profile && profile[f.n] ? profile[f.n] : '') + '"' + (f.p ? ' placeholder="' + f.p + '"' : '') + '></div>'; }).join('');
   return hh;
 }
 
@@ -74,8 +74,9 @@ function collectFormData() {
   cvData = nd; saveCvData();
 }
 
-function openEditor() { const ep = document.getElementById('editorPanel'), eo = document.getElementById('editorOverlay'); if (!ep || !eo) return; ep.hidden = false; eo.hidden = false; buildEditorForm(); }
-function closeEditor() { const ep = document.getElementById('editorPanel'), eo = document.getElementById('editorOverlay'); if (!ep || !eo) return; ep.hidden = true; eo.hidden = true; renderCv(); syncResumeLayout(); updateStageSize(); }
+function openEditor() { const ep = document.getElementById('editorPanel'), mb = document.getElementById('menuBtn'); if (!ep) return; ep.classList.add('is-open'); if (mb) mb.textContent = '×'; buildEditorForm(); updateStageSize(); }
+function closeEditor() { const ep = document.getElementById('editorPanel'), mb = document.getElementById('menuBtn'); if (!ep) return; ep.classList.remove('is-open'); if (mb) mb.textContent = '☰'; renderCv(); syncResumeLayout(); updateStageSize(); }
+function toggleEditor() { const ep = document.getElementById('editorPanel'); if (!ep) return; if (ep.classList.contains('is-open')) closeEditor(); else openEditor(); }
 function closeAllDropdowns() { document.querySelectorAll('.dropdown.open').forEach(function (d) { d.classList.remove('open'); }); const m = document.getElementById('addSectionMenu'); if (m) m.hidden = true; }
 
 function moveSection(idx, dir) { collectFormData(); const ni = idx + dir; if (ni < 0 || ni >= cvData.sections.length) return; const t = cvData.sections[idx]; cvData.sections[idx] = cvData.sections[ni]; cvData.sections[ni] = t; saveCvData(); buildEditorForm(); }
@@ -90,8 +91,9 @@ function getDefaultItem(type) { const cfg = SECTION_CONFIG[type]; return cfg && 
 
 function bindEditorEvents() {
   document.getElementById('closeEditor') && document.getElementById('closeEditor').addEventListener('click', closeEditor);
-  document.getElementById('editorOverlay') && document.getElementById('editorOverlay').addEventListener('click', closeEditor);
+  document.getElementById('menuBtn') && document.getElementById('menuBtn').addEventListener('click', toggleEditor);
   document.getElementById('saveData') && document.getElementById('saveData').addEventListener('click', function () { collectFormData(); closeEditor(); });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { const ep = document.getElementById('editorPanel'); if (ep && ep.classList.contains('is-open')) closeEditor(); } });
   document.addEventListener('click', function (ev) {
     const ab = ev.target.closest('[data-action]'); if (ab) { const a = ab.dataset.action; if (a === 'move-section-up' || a === 'move-section-down' || a === 'remove-section') { const i = parseInt(ab.dataset.index, 10); if (a === 'move-section-up') { moveSection(i, -1); return; } if (a === 'move-section-down') { moveSection(i, 1); return; } if (a === 'remove-section') { removeSection(i); return; } } else { const si = parseInt(ab.dataset.sectionIndex, 10), ii = parseInt(ab.dataset.itemIndex, 10); if (a === 'move-item-up') { moveItem(si, ii, -1); return; } if (a === 'move-item-down') { moveItem(si, ii, 1); return; } if (a === 'copy-item') { copyItem(si, ii); return; } } }
     const ab2 = ev.target.closest('[data-action]'); if (ab2) { const a2 = ab2.dataset.action; if (a2 === 'import-json') { document.getElementById('fileImportInput').click(); return; } if (a2 === 'import-md') { document.getElementById('fileImportInput').click(); return; } if (a2 === 'export-json') { collectFormData(); exportJson(); return; } if (a2 === 'export-md') { collectFormData(); exportMarkdown(); return; } if (a2 === 'print') { exportPdf(); return; } if (a2 === 'export-pdf-image') { collectFormData(); exportPdfImage(); return; } }

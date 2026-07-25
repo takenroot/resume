@@ -13,6 +13,7 @@
       您的浏览器未启用 JavaScript，简历内容仍可正常阅读，但缩放和编辑功能不可用。
     </div>
   </noscript>
+  <button type="button" class="menu-button" id="menuBtn" aria-label="打开编辑菜单" title="打开编辑菜单">☰</button>
   <div class="toast-container" id="toastContainer"></div>
   <div class="page-shell">
     <div class="resume-stage">
@@ -54,7 +55,6 @@
     <button type="button" class="tool-button" data-action="zoom-in" aria-label="放大简历">+</button>
     <button type="button" class="tool-button" data-action="zoom-out" aria-label="缩小简历">−</button>
     <button type="button" class="tool-button reset-button" data-action="reset" aria-label="重置简历缩放">100%</button>
-    <button type="button" class="tool-button edit-button" id="editBtn" data-action="edit" aria-label="编辑简历" title="编辑简历">✎</button>
   </aside>
 
   <input type="file" id="fileImportInput" accept=".json,.md,application/json" hidden>
@@ -90,7 +90,6 @@
       <button type="button" class="editor-btn primary" id="saveData">保存</button>
     </div>
   </div>
-  <div class="editor-overlay" id="editorOverlay" hidden></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.5.3/jspdf.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>

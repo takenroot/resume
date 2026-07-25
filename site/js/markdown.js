@@ -22,7 +22,7 @@ function parsePipeItems(ct, tp, hd, d) { const its = []; const lns = ct.split('\
 
 function buildMarkdown(d) {
   const lns = []; const p = d.profile || {};
-  lns.push('## 个人信息', ''); if (p.name) lns.push('- **姓名**：' + p.name); if (p.title) lns.push('- **岗位**：' + p.title); if (p.experience) lns.push('- **工作经验**：' + p.experience); if (p.所在地) lns.push('- **所在地**：' + p.所在地); if (p.gender || p.age) lns.push('- **基本信息**：' + (p.gender || '') + (p.gender && p.age ? ' / ' : '') + (p.age || '')); if (p.phone) lns.push('- **电话**：' + p.phone); if (p.email) lns.push('- **邮箱**：' + p.email); if (p.github) lns.push('- **GitHub**：' + p.github);
+  lns.push('## 个人信息', ''); if (p.name) lns.push('- **姓名**：' + p.name); if (p.title) lns.push('- **岗位**：' + p.title); if (p.experience) lns.push('- **工作经验**：' + p.experience); if (p.所在地) lns.push('- **所在地**：' + p.所在地); if (p.gender || p.birthDate) { const age = p.birthDate ? computeAge(p.birthDate) : ''; lns.push('- **基本信息**：' + (p.gender || '') + (p.gender && age ? ' / ' : '') + age); } if (p.phone) lns.push('- **电话**：' + p.phone); if (p.email) lns.push('- **邮箱**：' + p.email); if (p.github) lns.push('- **GitHub**：' + p.github);
   (d.sections || []).forEach(function (s) { const cfg = SECTION_CONFIG[s.type]; if (!cfg) return; lns.push('', '## ' + (s.title || cfg.label || ''), ''); if (cfg.mdPrefix) lns.push(cfg.mdPrefix); if (cfg.contentField) { lns.push(cfg.mdBlock(cfg.contentField === 'items' ? s.items : s.content)); } else { (s.items || []).forEach(function (i) { lns.push(cfg.mdItem(i)); lns.push('', '*   *   *', ''); }); } });
   return lns.join('\n');
 }
