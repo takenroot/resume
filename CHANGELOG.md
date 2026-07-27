@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 示例数据内嵌: `site/js/data.js` 顶部新增 `DEFAULT_DATA` 常量 (原 data.json 内容), `loadCvData` 在 localStorage 为空 + `fetch('./data.json')` 失败时, 改用 `DEFAULT_DATA` 作为示例 demo (不弹错). 这样 `file://` 协议直接打开也能看到示例简历, 不再受 CORS 阻挡. 用户自己的 data.json (HTTP 部署时) 仍走 fetch 优先.
 - 修复图片 PDF 导出 (多页简历): 旧 `captureSequential` 用递归实现, 每层递归重新声明 `const pdf = ... null`, 导致 idx>0 时 `pdf.addPage()` 在 null 上调用, 多页简历直接报错 `Cannot read properties of null (reading 'addPage')`. 改为 async/await 顺序执行, 单例 pdf 实例贯穿全流程, 修后多页简历可正常导出.
 - 项目经验条目新增 `难点` 字段 (与亮点完全一致机制: textarea 多行, 每行一条): 加在 highlights 之后, 渲染为独立的 `<ul>` bullet 列表 (有内容才渲染), Markdown 导出追加一段 `- ` 列表项. 让项目经历更真实不干巴 (开发者遇到的困难). 老条目自动兼容 (challenges 缺省视为空数组).
+- 亮点 + 难点列表加 subheading: 跟教育背景的"主修课程/校园经历"对齐, 都用 `.item-section` 容器 + `<h4 class="item-section-label">` 小标题 (灰小粗体) + `<ul class="item-section-list">` 项目符号. Markdown 导出用 `### 亮点` / `### 难点` 三级标题. 视觉上不再是同一组 bullet, 两个 list 各自带标头.
 
 ### Changed
 
