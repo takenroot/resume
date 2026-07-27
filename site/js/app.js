@@ -38,7 +38,7 @@ function exportPdfImage() {
 
   // 截图前强制重排：等一帧让浏览器绘制稳定状态
   requestAnimationFrame(function () {
-    captureSequential(pages, 0)
+    captureSequential(pages)
       .then(function (pdf) {
         const name = (cvData && cvData.profile && cvData.profile.name ? cvData.profile.name + '_' : '') + 'resume.pdf';
         pdf.save(name);
@@ -52,27 +52,18 @@ function exportPdfImage() {
   });
 }
 
-// 顺序截图：保证多页 PDF 的页序，避免 Promise.all 竞态导致乱序
-function captureSequential(pages, idx) {
-  return new Promise(function (resolve, reject) {
-    if (idx >= pages.length) return resolve(null);
-    const pdf = idx === 0 ? new (window.jspdf && window.jspdf.jsPDF || window.jsPDF)({ unit: 'mm', format: 'a4', orientation: 'portrait' }) : null;
-    html2canvas(pages[idx], { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' })
-      .then(function (canvas) {
-        const imgData = canvas.toDataURL('image/png');
-        const w = 210, h = 297; // A4 portrait mm
-        if (idx === 0) {
-          pdf.addImage(imgData, 'PNG', 0, 0, w, h);
-        } else {
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, 0, w, h);
-        }
-        captureSequential(pages, idx + 1)
-          .then(function () { resolve(pdf); })
-          .catch(reject);
-      })
-      .catch(reject);
-  });
+// 顺序截图：保证多页 PDF 的页序，避免 Promise.all 竞态导致乱序. async/await 顺序执行, 单例 pdf 实例贯穿全流程
+async function captureSequential(pages) {
+  const JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+  const pdf = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+  const w = 210, h = 297; // A4 portrait mm
+  for (let i = 0; i < pages.length; i++) {
+    const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
+    const imgData = canvas.toDataURL('image/png');
+    if (i > 0) pdf.addPage();
+    pdf.addImage(imgData, 'PNG', 0, 0, w, h);
+  }
+  return pdf;
 }
 function init() { loadPrefs(); applyPrefs(); const rd = document.getElementById('resumeDocument'); if (rd) { handleViewportChange(); window.addEventListener('resize', debounce(handleViewportChange, 100)); window.addEventListener('load', handleViewportChange); } const tb = document.querySelector('.floating-toolbar'); if (tb) updateScale(DEFAULT_SCALE); bindCopyActions(); bindToolbarActions(); bindEditorEvents(); if (new URLSearchParams(location.search).get('edit') === '1') openEditor(); }
 
