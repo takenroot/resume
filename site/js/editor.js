@@ -70,7 +70,7 @@ function collectFormData(opts) {
   ec.querySelectorAll('[name^="sectionSummary."]').forEach(function (el) { const i = parseInt(el.name.split('.')[1], 10); if (nd.sections[i]) nd.sections[i].items = el.value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean); });
   ec.querySelectorAll('[name^="sectionText."]').forEach(function (el) { const i = parseInt(el.name.split('.')[1], 10); if (nd.sections[i]) nd.sections[i].content = el.value; });
   ec.querySelectorAll('[name^="item."]').forEach(function (el) { const ps = el.name.split('.'), si = parseInt(ps[1], 10), ii = parseInt(ps[2], 10), fi = ps[3]; if (!nd.sections[si]) return; if (!nd.sections[si].items) nd.sections[si].items = []; if (!nd.sections[si].items[ii]) nd.sections[si].items[ii] = {}; nd.sections[si].items[ii][fi] = el.value; });
-  (nd.sections || []).forEach(function (s) { if (s.type === 'text' || s.type === 'summary') return; (s.items || []).forEach(function (item) { if (item.highlights && typeof item.highlights === 'string') item.highlights = item.highlights.split('\n').map(function (l) { return l.trim(); }).filter(Boolean); if (item.tags && typeof item.tags === 'string') item.tags = item.tags.split(/[,\n]+/).map(function (t) { return t.trim(); }).filter(Boolean); }); });
+  (nd.sections || []).forEach(function (s) { if (s.type === 'text' || s.type === 'summary') return; (s.items || []).forEach(function (item) { ['highlights', 'challenges', 'tags'].forEach(function (k) { if (item[k] && typeof item[k] === 'string') item[k] = arr(item[k]); }); }); });
   cvData = nd; if (!(opts && opts.skipSave)) saveCvData();
 }
 let liveSyncTimer = null;

@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 项目经验条目新增 `难点` 字段 (与亮点完全一致机制: textarea 多行, 每行一条): 加在 highlights 之后, 渲染为独立的 `<ul>` bullet 列表 (有内容才渲染), Markdown 导出追加一段 `- ` 列表项. 让项目经历更真实不干巴 (开发者遇到的困难). 老条目自动兼容 (challenges 缺省视为空数组).
 - 亮点 + 难点列表加 subheading: 跟教育背景的"主修课程/校园经历"对齐, 都用 `.item-section` 容器 + `<h4 class="item-section-label">` 小标题 (灰小粗体) + `<ul class="item-section-list">` 项目符号. Markdown 导出用 `### 亮点` / `### 难点` 三级标题. 视觉上不再是同一组 bullet, 两个 list 各自带标头.
 - 修复跨项目 JSON 导入崩溃: 旧 `normalizeSavedData` 只对 projects.tags 做数组化, 其他字段 (highlights / challenges) 如果来源 JSON 是字符串/object, 直接传到渲染层 `lis()` 的 `(arr || []).map` 报 `(arr || []).map is not a function`. 改为统一对所有 section 条目的 highlights / challenges / tags 走 `arr()` helper (utils.js, 已支持 string→array 拆分), undefined 跳过不创建空数组.
+- 修复 live sync 后渲染崩溃 (同上根因): `collectFormData` 把表单 textarea 的字符串值写回 `cvData.items[i].field` 时只 normalize 了 highlights+tags, 没管 challenges. 编辑后页面没更新是因为 renderCv 在 `lis()` 抛错中断. 改为统一对三个数组字段走 `arr()` helper. import 后做表单编辑, 数据形状现在始终是数组.
 
 ### Changed
 
