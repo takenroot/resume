@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 修复跨项目 JSON 导入崩溃: 旧 `normalizeSavedData` 只对 projects.tags 做数组化, 其他字段 (highlights / challenges) 如果来源 JSON 是字符串/object, 直接传到渲染层 `lis()` 的 `(arr || []).map` 报 `(arr || []).map is not a function`. 改为统一对所有 section 条目的 highlights / challenges / tags 走 `arr()` helper (utils.js, 已支持 string→array 拆分), undefined 跳过不创建空数组.
 - 修复 live sync 后渲染崩溃 (同上根因): `collectFormData` 把表单 textarea 的字符串值写回 `cvData.items[i].field` 时只 normalize 了 highlights+tags, 没管 challenges. 编辑后页面没更新是因为 renderCv 在 `lis()` 抛错中断. 改为统一对三个数组字段走 `arr()` helper. import 后做表单编辑, 数据形状现在始终是数组.
 - 顶部时间轴自动隐藏: 之前 `.timeline-strip` 始终在 DOM 里 (没内容时仍占 padding 留空条). 改为渲染后若 `profile.timeline` 为空 + 无任何教育/工作经历的 period 可抽, 自动 `display: none`. 用户填了自定义 timeline 文字 或 加了带 period 的经历, 才显示. 想完全关掉时间轴, 清空对应字段即可.
+- 顶部时间轴显式开关: 编辑器"页面设置"区加 checkbox "显示顶部时间轴" (默认勾选), 状态存到 `cvPrefs.timelineEnabled` (localStorage). 关闭后强制 `display: none`, 不受内容影响. 不依赖 auto-hide 边角条件, 关掉就是关掉. 与 auto-hide 配合: 关掉 → 全隐藏; 勾上 → 自动按内容判定.
 
 ### Changed
 

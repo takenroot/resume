@@ -871,6 +871,23 @@ html.js .resume-document[data-js-ready="false"] {
   transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
 }
 
+/* checkbox 风格 label: 行内展示, label 不块级独占一行 */
+.editor-field label.checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--text-main);
+  cursor: pointer;
+}
+.editor-field label.checkbox-label input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+  margin: 0;
+}
+
 .editor-field input:focus,
 .editor-field textarea:focus {
   outline: none;
