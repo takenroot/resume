@@ -17,14 +17,16 @@ function buildEditorSectionForm(sec, idx) {
   const cfg = SECTION_CONFIG[sec.type]; if (!cfg) return '';
   let hh = '<div class="editor-section editor-module" data-section-index="' + idx + '">';
   hh += '<div class="editor-module-header"><span class="module-type-label">' + (cfg.label || '') + '</span><div class="module-actions">';
+  hh += '<button type="button" class="module-action-btn collapse-btn" data-action="toggle-section-collapse" data-index="' + idx + '" title="折叠/展开"></button>';
   hh += '<button type="button" class="module-action-btn" data-action="move-section-up" data-index="' + idx + '" title="上移"' + (idx === 0 ? ' disabled' : '') + '>↑</button>';
   hh += '<button type="button" class="module-action-btn" data-action="move-section-down" data-index="' + idx + '" title="下移"' + (idx === (cvData.sections || []).length - 1 ? ' disabled' : '') + '>↓</button>';
   hh += '<button type="button" class="module-action-btn module-action-remove" data-action="remove-section" data-index="' + idx + '" title="删除模块">×</button>';
   hh += '</div></div>';
+  hh += '<div class="editor-module-body">';
   hh += '<div class="editor-field"><label>模块标题</label><input type="text" name="sectionTitle.' + idx + '" value="' + esc(sec.title || '') + '" placeholder="' + (cfg.label || '') + '"></div>';
   if (cfg.contentField && cfg.editorContent) { hh += cfg.editorContent(cfg.contentField === 'items' ? (sec.items || []) : (sec.content || '')).replace(/\{idx\}/g, idx); }
   else if (cfg.fields && cfg.fields.length > 0) { (sec.items || []).forEach(function (item, iIdx) { hh += buildItemCard(idx, iIdx, cfg.fields, item); }); hh += '<button type="button" class="editor-add-btn" data-add-item="' + idx + '">+ 添加条目</button>'; }
-  hh += '</div>';
+  hh += '</div></div>';
   return hh;
 }
 
@@ -103,6 +105,7 @@ function bindEditorEvents() {
     editorPanelForSync.addEventListener('input', liveSyncPreview);
   }
   document.addEventListener('click', function (ev) {
+    const cb = ev.target.closest('[data-action="toggle-section-collapse"]'); if (cb) { const i = parseInt(cb.dataset.index, 10); const sec = document.querySelector('.editor-section.editor-module[data-section-index="' + i + '"]'); if (sec) sec.classList.toggle('is-collapsed'); return; }
     const ab = ev.target.closest('[data-action]'); if (ab) { const a = ab.dataset.action; if (a === 'move-section-up' || a === 'move-section-down' || a === 'remove-section') { const i = parseInt(ab.dataset.index, 10); if (a === 'move-section-up') { moveSection(i, -1); return; } if (a === 'move-section-down') { moveSection(i, 1); return; } if (a === 'remove-section') { removeSection(i); return; } } else { const si = parseInt(ab.dataset.sectionIndex, 10), ii = parseInt(ab.dataset.itemIndex, 10); if (a === 'move-item-up') { moveItem(si, ii, -1); return; } if (a === 'move-item-down') { moveItem(si, ii, 1); return; } if (a === 'copy-item') { copyItem(si, ii); return; } } }
     const ab2 = ev.target.closest('[data-action]'); if (ab2) { const a2 = ab2.dataset.action; if (a2 === 'import-json') { document.getElementById('fileImportInput').click(); return; } if (a2 === 'import-md') { document.getElementById('fileImportInput').click(); return; } if (a2 === 'export-json') { collectFormData(); exportJson(); return; } if (a2 === 'export-md') { collectFormData(); exportMarkdown(); return; } if (a2 === 'print') { exportPdf(); return; } if (a2 === 'export-pdf-image') { collectFormData(); exportPdfImage(); return; } }
     const aib = ev.target.closest('[data-add-item]'); if (aib) { addItem(parseInt(aib.dataset.addItem, 10)); return; }

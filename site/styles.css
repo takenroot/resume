@@ -1193,6 +1193,20 @@ html.js .resume-document[data-js-ready="false"] {
   cursor: default;
 }
 
+/* 折叠/展开: 折叠后模块正文 display: none, 按钮里的 ▾ 旋转 90° 变成 ▸ */
+.module-action-btn.collapse-btn::after {
+  content: '▾';
+  font-size: 14px;
+  line-height: 1;
+  transition: transform 140ms ease;
+}
+.editor-section.editor-module.is-collapsed .module-action-btn.collapse-btn::after {
+  transform: rotate(-90deg);
+}
+.editor-section.editor-module.is-collapsed .editor-module-body {
+  display: none;
+}
+
 .module-action-remove:hover:not(:disabled) {
   background: rgba(220, 38, 38, 0.1);
   color: #dc2626;
