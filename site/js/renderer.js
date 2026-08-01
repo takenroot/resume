@@ -75,12 +75,16 @@ function renderCv() {
   (d.sections || []).forEach(function (sec, i) { const dom = createSectionDOM(i); const h2 = dom.querySelector('h2'); if (h2) h2.textContent = sec.title || (SECTION_CONFIG[sec.type] || {}).label || ''; rs.appendChild(dom); const le = dom.querySelector('[data-render-list]'); if (le) renderSectionContent(le, i); });
   const ts = document.querySelector('.timeline-strip');
   if (ts) {
+    let html;
     if (d.profile && d.profile.timeline) {
-      ts.textContent = d.profile.timeline;
+      html = d.profile.timeline;
+      ts.textContent = html;
       ts.classList.remove('auto');
     } else {
-      ts.innerHTML = autoTimeline();
+      html = autoTimeline();
+      ts.innerHTML = html;
       ts.classList.add('auto');
     }
+    ts.style.display = html ? '' : 'none';
   }
 }
