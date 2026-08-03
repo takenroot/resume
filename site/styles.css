@@ -891,22 +891,8 @@ html.js .resume-document[data-js-ready="false"] {
   margin: 0;
 }
 
-/* 求职状态 badge: 顶部小标签, 蓝色填充 */
-.profile-status {
-  display: inline-block;
-  padding: 1px 8px;
-  margin: 0 2px;
-  font-size: var(--fs-meta);
-  font-weight: 500;
-  color: var(--accent);
-  background: var(--accent-light);
-  border: 1px solid var(--accent-border);
-  border-radius: 10px;
-  vertical-align: middle;
-}
-.profile-status:empty {
-  display: none;
-}
+/* 求职状态 badge: 已废弃, 现用纯文字 (跟其他 identity-meta 项一致), 不需要特殊样式 */
+/* 删了原 .profile-status 和 .profile-status:empty 规则, 用户要求"直接上文字即可, 不要用样式" */
 
 .editor-field input:focus,
 .editor-field textarea:focus {
