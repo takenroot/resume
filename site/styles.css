@@ -860,7 +860,8 @@ html.js .resume-document[data-js-ready="false"] {
 }
 
 .editor-field input,
-.editor-field textarea {
+.editor-field textarea,
+.editor-field select {
   width: 100%;
   padding: 9px 12px;
   font-size: 14px;
@@ -888,6 +889,23 @@ html.js .resume-document[data-js-ready="false"] {
   width: auto;
   padding: 0;
   margin: 0;
+}
+
+/* 求职状态 badge: 顶部小标签, 蓝色填充 */
+.profile-status {
+  display: inline-block;
+  padding: 1px 8px;
+  margin: 0 2px;
+  font-size: var(--fs-meta);
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent-light);
+  border: 1px solid var(--accent-border);
+  border-radius: 10px;
+  vertical-align: middle;
+}
+.profile-status:empty {
+  display: none;
 }
 
 .editor-field input:focus,

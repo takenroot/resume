@@ -58,9 +58,18 @@ function buildProfileFields(profile) {
   const av = profile && profile.avatar ? profile.avatar : '';
   const localAvatar = av ? av : loadAvatar(name);
   const hasLocalAvatar = !!loadAvatar(name);
-  const flds = [{ n: 'name', l: '姓名' }, { n: 'title', l: '岗位' }, { n: 'experience', l: '工作经验' }, { n: '所在地', l: '所在地' }, { n: 'gender', l: '性别' }, { n: 'birthDate', l: '出生日期', t: 'date' }, { n: 'phone', l: '电话' }, { n: 'email', l: '邮箱' }, { n: 'github', l: 'GitHub' }, { n: 'timeline', l: '顶部时间线', p: '留空则自动从经历中提取' }];
+  const flds = [{ n: 'name', l: '姓名' }, { n: 'title', l: '岗位' }, { n: 'experience', l: '工作经验' }, { n: '求职状态', l: '求职状态', t: 'select', options: ['随时到岗', '在职-看机会', '在职-暂不考虑', '暂不找工作'] }, { n: '所在地', l: '所在地' }, { n: 'gender', l: '性别' }, { n: 'birthDate', l: '出生日期', t: 'date' }, { n: 'phone', l: '电话' }, { n: 'email', l: '邮箱' }, { n: 'github', l: 'GitHub' }, { n: 'timeline', l: '顶部时间线', p: '留空则自动从经历中提取' }];
   let hh = '<div class="editor-field editor-field-avatar"><label>头像</label><div class="avatar-upload"><div class="avatar-preview" id="avatarPreview" style="' + (localAvatar ? "background-image: url('" + esc(localAvatar) + "')" : '') + '"></div><div class="avatar-upload-inputs"><input type="file" id="avatarFileInput" accept="image/*">' + (hasLocalAvatar ? '<button type="button" class="editor-btn" id="clearAvatarBtn" style="font-size:12px;padding:4px 8px">清除头像</button>' : '') + '<input type="text" name="profile.avatar" value="' + esc(av) + '" placeholder="留空则使用浏览器本地头像"></div><p style="font-size:11px;color:var(--text-soft);margin:4px 0 0">选择图片后自动转为 base64 存入浏览器本地，导出 JSON/Markdown 时不含头像</p></div></div>';
-  hh += flds.map(function (f) { return '<div class="editor-field"><label>' + f.l + '</label><input type="' + (f.t === 'date' ? 'date' : 'text') + '" name="profile.' + f.n + '" value="' + esc(profile && profile[f.n] ? profile[f.n] : '') + '"' + (f.p ? ' placeholder="' + f.p + '"' : '') + '></div>'; }).join('');
+  hh += flds.map(function (f) {
+    let inputHtml;
+    if (f.t === 'select') {
+      const opts = (f.options || []).map(function (o) { return '<option value="' + esc(o) + '"' + ((profile && profile[f.n]) === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('');
+      inputHtml = '<select name="profile.' + f.n + '">' + opts + '</select>';
+    } else {
+      inputHtml = '<input type="' + (f.t === 'date' ? 'date' : 'text') + '" name="profile.' + f.n + '" value="' + esc(profile && profile[f.n] ? profile[f.n] : '') + '"' + (f.p ? ' placeholder="' + f.p + '"' : '') + '>';
+    }
+    return '<div class="editor-field"><label>' + f.l + '</label>' + inputHtml + '</div>';
+  }).join('');
   return hh;
 }
 

@@ -53,13 +53,8 @@ function renderCv() {
   document.querySelectorAll('[data-render]').forEach(function (el) {
     if (el.classList.contains('timeline-strip')) return;
     const key = el.dataset.render, ps = key.split('.');
-    let v;
-    if (key === 'profile.age' && d.profile && d.profile.birthDate) {
-      v = computeAge(d.profile.birthDate);
-    } else {
-      v = d[ps[0]];
-      for (let i = 1; v != null && i < ps.length; i++) v = v[ps[i]];
-    }
+    let v = d[ps[0]];
+    for (let i = 1; v != null && i < ps.length; i++) v = v[ps[i]];
     if (el.tagName === 'A') { if (v) el.href = (v.startsWith('http') ? '' : 'https://') + v; }
     else if (el.tagName === 'BUTTON') { if (v) el.dataset.copy = v; }
     else if (el.classList.contains('resume-avatar')) {

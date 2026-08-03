@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 编辑器模块加折叠按钮: 每个 section 头部多一个 ▾ 按钮 (在 ↑↓× 前面), 点击切换 `.is-collapsed` class. 折叠后 `.editor-module-body { display: none }`, 整个模块正文 (标题输入框 + 条目) 收起, 只剩模块名 + 折叠按钮 + 排序/删除按钮, 操作多个模块之间位置时清爽. chevron 旋转 -90° 视觉上从 ▾ 变 ▸. 不持久化 (关掉编辑器再开会重置, 但这是局部 UI 状态, 不影响简历数据).
 - 项目经历渲染补上 period 显示: 之前 experience 和 education 都有 `<span class="item-time">` 显示日期, projects 漏了 (只显示名字 + tags + summary + 亮点/难点). 加 span 后项目日期也右对齐显示.
 - `.item-time` 加 `white-space: nowrap` + `flex-shrink: 0`: 日期字符串 (含中文) 在窄容器里会从中间断开 (如 `2025年12月-2026年6\n月`), 因为没强制不换行. 加 nowrap 后日期完整在一行; flex-shrink:0 保证 flex 不压缩日期. 项目 tags 多 (内层 div 宽) 时仍完整显示.
+- 个人信息加 `求职状态` 字段 (select, 选项: 随时到岗 / 在职-看机会 / 在职-暂不考虑 / 暂不找工作): 编辑器字段加在 经验 和 所在地 之间, 简历顶部 badge 样式 (蓝填充 + 边框 + 圆角). 空值时 `:empty` 选择器自动隐藏 badge. 个人信息同时删除 `年龄` 字段 (renderer.js 移除 profile.age 特殊处理 computeAge, index.html 移除 / age 那段 span).
 
 ### Changed
 

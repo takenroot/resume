@@ -5,7 +5,7 @@ const STORAGE_KEY = 'cv_data', AVATAR_PREFIX = '__cv_avatar_';
 const DEFAULT_DATA = {
   profile: {
     name: '张三', title: '全栈开发工程师', phone: '138-0000-0000', email: 'example@qq.com',
-    '所在地': '北京市', experience: '5年', gender: '男', birthDate: '1998-01-15', avatar: '', github: 'https://github.com/example'
+    '所在地': '北京市', experience: '5年', '求职状态': '', gender: '男', birthDate: '1998-01-15', avatar: '', github: 'https://github.com/example'
   },
   sections: [
     { type: 'education', title: '教育背景', items: [{ school: '某大学', degree: '本科', major: '计算机科学与技术', period: '2015.09 - 2019.06' }] },
