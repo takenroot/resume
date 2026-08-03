@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 顶部时间轴显式开关: 编辑器"页面设置"区加 checkbox "显示顶部时间轴" (默认勾选), 状态存到 `cvPrefs.timelineEnabled` (localStorage). 关闭后强制 `display: none`, 不受内容影响. 不依赖 auto-hide 边角条件, 关掉就是关掉. 与 auto-hide 配合: 关掉 → 全隐藏; 勾上 → 自动按内容判定.
 - 编辑器模块加折叠按钮: 每个 section 头部多一个 ▾ 按钮 (在 ↑↓× 前面), 点击切换 `.is-collapsed` class. 折叠后 `.editor-module-body { display: none }`, 整个模块正文 (标题输入框 + 条目) 收起, 只剩模块名 + 折叠按钮 + 排序/删除按钮, 操作多个模块之间位置时清爽. chevron 旋转 -90° 视觉上从 ▾ 变 ▸. 不持久化 (关掉编辑器再开会重置, 但这是局部 UI 状态, 不影响简历数据).
 - 项目经历渲染补上 period 显示: 之前 experience 和 education 都有 `<span class="item-time">` 显示日期, projects 漏了 (只显示名字 + tags + summary + 亮点/难点). 加 span 后项目日期也右对齐显示.
+- `.item-time` 加 `white-space: nowrap` + `flex-shrink: 0`: 日期字符串 (含中文) 在窄容器里会从中间断开 (如 `2025年12月-2026年6\n月`), 因为没强制不换行. 加 nowrap 后日期完整在一行; flex-shrink:0 保证 flex 不压缩日期. 项目 tags 多 (内层 div 宽) 时仍完整显示.
 
 ### Changed
 

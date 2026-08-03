@@ -427,6 +427,8 @@ html.js .resume-document[data-js-ready="false"] {
 .item-time {
   font-size: var(--fs-meta);
   color: var(--text-soft);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .item-head .item-subtitle:not(.tag-list) {
