@@ -894,6 +894,26 @@ html.js .resume-document[data-js-ready="false"] {
 /* 求职状态 badge: 已废弃, 现用纯文字 (跟其他 identity-meta 项一致), 不需要特殊样式 */
 /* 删了原 .profile-status 和 .profile-status:empty 规则, 用户要求"直接上文字即可, 不要用样式" */
 
+/* 头部姓名下方横条 (title/experience/所在地) 的 | 分隔符.
+   用 .hdr-item 包每个字段, ::before 注入 |. 字段值为空时加 .is-empty,
+   CSS 用 :has() 检测相邻空字段, 自动隐藏对应的 |, 不会留下孤立的 "|" */
+.hdr-item + .hdr-item::before {
+  content: " | ";
+  color: var(--text-soft);
+  margin: 0 4px;
+}
+.hdr-item:has(> .is-empty) {
+  display: none;
+}
+/* 隐藏前面那个空字段的 | (前一个字段空时, 它后面的 | 也要藏) */
+.hdr-item:has(+ .hdr-item:has(> .is-empty))::before {
+  display: none;
+}
+/* 隐藏后面那个空字段前面的 | */
+.hdr-item:has(> .is-empty) + .hdr-item::before {
+  display: none;
+}
+
 .editor-field input:focus,
 .editor-field textarea:focus {
   outline: none;

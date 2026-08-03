@@ -62,7 +62,7 @@ function renderCv() {
       if (!url && d.profile && d.profile.name) { const local = loadAvatar(d.profile.name); if (local) url = local; }
       if (url) el.style.setProperty('--avatar-image', "url('" + url + "')");
     }
-    else { if (v && !(el.children.length > 0 && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) el.textContent = v; }
+    else { if (v && !(el.children.length > 0 && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) { el.textContent = v; el.classList.remove('is-empty'); } else if (!v) { el.classList.add('is-empty'); } }
   });
   if (d.profile && d.profile.title) document.title = d.profile.name + ' - ' + d.profile.title;
   const rs = document.getElementById('resumeSource'); if (!rs) return;
