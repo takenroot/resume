@@ -48,6 +48,19 @@ function autoTimeline() {
   return segs.join('<span class="tl-arrow"> → </span>');
 }
 
+function renderHeaderRow(p) {
+  const row = document.getElementById('headerRow'); if (!row) return;
+  // 非空字段按顺序排列: 岗位 / 经验 / 所在地, 最后一个非空字段后面不追加 " | "
+  const fields = ['title', 'experience', '所在地'];
+  const nonEmpty = fields.filter(function (k) { return p[k] && String(p[k]).trim(); });
+  row.replaceChildren();
+  nonEmpty.forEach(function (k, i) {
+    const span = document.createElement('span'); span.className = 'hdr-item'; span.textContent = p[k];
+    row.appendChild(span);
+    if (i < nonEmpty.length - 1) row.appendChild(document.createTextNode(' | '));
+  });
+}
+
 function renderCv() {
   if (!cvData) return; const d = cvData;
   document.querySelectorAll('[data-render]').forEach(function (el) {
@@ -64,6 +77,7 @@ function renderCv() {
     }
     else { if (v && !(el.children.length > 0 && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) { el.textContent = v; el.classList.remove('is-empty'); } else if (!v) { el.classList.add('is-empty'); } }
   });
+  renderHeaderRow(d.profile || {});
   if (d.profile && d.profile.title) document.title = d.profile.name + ' - ' + d.profile.title;
   const rs = document.getElementById('resumeSource'); if (!rs) return;
   const hd = rs.querySelector('.resume-header'); rs.replaceChildren(); if (hd) rs.appendChild(hd);

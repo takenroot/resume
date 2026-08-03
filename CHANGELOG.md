@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.item-time` 加 `white-space: nowrap` + `flex-shrink: 0`: 日期字符串 (含中文) 在窄容器里会从中间断开 (如 `2025年12月-2026年6\n月`), 因为没强制不换行. 加 nowrap 后日期完整在一行; flex-shrink:0 保证 flex 不压缩日期. 项目 tags 多 (内层 div 宽) 时仍完整显示.
 - 个人信息加 `求职状态` 字段 (select, 选项: 随时到岗 / 在职-看机会 / 在职-暂不考虑 / 暂不找工作): 编辑器字段加在 经验 和 所在地 之间, 简历顶部 badge 样式 (蓝填充 + 边框 + 圆角). 空值时 `:empty` 选择器自动隐藏 badge. 个人信息同时删除 `年龄` 字段 (renderer.js 移除 profile.age 特殊处理 computeAge, index.html 移除 / age 那段 span).
 - `求职状态` 重排到 identity-meta (替换原来的性别显示位): 用公文包 SVG icon (24×24, fill=currentColor) + 纯文字, 无 badge 样式 (按用户要求"直接上文字即可, 不要用样式"). 头部姓名下方一横条 title/experience/所在地 之间用 ` | ` 字面分隔. 删了 .profile-status / .profile-status:empty CSS 规则. 性别 (profile.gender) 不再渲染 (data 字段保留在 form, 不强制删).
-- 头部姓名下方"如果不填就不显示 |" 的规则: 之前用字面 " | " 隔, 字段为空时周围的 | 还在 (例: "全栈开发工程师 |  | 内蒙古巴彦淖尔"). 改为 .hdr-item 包每个字段, ::before 注入 |. renderer.js 在 v 为空时给字段 span 加 .is-empty class (placeholder 文字保留, 仅作 hint, 不显示). CSS 用 :has() 检测相邻空字段, 自动隐藏对应 ::before, 不会留孤立 |.
+- 头部姓名下方"如果不填就不显示 |" 的规则: 之前用字面 " | " 隔, 字段为空时周围的 | 还在 (例: "全栈开发工程师 |  | 内蒙古巴彦淖尔"). 改为 renderer.js 里 `renderHeaderRow()` 动态构建这条横条: 遍历 `[title, experience, 所在地]` 三个字段, 过滤出非空项, 只在非空项之间插 " | " (最后一个非空项后面不插). 旧 CSS ::before + :has() 方案已撤掉, 逻辑收敛在一处更直观. index.html 那三个 .hdr-item wrapper 合并成单个 `<span class="header-row" id="headerRow"></span>`.
 
 ### Changed
 
