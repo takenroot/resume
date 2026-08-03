@@ -75,10 +75,25 @@ function buildProfileFields(profile) {
 
 function collectFormData(opts) {
   const ec = document.getElementById('editorContent'); if (!ec) return;
-  const nd = { profile: Object.assign({}, cvData.profile || {}), sections: cvData.sections ? cvData.sections.map(function (s) { return Object.assign({}, s); }) : [] };
+  const nd = { profile: Object.assign({}, cvData.profile || {}), sections: cvData.sections ? cvData.sections.map(function (s) {
+    // ponytail: Object.assign 是浅拷, sections[i].items 仍指向原数组. 若两份 sections 共用
+    // 同一个 items 引用 (历史数据/外部导入异常), push 会越界加到所有共用方. 用 slice 拆掉
+    // 数组级引用即可, 内部对象仍共享 — collectFormData 只在已有 item 上写字段, 不替换对象本身.
+    const copy = Object.assign({}, s);
+    if (Array.isArray(s.items)) copy.items = s.items.slice();
+    return copy;
+  }) : [] };
   ec.querySelectorAll('[name^="profile."]').forEach(function (el) { nd.profile[el.name.split('.')[1]] = el.value; });
   ec.querySelectorAll('[name^="sectionTitle."]').forEach(function (el) { const i = parseInt(el.name.split('.')[1], 10); if (nd.sections[i]) nd.sections[i].title = el.value; });
-  ec.querySelectorAll('[name^="sectionSummary."]').forEach(function (el) { const i = parseInt(el.name.split('.')[1], 10); if (nd.sections[i]) nd.sections[i].items = el.value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean); });
+  ec.querySelectorAll('[name^="sectionSummary."]').forEach(function (el) { const i = parseInt(el.name.split('.')[1], 10); if (nd.sections[i]) {
+    // ponytail: 默认占位 items: [""], 空 textarea 经过 filter(Boolean) 会变成 [], 让新建的空
+    // summary 模块在首次 collectFormData 后被预览当成空模块隐藏掉. 若原 items 是 [""] 占位且
+    // 用户没输入, 保留原 items; 否则按行切.
+    const orig = cvData.sections[i] && cvData.sections[i].items;
+    const isPlaceholder = orig && orig.length === 1 && orig[0] === '';
+    if (el.value === '' && isPlaceholder) { /* keep nd.sections[i].items as-is (shallow copy of [""]) */ }
+    else nd.sections[i].items = el.value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+  } });
   ec.querySelectorAll('[name^="sectionText."]').forEach(function (el) { const i = parseInt(el.name.split('.')[1], 10); if (nd.sections[i]) nd.sections[i].content = el.value; });
   ec.querySelectorAll('[name^="item."]').forEach(function (el) { const ps = el.name.split('.'), si = parseInt(ps[1], 10), ii = parseInt(ps[2], 10), fi = ps[3]; if (!nd.sections[si]) return; if (!nd.sections[si].items) nd.sections[si].items = []; if (!nd.sections[si].items[ii]) nd.sections[si].items[ii] = {}; nd.sections[si].items[ii][fi] = el.value; });
   (nd.sections || []).forEach(function (s) { if (s.type === 'text' || s.type === 'summary') return; (s.items || []).forEach(function (item) { ['highlights', 'challenges', 'tags'].forEach(function (k) { if (item[k] && typeof item[k] === 'string') item[k] = arr(item[k]); }); }); });

@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 个人信息加 `求职状态` 字段 (select, 选项: 随时到岗 / 在职-看机会 / 在职-暂不考虑 / 暂不找工作): 编辑器字段加在 经验 和 所在地 之间, 简历顶部 badge 样式 (蓝填充 + 边框 + 圆角). 空值时 `:empty` 选择器自动隐藏 badge. 个人信息同时删除 `年龄` 字段 (renderer.js 移除 profile.age 特殊处理 computeAge, index.html 移除 / age 那段 span).
 - `求职状态` 重排到 identity-meta (替换原来的性别显示位): 用公文包 SVG icon (24×24, fill=currentColor) + 纯文字, 无 badge 样式 (按用户要求"直接上文字即可, 不要用样式"). 头部姓名下方一横条 title/experience/所在地 之间用 ` | ` 字面分隔. 删了 .profile-status / .profile-status:empty CSS 规则. 性别 (profile.gender) 不再渲染 (data 字段保留在 form, 不强制删).
 - 头部姓名下方"如果不填就不显示 |" 的规则: 之前用字面 " | " 隔, 字段为空时周围的 | 还在 (例: "全栈开发工程师 |  | 内蒙古巴彦淖尔"). 改为 renderer.js 里 `renderHeaderRow()` 动态构建这条横条: 遍历 `[title, experience, 所在地]` 三个字段, 过滤出非空项, 只在非空项之间插 " | " (最后一个非空项后面不插). 旧 CSS ::before + :has() 方案已撤掉, 逻辑收敛在一处更直观. index.html 那三个 .hdr-item wrapper 合并成单个 `<span class="header-row" id="headerRow"></span>`.
+- 修复 collectFormData 浅拷贝引发的跨模块越界: 旧 `cvData.sections.map(s => Object.assign({}, s))` 只复制外层对象, `s.items` 沿用同一引用. 若两份 sections 共享同一个 items 数组 (历史数据/异常导入), 在一段上 push 会让所有共用方一起涨, 表现为"加一条其他模块也加一条". 改为对 `s.items` 显式 `slice()` 拆掉数组级引用. 内部对象仍共享 (collectFormData 不替换 item 对象本身, 只在已有 item 上写字段或 push/splice), 性能比深拷贝好.
+- 修复 summary 模块占位项首次 collectFormData 后被清空: 旧 `sectionSummary` handler 对空 textarea 走 `filter(Boolean)`, 把默认占位 `[""]` 变成 `[]`, 让新建的空 summary 模块在预览里直接消失 (`renderContent` 见 items.length===0 就 return). 改为占位且未输入时保留 `[""]`.
 
 ### Changed
 
