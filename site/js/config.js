@@ -2,12 +2,17 @@
    CV 简历网页 — 模块配置表
    新增类型只需在 SECTION_CONFIG 加一项
    =========================================================== */
+// ponytail: 抽出 experience 共享字段/渲染器/默认项, 让 experience 和 experience_other 都展它, 只换 label.
+// 同字段同渲染逻辑, 单一数据源, 之后想加更多 alias (如 '其它教育') 加一行就行.
+// 注意 defaultItem 引用是共享的 — getDefaultItem 走 JSON.parse(JSON.stringify(...)) 深拷, 每次调用都拿到新对象, 不会污染源.
+const _EXP_SHARED = { fields: [{ n: 'company', l: '公司' }, { n: 'position', l: '职位' }, { n: 'period', l: '时间' }, { n: 'summary', l: '工作描述', t: 'textarea' }, { n: 'highlights', l: '亮点 (每行一条)', t: 'textarea', a: true }],
+  renderItem: function (i) { const a = cE('article', 'timeline-item'); a.innerHTML = '<div class="item-head"><div><h3>' + esc(i.company) + ' · ' + esc(i.position) + '</h3></div><span class="item-time">' + esc(i.period) + '</span></div>' + (i.summary ? '<p class="summary">' + esc(i.summary) + '</p>' : '') + '<ul>' + lis(i.highlights) + '</ul>'; return a; },
+  mdItem: function (i) { return '**' + (i.period || '') + '** | ' + (i.company || '') + ' | ' + (i.position || '') + '\n\n' + (i.summary || '') + '\n' + mli(i.highlights); },
+  defaultItem: { company: '', position: '', period: '', summary: '', highlights: [] }
+};
 const SECTION_CONFIG = {
-  experience: { label: '工作经历', fields: [{ n: 'company', l: '公司' }, { n: 'position', l: '职位' }, { n: 'period', l: '时间' }, { n: 'summary', l: '工作描述', t: 'textarea' }, { n: 'highlights', l: '亮点 (每行一条)', t: 'textarea', a: true }],
-    renderItem: function (i) { const a = cE('article', 'timeline-item'); a.innerHTML = '<div class="item-head"><div><h3>' + esc(i.company) + ' · ' + esc(i.position) + '</h3></div><span class="item-time">' + esc(i.period) + '</span></div>' + (i.summary ? '<p class="summary">' + esc(i.summary) + '</p>' : '') + '<ul>' + lis(i.highlights) + '</ul>'; return a; },
-    mdItem: function (i) { return '**' + (i.period || '') + '** | ' + (i.company || '') + ' | ' + (i.position || '') + '\n\n' + (i.summary || '') + '\n' + mli(i.highlights); },
-    defaultItem: { company: '', position: '', period: '', summary: '', highlights: [] }
-  },
+  experience: { label: '工作经历', ..._EXP_SHARED },
+  experience_other: { label: '其它经历', ..._EXP_SHARED },
   education: { label: '教育背景', fields: [{ n: 'school', l: '学校' }, { n: 'major', l: '专业' }, { n: 'degree', l: '学历' }, { n: 'period', l: '时间' }, { n: 'courses', l: '主修课程' }, { n: 'campus', l: '校园经历 (每行一条)', t: 'textarea' }],
     renderItem: function (i) { const a = cE('article', 'timeline-item'); let html = '<div class="item-head"><div><h3>' + esc(i.school) + (i.major ? ' · ' + esc(i.major) : '') + (i.degree ? ' · ' + esc(i.degree) : '') + '</h3></div><span class="item-time">' + esc(i.period) + '</span></div>'; if (i.courses) html += '<div class="item-section"><h4 class="item-section-label">主修课程</h4><p class="item-section-content">' + esc(i.courses) + '</p></div>'; if (i.campus) { const lines = (i.campus || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean); if (lines.length > 0) html += '<div class="item-section"><h4 class="item-section-label">校园经历</h4><ul class="item-section-list">' + lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></div>'; } a.innerHTML = html; return a; },
     mdItem: function (i) { let md = '**' + (i.period || '') + '** | ' + (i.school || '') + (i.major ? ' | ' + i.major : '') + (i.degree ? ' | ' + i.degree : ''); if (i.courses) md += '\n\n### 主修课程\n' + i.courses; if (i.campus) { const lines = (i.campus || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean); if (lines.length > 0) md += '\n\n### 校园经历\n' + lines.map(function (l) { return '- ' + l; }).join('\n'); } return md; },

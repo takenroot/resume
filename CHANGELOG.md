@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 头部姓名下方"如果不填就不显示 |" 的规则: 之前用字面 " | " 隔, 字段为空时周围的 | 还在 (例: "全栈开发工程师 |  | 内蒙古巴彦淖尔"). 改为 renderer.js 里 `renderHeaderRow()` 动态构建这条横条: 遍历 `[title, experience, 所在地]` 三个字段, 过滤出非空项, 只在非空项之间插 " | " (最后一个非空项后面不插). 旧 CSS ::before + :has() 方案已撤掉, 逻辑收敛在一处更直观. index.html 那三个 .hdr-item wrapper 合并成单个 `<span class="header-row" id="headerRow"></span>`.
 - 修复 collectFormData 浅拷贝引发的跨模块越界: 旧 `cvData.sections.map(s => Object.assign({}, s))` 只复制外层对象, `s.items` 沿用同一引用. 若两份 sections 共享同一个 items 数组 (历史数据/异常导入), 在一段上 push 会让所有共用方一起涨, 表现为"加一条其他模块也加一条". 改为对 `s.items` 显式 `slice()` 拆掉数组级引用. 内部对象仍共享 (collectFormData 不替换 item 对象本身, 只在已有 item 上写字段或 push/splice), 性能比深拷贝好.
 - 修复 summary 模块占位项首次 collectFormData 后被清空: 旧 `sectionSummary` handler 对空 textarea 走 `filter(Boolean)`, 把默认占位 `[""]` 变成 `[]`, 让新建的空 summary 模块在预览里直接消失 (`renderContent` 见 items.length===0 就 return). 改为占位且未输入时保留 `[""]`.
+- 新增模块类型 `其它经历` (SECTION_CONFIG.experience_other): 与 `工作经历` (experience) 共享同一份 fields / renderItem / mdItem / defaultItem, 只换 label. 把经验模块的共享配置抽到顶层 const `_EXP_SHARED`, 两个 SECTION_CONFIG 条目用 `..._EXP_SHARED` 展开, 单一数据源 — 之后再加 alias (如 '其它教育') 加一行就行. 不会进入顶部时间轴 (getTimelineLabel 只硬编码 'education' / 'experience'), 也不会污染源 defaultItem (`getDefaultItem` 走 JSON 深拷). 添加模块下拉自动出现.
 
 ### Changed
 
