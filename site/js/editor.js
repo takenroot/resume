@@ -16,7 +16,9 @@ function buildEditorForm() {
 function buildEditorSectionForm(sec, idx) {
   const cfg = SECTION_CONFIG[sec.type]; if (!cfg) return '';
   let hh = '<div class="editor-section editor-module" data-section-index="' + idx + '">';
-  hh += '<div class="editor-module-header"><span class="module-type-label">' + (cfg.label || '') + '</span><div class="module-actions">';
+  // ponytail: headerLabel 跟用户改的 title 保持一致. 用户没改过 sec.title 时回退到 type 默认 label,
+  // 改过就用用户改的 (他们会自定义模块名, 静态 type 标签会跟输入框矛盾造成 "标题写错" 错觉).
+  hh += '<div class="editor-module-header"><span class="module-type-label">' + esc(sec.title || cfg.label || '') + '</span><div class="module-actions">';
   hh += '<button type="button" class="module-action-btn collapse-btn" data-action="toggle-section-collapse" data-index="' + idx + '" title="折叠/展开"></button>';
   hh += '<button type="button" class="module-action-btn" data-action="move-section-up" data-index="' + idx + '" title="上移"' + (idx === 0 ? ' disabled' : '') + '>↑</button>';
   hh += '<button type="button" class="module-action-btn" data-action="move-section-down" data-index="' + idx + '" title="下移"' + (idx === (cvData.sections || []).length - 1 ? ' disabled' : '') + '>↓</button>';
@@ -100,11 +102,26 @@ function collectFormData(opts) {
   cvData = nd; if (!(opts && opts.skipSave)) saveCvData();
 }
 let liveSyncTimer = null;
-function liveSyncPreview() { if (liveSyncTimer) clearTimeout(liveSyncTimer); liveSyncTimer = setTimeout(function () { collectFormData({ skipSave: true }); renderCv(); syncResumeLayout(); const focused = document.activeElement; if (focused && focused.matches && focused.matches('input, textarea, select')) scrollPreviewToSection(focused); }, 50); }
+function liveSyncPreview() {
+  if (liveSyncTimer) clearTimeout(liveSyncTimer);
+  liveSyncTimer = setTimeout(function () {
+    collectFormData({ skipSave: true });
+    // ponytail: 同步更新编辑器里 module-type-label — 用户改了 sec.title 后 headerLabel 跟着变,
+    // 避免视觉上 "label 跟 title 输入框内容不一致". 只改文字, 不重建 DOM, 保留 input focus.
+    (cvData.sections || []).forEach(function (s, i) {
+      const mod = document.querySelector('.editor-section.editor-module[data-section-index="' + i + '"]');
+      if (mod) { const lb = mod.querySelector('.module-type-label'); if (lb) lb.textContent = s.title || (SECTION_CONFIG[s.type] || {}).label || ''; }
+    });
+    renderCv();
+    syncResumeLayout();
+    const focused = document.activeElement;
+    if (focused && focused.matches && focused.matches('input, textarea, select')) scrollPreviewToSection(focused);
+  }, 50);
+}
 function scrollPreviewToSection(input) { if (!input || !input.closest) return; const section = input.closest('.editor-section'); if (!section) return; if (section.classList.contains('editor-section-prefs')) return; let el = null; const itemMatch = (input.name || '').match(/^item\.(\d+)\.(\d+)\./); if (itemMatch) { const items = document.querySelectorAll('.resume-pages .resume-section[data-section-index="' + itemMatch[1] + '"] [data-render-list] > *'); el = items[parseInt(itemMatch[2], 10)] || null; } else { const dataIdx = section.dataset.sectionIndex; if (dataIdx !== undefined) el = document.querySelector('.resume-pages .resume-section[data-section-index="' + dataIdx + '"]'); else { const h3 = section.querySelector('h3'); if (h3 && h3.textContent.trim() === '个人信息') el = document.querySelector('.resume-pages .resume-header'); } } if (!el) return; el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.classList.remove('preview-highlight'); void el.offsetWidth; el.classList.add('preview-highlight'); }
 
-function openEditor() { const ep = document.getElementById('editorPanel'), mb = document.getElementById('menuBtn'); if (!ep) return; ep.classList.add('is-open'); if (mb) mb.textContent = '×'; buildEditorForm(); updateStageSize(); }
-function closeEditor() { const ep = document.getElementById('editorPanel'), mb = document.getElementById('menuBtn'); if (!ep) return; ep.classList.remove('is-open'); if (mb) mb.textContent = '☰'; renderCv(); syncResumeLayout(); updateStageSize(); }
+function openEditor() { const ep = document.getElementById('editorPanel'), mb = document.getElementById('menuBtn'); if (!ep) return; ep.hidden = false; ep.classList.add('is-open'); if (mb) mb.textContent = '×'; buildEditorForm(); updateStageSize(); }
+function closeEditor() { const ep = document.getElementById('editorPanel'), mb = document.getElementById('menuBtn'); if (!ep) return; ep.classList.remove('is-open'); ep.hidden = true; if (mb) mb.textContent = '☰'; renderCv(); syncResumeLayout(); updateStageSize(); }
 function toggleEditor() { const ep = document.getElementById('editorPanel'); if (!ep) return; if (ep.classList.contains('is-open')) closeEditor(); else openEditor(); }
 function closeAllDropdowns() { document.querySelectorAll('.dropdown.open').forEach(function (d) { d.classList.remove('open'); }); const m = document.getElementById('addSectionMenu'); if (m) m.hidden = true; }
 

@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 复制 [cv-autofill/docs/CV_SCHEMA_FEEDBACK.md](docs/CV_SCHEMA_FEEDBACK.md) 到本项目 docs, 配套新增 [docs/SCHEMA_NAMING.md](docs/SCHEMA_NAMING.md) 字段命名对照表: 列出 CV 项目每个字段在 Boss/猎聘/智联三平台的对应输入框名 + 字段缺口清单 + 自动填充映射建议. 给 cv-autofill 引擎做字段映射时直接查这表, 不用反推 CV schema.
 - 修复导入 JSON 后姓名/个人信息不更新: 旧 `importData` 调 `renderCv()` 但没清空旧 DOM 的 textContent, 而 renderCv 的 data-render 分支在 `v` 为空且元素已有 children 时只 add `is-empty` 类不清 textContent, 残留上次的值. 改为导入前显式清空所有 data-render 元素的 textContent + 整块 replaceChildren resumeSource + 清空 headerRow. 普通的 live-sync 走输入框赋值不受影响. Playwright 验证: 旧"张三" → 新"测试用户甲" / "另一用户乙", sections 数量跟着 JSON 走 (2 → 0), 残留清干净.
 - 删除项目 `challenges` (难点) 字段: 用户确认用不上, 编辑器不放该输入框, 渲染和 Markdown 导出也不再生成对应 block, 老数据迁移时 (normalizeSavedData + collectFormData) 主动 delete challenges. Playwright 验证: 导入含 `challenges: ""` 的 JSON 后 localStorage 里再无该字段.
+- 修复编辑器模块标签 (module-type-label) 跟用户改的标题 (sectionTitle 输入框) 视觉错位: 旧 buildEditorSectionForm 里 `module-type-label` 写死 `cfg.label` (来自 sec.type), 与 `sec.title` 完全解耦. 用户改 "项目经验" → "项目集" 后, 标签仍显示 "项目经验" 跟输入框内容不一致, 让用户以为 "标题写错了". 改为 `(sec.title || cfg.label)` — 用户没改时仍显示默认 label, 改过就用用户改的. liveSyncPreview 跑 collectFormData 后再同步刷一遍 label 文字 (不改 DOM 结构, 保留 input focus). Playwright 验证: 改 idx=3 "项目经验"→"项目集" / "项目经验"→"自我评价" / idx=1 "专业技能"→"工作经历" 全部同步.
+- 修复 editorPanel hidden 状态错位: index.html 初始 `<div class="editor-panel" hidden>`, HTML `hidden` 属性会强制 `display: none` 覆盖 CSS `display: flex`; openEditor 只加 `is-open` class, 没取消 hidden, 关闭后 hidden 也保留. 改为去掉 index.html 上的 hidden 初始属性, openEditor / closeEditor 显式设 `ep.hidden = false / true` 跟 class 同步. 顺带修 importData 里 `if (!editorPanel.hidden) buildEditorForm()` 现在能可靠判定编辑器状态, 导入时编辑器开着的会 rebuild.
 
 ### Changed
 
