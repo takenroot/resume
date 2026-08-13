@@ -38,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 删除项目 `challenges` (难点) 字段: 用户确认用不上, 编辑器不放该输入框, 渲染和 Markdown 导出也不再生成对应 block, 老数据迁移时 (normalizeSavedData + collectFormData) 主动 delete challenges. Playwright 验证: 导入含 `challenges: ""` 的 JSON 后 localStorage 里再无该字段.
 - 修复编辑器模块标签 (module-type-label) 跟用户改的标题 (sectionTitle 输入框) 视觉错位: 旧 buildEditorSectionForm 里 `module-type-label` 写死 `cfg.label` (来自 sec.type), 与 `sec.title` 完全解耦. 用户改 "项目经验" → "项目集" 后, 标签仍显示 "项目经验" 跟输入框内容不一致, 让用户以为 "标题写错了". 改为 `(sec.title || cfg.label)` — 用户没改时仍显示默认 label, 改过就用用户改的. liveSyncPreview 跑 collectFormData 后再同步刷一遍 label 文字 (不改 DOM 结构, 保留 input focus). Playwright 验证: 改 idx=3 "项目经验"→"项目集" / "项目经验"→"自我评价" / idx=1 "专业技能"→"工作经历" 全部同步.
 - 修复 editorPanel hidden 状态错位: index.html 初始 `<div class="editor-panel" hidden>`, HTML `hidden` 属性会强制 `display: none` 覆盖 CSS `display: flex`; openEditor 只加 `is-open` class, 没取消 hidden, 关闭后 hidden 也保留. 改为去掉 index.html 上的 hidden 初始属性, openEditor / closeEditor 显式设 `ep.hidden = false / true` 跟 class 同步. 顺带修 importData 里 `if (!editorPanel.hidden) buildEditorForm()` 现在能可靠判定编辑器状态, 导入时编辑器开着的会 rebuild.
+- 抽 `moduleLabel(sec)` helper: 之前 buildEditorSectionForm (静态渲染) 跟 liveSyncPreview (实时刷新) 各写一遍 `sec.title || (SECTION_CONFIG[s.type] || {}).label || ''` 表达式, 两处回退逻辑一致但分散. 抽到顶层单一函数, buildEditorForm 走 `esc(moduleLabel(sec))` (HTML 上下文), liveSync 走 `moduleLabel(sec)` (textContent 上下文, 不需要 esc). Playwright 验证: 改 idx=3 "项目经验"→"项目集" 同步, 清空 title 自动回退到 "项目经验", 保存后 localStorage 持久化正常.
 
 ### Changed
 

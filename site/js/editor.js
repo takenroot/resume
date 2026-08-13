@@ -13,12 +13,14 @@ function buildEditorForm() {
   bindPrefChangeEvents();
 }
 
+// ponytail: 单一来源 — headerLabel / placeholder / liveSync label 刷新都走这个.
+// 用户改过 sec.title 就用用户的 (他们会自定义模块名), 没改回退到 type 默认 label.
+function moduleLabel(sec) { return (sec && sec.title) || (SECTION_CONFIG[sec && sec.type] || {}).label || ''; }
+
 function buildEditorSectionForm(sec, idx) {
   const cfg = SECTION_CONFIG[sec.type]; if (!cfg) return '';
   let hh = '<div class="editor-section editor-module" data-section-index="' + idx + '">';
-  // ponytail: headerLabel 跟用户改的 title 保持一致. 用户没改过 sec.title 时回退到 type 默认 label,
-  // 改过就用用户改的 (他们会自定义模块名, 静态 type 标签会跟输入框矛盾造成 "标题写错" 错觉).
-  hh += '<div class="editor-module-header"><span class="module-type-label">' + esc(sec.title || cfg.label || '') + '</span><div class="module-actions">';
+  hh += '<div class="editor-module-header"><span class="module-type-label">' + esc(moduleLabel(sec)) + '</span><div class="module-actions">';
   hh += '<button type="button" class="module-action-btn collapse-btn" data-action="toggle-section-collapse" data-index="' + idx + '" title="折叠/展开"></button>';
   hh += '<button type="button" class="module-action-btn" data-action="move-section-up" data-index="' + idx + '" title="上移"' + (idx === 0 ? ' disabled' : '') + '>↑</button>';
   hh += '<button type="button" class="module-action-btn" data-action="move-section-down" data-index="' + idx + '" title="下移"' + (idx === (cvData.sections || []).length - 1 ? ' disabled' : '') + '>↓</button>';
@@ -110,7 +112,7 @@ function liveSyncPreview() {
     // 避免视觉上 "label 跟 title 输入框内容不一致". 只改文字, 不重建 DOM, 保留 input focus.
     (cvData.sections || []).forEach(function (s, i) {
       const mod = document.querySelector('.editor-section.editor-module[data-section-index="' + i + '"]');
-      if (mod) { const lb = mod.querySelector('.module-type-label'); if (lb) lb.textContent = s.title || (SECTION_CONFIG[s.type] || {}).label || ''; }
+      if (mod) { const lb = mod.querySelector('.module-type-label'); if (lb) lb.textContent = moduleLabel(s); }
     });
     renderCv();
     syncResumeLayout();
