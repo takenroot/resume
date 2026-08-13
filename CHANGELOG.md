@@ -33,6 +33,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 修复 collectFormData 浅拷贝引发的跨模块越界: 旧 `cvData.sections.map(s => Object.assign({}, s))` 只复制外层对象, `s.items` 沿用同一引用. 若两份 sections 共享同一个 items 数组 (历史数据/异常导入), 在一段上 push 会让所有共用方一起涨, 表现为"加一条其他模块也加一条". 改为对 `s.items` 显式 `slice()` 拆掉数组级引用. 内部对象仍共享 (collectFormData 不替换 item 对象本身, 只在已有 item 上写字段或 push/splice), 性能比深拷贝好.
 - 修复 summary 模块占位项首次 collectFormData 后被清空: 旧 `sectionSummary` handler 对空 textarea 走 `filter(Boolean)`, 把默认占位 `[""]` 变成 `[]`, 让新建的空 summary 模块在预览里直接消失 (`renderContent` 见 items.length===0 就 return). 改为占位且未输入时保留 `[""]`.
 - 新增模块类型 `其它经历` (SECTION_CONFIG.experience_other): 与 `工作经历` (experience) 共享同一份 fields / renderItem / mdItem / defaultItem, 只换 label. 把经验模块的共享配置抽到顶层 const `_EXP_SHARED`, 两个 SECTION_CONFIG 条目用 `..._EXP_SHARED` 展开, 单一数据源 — 之后再加 alias (如 '其它教育') 加一行就行. 不会进入顶部时间轴 (getTimelineLabel 只硬编码 'education' / 'experience'), 也不会污染源 defaultItem (`getDefaultItem` 走 JSON 深拷). 添加模块下拉自动出现.
+- 复制 [cv-autofill/docs/CV_SCHEMA_FEEDBACK.md](docs/CV_SCHEMA_FEEDBACK.md) 到本项目 docs, 配套新增 [docs/SCHEMA_NAMING.md](docs/SCHEMA_NAMING.md) 字段命名对照表: 列出 CV 项目每个字段在 Boss/猎聘/智联三平台的对应输入框名 + 字段缺口清单 + 自动填充映射建议. 给 cv-autofill 引擎做字段映射时直接查这表, 不用反推 CV schema.
+- 修复导入 JSON 后姓名/个人信息不更新: 旧 `importData` 调 `renderCv()` 但没清空旧 DOM 的 textContent, 而 renderCv 的 data-render 分支在 `v` 为空且元素已有 children 时只 add `is-empty` 类不清 textContent, 残留上次的值. 改为导入前显式清空所有 data-render 元素的 textContent + 整块 replaceChildren resumeSource + 清空 headerRow. 普通的 live-sync 走输入框赋值不受影响. Playwright 验证: 旧"张三" → 新"测试用户甲" / "另一用户乙", sections 数量跟着 JSON 走 (2 → 0), 残留清干净.
+- 删除项目 `challenges` (难点) 字段: 用户确认用不上, 编辑器不放该输入框, 渲染和 Markdown 导出也不再生成对应 block, 老数据迁移时 (normalizeSavedData + collectFormData) 主动 delete challenges. Playwright 验证: 导入含 `challenges: ""` 的 JSON 后 localStorage 里再无该字段.
 
 ### Changed
 

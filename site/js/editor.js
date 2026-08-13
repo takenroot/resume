@@ -96,7 +96,7 @@ function collectFormData(opts) {
   } });
   ec.querySelectorAll('[name^="sectionText."]').forEach(function (el) { const i = parseInt(el.name.split('.')[1], 10); if (nd.sections[i]) nd.sections[i].content = el.value; });
   ec.querySelectorAll('[name^="item."]').forEach(function (el) { const ps = el.name.split('.'), si = parseInt(ps[1], 10), ii = parseInt(ps[2], 10), fi = ps[3]; if (!nd.sections[si]) return; if (!nd.sections[si].items) nd.sections[si].items = []; if (!nd.sections[si].items[ii]) nd.sections[si].items[ii] = {}; nd.sections[si].items[ii][fi] = el.value; });
-  (nd.sections || []).forEach(function (s) { if (s.type === 'text' || s.type === 'summary') return; (s.items || []).forEach(function (item) { ['highlights', 'challenges', 'tags'].forEach(function (k) { if (item[k] && typeof item[k] === 'string') item[k] = arr(item[k]); }); }); });
+  (nd.sections || []).forEach(function (s) { if (s.type === 'text' || s.type === 'summary') return; (s.items || []).forEach(function (item) { delete item.challenges; ['highlights', 'tags'].forEach(function (k) { if (item[k] && typeof item[k] === 'string') item[k] = arr(item[k]); }); }); });
   cvData = nd; if (!(opts && opts.skipSave)) saveCvData();
 }
 let liveSyncTimer = null;
