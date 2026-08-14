@@ -55,6 +55,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 编辑器新增 `select` / `checkbox` 字段类型支持: buildItemCard 原本只识别 textarea / 默认 input, 扩展后支持 `f.t === 'select'` (走 f.options) / `f.t === 'checkbox'` (走 el.checked 转 boolean). profile 级字段里 `求职状态` select 路径保留不动 (它已经走独立 buildProfileFields).
 - collectFormData 扩展: profile 路径支持嵌套对象 (`profile.expectSalary.low` 三段路径写入到 nd.profile.expectSalary.low); item 路径 checkbox 走 `el.checked` 而不是 `el.value`; 数组字段 (highlights / achievements / tags / skillTags / experience) collectFormData 末尾统一 arr() 拆 string.
 - normalizeSavedData 同步扩展: 老数据 string-shape achievements/skillTags/experience 字段加载时自动 arr() 拆, 老 expectCities string 同处理. 老数据 (achievements='业绩1\n业绩2') 渲染出 `<li>业绩1</li>` 通过.
+- 修 XSS: `projects.link` 用 `new URL()` 验证协议是 http(s), 否则拒绝渲染 `<a>` 标签. 修前 `esc()` 不防 URL 协议层攻击, 用户输入 `javascript:alert(1)` / `data:text/html,...` 会被 click 触发.
+- 修 type 契约: `profile.expectSalary.{low,high,months}` 从 string 改 number 存储 (符合文档定义 `{ low: 7, high: 10, months: 12 }`). collectFormData 给 number input 走 `Number()` 转换, 空字符串保留让 delete 逻辑判定.
+- 修 number 0 误删: expectSalary 三个字段 delete 判断从 `!x` 改 `x === ''`, number 0 (合法薪资) 不会被误判空值删除.
+- 抽 `renderItemFieldInput(f, v, name)` helper: buildItemCard 原本 4 个 if/else if 链 (select/checkbox/textarea/input) 抽到顶层, 加新类型只改一处. dispatch 风格而非 dispatcher map (YAGNI, 4 类型够直读).
+- 抽 `arrFieldsOf(cfg)` helper: collectFormData 末尾的数组 normalize 列表和 normalizeSavedData 都从硬编码 `['highlights', 'achievements', 'tags', 'skillTags', 'experience']` 改成从 `cfg.fields.filter(f.a).map(f.n)` 动态读. 加新数组字段只需在 fields 加 `{ a: true }`, 不需要再维护两处 normalize 列表.
+
+### Changed
 - Playwright 验证: 17 个新字段全在编辑器 + 渲染 subheading 全过 (`工作业绩` / `技能标签` / `在校经历` / `毕设/论文` / `统招` badge / `全日制` meta / `全栈` role badge / `.project-link a[href]`) + 老数据 string→array 兼容 + checkbox isIntern 勾选保存=true.
 
 ### Changed

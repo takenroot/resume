@@ -17,16 +17,20 @@ const DEFAULT_DATA = {
 let cvData = null;
 
 function migrateToSections(d) { if (d.sections && Array.isArray(d.sections)) return; const ss = []; if (d.education) ss.push({ type: 'education', title: (d.sectionTitles && d.sectionTitles.education) || '教育背景', items: d.education }); if (d.experience) ss.push({ type: 'experience', title: (d.sectionTitles && d.sectionTitles.experience) || '工作经历', items: d.experience }); if (d.skills) ss.push({ type: 'skills', title: (d.sectionTitles && d.sectionTitles.skills) || '专业技能', items: d.skills }); if (d.projects) ss.push({ type: 'projects', title: (d.sectionTitles && d.sectionTitles.projects) || '项目经验', items: d.projects }); if (d.summary) ss.push({ type: 'summary', title: (d.sectionTitles && d.sectionTitles.summary) || '自我评价', items: Array.isArray(d.summary) ? d.summary : [d.summary] }); d.sections = ss; delete d.education; delete d.experience; delete d.skills; delete d.projects; delete d.summary; delete d.sectionTitles; }
+// ponytail: 从 cfg.fields 读所有 a:true (数组字段) 列表, 统一走 arr() 拆.
+// 加新数组字段只需在 fields 加 { a: true }, 不需要再改 normalize 列表.
+function arrFieldsOf(cfg) { return (cfg && cfg.fields ? cfg.fields : []).filter(function (f) { return f.a; }).map(function (f) { return f.n; }); }
+
 function normalizeSavedData() {
   migrateToSections(cvData);
   (cvData.sections || []).forEach(function (s) {
     if (!s.items) s.items = [];
     if (!s.title) s.title = (SECTION_CONFIG[s.type] || {}).label || '模块';
+    const arrKeys = arrFieldsOf(SECTION_CONFIG[s.type]);
     (s.items || []).forEach(function (it) {
-      // ponytail: 2026-08-13 删除 challenges 字段, 老数据迁移时直接 delete 不 normalize.
-      // 所有 array-shaped 字段 (highlights / achievements / tags / skillTags / experience) 走 arr() 拆.
+      // ponytail: 2026-08-13 删除 challenges 字段, 老数据迁移时直接 delete.
       delete it.challenges;
-      ['highlights', 'achievements', 'tags', 'skillTags', 'experience'].forEach(function (k) { if (it[k] !== undefined) it[k] = arr(it[k]); });
+      arrKeys.forEach(function (k) { if (it[k] !== undefined) it[k] = arr(it[k]); });
     });
   });
   if (cvData.profile) {

@@ -34,6 +34,22 @@ function buildEditorSectionForm(sec, idx) {
   return hh;
 }
 
+// ponytail: 把 buildItemCard 里的 if/else if 链抽成 dispatch, 加新类型 (radio/date 等) 只改这里.
+// 支持的 f.t: 'select' / 'checkbox' / 'textarea' / 默认 input. f.a=true 数组字段自动 join('\n' 或 ', ').
+function renderItemFieldInput(f, v, name) {
+  if (f.t === 'select') {
+    const opts = (f.options || []).map(function (o) { return '<option value="' + esc(o) + '"' + (v === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('');
+    return '<select name="' + name + '">' + opts + '</select>';
+  }
+  if (f.t === 'checkbox') return '<input type="checkbox" name="' + name + '" value="1"' + (v ? ' checked' : '') + '>';
+  if (f.t === 'textarea') {
+    const dv = f.a ? (Array.isArray(v) ? v.join('\n') : v) : v;
+    return '<textarea name="' + name + '">' + esc(dv || '') + '</textarea>';
+  }
+  const dv = f.a ? (Array.isArray(v) ? v.join(f.n === 'tags' ? ', ' : '\n') : v) : v;
+  return '<input name="' + name + '" value="' + esc(dv || '') + '">';
+}
+
 function buildItemCard(si, ii, fields, item) {
   let hh = '<div class="editor-item" data-section-index="' + si + '" data-item-index="' + ii + '">';
   hh += '<div class="editor-item-header"><span>#' + (ii + 1) + '</span><div class="item-header-actions">';
@@ -42,24 +58,7 @@ function buildItemCard(si, ii, fields, item) {
   hh += '<button type="button" class="item-action-btn" data-action="copy-item" data-section-index="' + si + '" data-item-index="' + ii + '" title="复制">⧉</button>';
   hh += '<button type="button" class="editor-item-remove" data-section-index="' + si + '" data-item-index="' + ii + '" aria-label="移除">×</button></div></div>';
   hh += '<div class="editor-item-content">';
-  fields.forEach(function (f) {
-    const v = item[f.n];
-    let inputHtml;
-    if (f.t === 'select') {
-      const opts = (f.options || []).map(function (o) { return '<option value="' + esc(o) + '"' + (v === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('');
-      inputHtml = '<select name="item.' + si + '.' + ii + '.' + f.n + '">' + opts + '</select>';
-    } else if (f.t === 'checkbox') {
-      // ponytail: checkbox 用 0/1 字符串序列化, 保证 form 值非空走 collectFormData 的统一 string 路径.
-      inputHtml = '<input type="checkbox" name="item.' + si + '.' + ii + '.' + f.n + '" value="1"' + (v ? ' checked' : '') + '>';
-    } else if (f.t === 'textarea') {
-      const dv = f.a ? (Array.isArray(v) ? v.join('\n') : v) : v;
-      inputHtml = '<textarea name="item.' + si + '.' + ii + '.' + f.n + '">' + esc(dv || '') + '</textarea>';
-    } else {
-      const dv = f.a ? (Array.isArray(v) ? v.join(f.n === 'tags' ? ', ' : '\n') : v) : v;
-      inputHtml = '<input name="item.' + si + '.' + ii + '.' + f.n + '" value="' + esc(dv || '') + '">';
-    }
-    hh += '<div class="editor-field"><label>' + f.l + '</label>' + inputHtml + '</div>';
-  });
+  fields.forEach(function (f) { hh += '<div class="editor-field"><label>' + f.l + '</label>' + renderItemFieldInput(f, item[f.n], 'item.' + si + '.' + ii + '.' + f.n) + '</div>'; });
   hh += '</div></div>';
   return hh;
 }
@@ -116,16 +115,20 @@ function collectFormData(opts) {
   }) : [] };
   ec.querySelectorAll('[name^="profile."]').forEach(function (el) {
     const parts = el.name.split('.'); parts.shift();
-    if (parts.length === 1) { nd.profile[parts[0]] = el.value; return; }
-    // ponytail: 嵌套路径 (expectSalary.low / expectSalary.high / expectSalary.months).
+    // ponytail: number input 走 Number() 转 number 类型 (跟文档契约 { low: 7, high: 10, months: 12 } 一致),
+    // 空字符串保留空字符串让 delete expectSalary 逻辑判断.
+    const v = el.type === 'number' ? (el.value === '' ? '' : Number(el.value)) : el.value;
+    if (parts.length === 1) { nd.profile[parts[0]] = v; return; }
+    // 嵌套路径 (expectSalary.low / expectSalary.high / expectSalary.months).
     let cursor = nd.profile; for (let i = 0; i < parts.length - 1; i++) { if (!cursor[parts[i]] || typeof cursor[parts[i]] !== 'object') cursor[parts[i]] = {}; cursor = cursor[parts[i]]; }
-    cursor[parts[parts.length - 1]] = el.value;
+    cursor[parts[parts.length - 1]] = v;
   });
   // ponytail: expectCities (textarea) 走 split('\n').filter(Boolean) 转 string[], checkbox profile 字段无.
   const ecTextarea = document.querySelector('textarea[name="profile.expectCities"]');
   if (ecTextarea) nd.profile.expectCities = ecTextarea.value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
-  // ponytail: 清空 expectSalary 子字段若三个 input 都空, 删对象避免残留 { low: '', high: '', months: '' }.
-  if (nd.profile.expectSalary && !nd.profile.expectSalary.low && !nd.profile.expectSalary.high && !nd.profile.expectSalary.months) delete nd.profile.expectSalary;
+  // ponytail: expectSalary 三个字段 (low/high/months) 任意一个非空就保留对象, 都空时 delete.
+  // 用 === '' / === undefined 判断而非 !, 因为 number 0 是合法薪资 (0K 起步) 不能误删, '' 是 number input 清空后的 string.
+  if (nd.profile.expectSalary && nd.profile.expectSalary.low === '' && nd.profile.expectSalary.high === '' && nd.profile.expectSalary.months === '') delete nd.profile.expectSalary;
   // ponytail: expectCities 老数据可能是 string, 走 arr() 拆.
   if (nd.profile.expectCities && typeof nd.profile.expectCities === 'string') nd.profile.expectCities = arr(nd.profile.expectCities);
   ec.querySelectorAll('[name^="sectionTitle."]').forEach(function (el) { const i = parseInt(el.name.split('.')[1], 10); if (nd.sections[i]) nd.sections[i].title = el.value; });
@@ -151,11 +154,10 @@ function collectFormData(opts) {
   });
   (nd.sections || []).forEach(function (s) {
     if (s.type === 'text' || s.type === 'summary') return;
+    const arrKeys = arrFieldsOf(SECTION_CONFIG[s.type]);
     (s.items || []).forEach(function (item) {
       delete item.challenges;
-      ['highlights', 'achievements', 'tags', 'skillTags', 'experience'].forEach(function (k) {
-        if (item[k] && typeof item[k] === 'string') item[k] = arr(item[k]);
-      });
+      arrKeys.forEach(function (k) { if (item[k] && typeof item[k] === 'string') item[k] = arr(item[k]); });
     });
   });
   cvData = nd; if (!(opts && opts.skipSave)) saveCvData();
