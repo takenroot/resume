@@ -117,7 +117,8 @@ function renderCv() {
   (d.sections || []).forEach(function (sec, i) { const dom = createSectionDOM(i); const h2 = dom.querySelector('h2'); if (h2) h2.textContent = sec.title || (SECTION_CONFIG[sec.type] || {}).label || ''; rs.appendChild(dom); const le = dom.querySelector('[data-render-list]'); if (le) renderSectionContent(le, i); });
   const ts = document.querySelector('.timeline-strip');
   if (ts) {
-    if (cvPrefs && cvPrefs.timelineEnabled === false) {
+    // ponytail: 顶部时间轴 strip 跟 cvPrefs.timelineEnabled 绑定. 默认 false (市场不认可, 用户决定) 但代码逻辑保留, 改 pref 即可开.
+    if (!cvPrefs || cvPrefs.timelineEnabled !== true) {
       ts.style.display = 'none';
     } else {
       let html;

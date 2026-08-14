@@ -20,8 +20,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 编辑器模块加折叠按钮: 每个 section 头部多一个 ▾ 按钮 (在 ↑↓× 前面), 点击切换 `.is-collapsed` class. 折叠后 `.editor-module-body { display: none }`, 整个模块正文 (标题输入框 + 条目) 收起, 只剩模块名 + 折叠按钮 + 排序/删除按钮. chevron 旋转 -90° 视觉上从 ▾ 变 ▸. 不持久化.
 - 编辑器新增 `select` / `checkbox` 字段类型支持: buildItemCard 原本只识别 textarea / 默认 input, 扩展后支持 `f.t === 'select'` (走 f.options) / `f.t === 'checkbox'` (走 el.checked 转 boolean). profile 级字段里 `求职状态` select 路径保留不动 (它已经走独立 buildProfileFields).
 - Editor "个人信息" 模块: "年龄" 字段改用 "出生日期" (HTML5 原生日期选择器 `<input type="date">`, YYYY-MM-DD); 简历预览按今日日期自动算出年龄 ("X岁").
-- Editor now shows a "清除头像" (Clear Avatar) button when a local avatar exists.
-- Resume automatically loads the local avatar for the current profile name on render.
+- normalizeSavedData 同步扩展: 老数据 string-shape achievements/skillTags/experience 字段加载时自动 arr() 拆, 老 expectCities string 同处理. 老数据 (achievements='业绩1\n业绩2') 渲染出 `<li>业绩1</li>` 通过.
+- 修 XSS: `projects.link` 用 `new URL()` 验证协议是 http(s), 否则拒绝渲染 `<a>` 标签. 修前 `esc()` 不防 URL 协议层攻击, 用户输入 `javascript:alert(1)` / `data:text/html,...` 会被 click 触发.
+- 修 type 契约: `profile.expectSalary.{low,high,months}` 从 string 改 number 存储 (符合文档定义 `{ low: 7, high: 10, months: 12 }`). collectFormData 给 number input 走 `Number()` 转换, 空字符串保留让 delete 逻辑判定.
+- 修 number 0 误删: expectSalary 三个字段 delete 判断从 `!x` 改 `x === ''`, number 0 (合法薪资) 不会被误判空值删除.
+- 抽 `renderItemFieldInput(f, v, name)` helper: buildItemCard 原本 4 个 if/else if 链 (select/checkbox/textarea/input) 抽到顶层, 加新类型只改一处. dispatch 风格而非 dispatcher map (YAGNI, 4 类型够直读).
+- 抽 `arrFieldsOf(cfg)` helper: collectFormData 末尾的数组 normalize 列表和 normalizeSavedData 都从硬编码 `['highlights', 'achievements', 'tags', 'skillTags', 'experience']` 改成从 `cfg.fields.filter(f.a).map(f.n)` 动态读. 加新数组字段只需在 fields 加 `{ a: true }`, 不需要再维护两处 normalize 列表.
+- 删 `projects.highlights` 字段: 用户确认跟项目业绩是同义重复, 编辑器不放, 渲染和 Markdown 导出也不生成对应 block. 老 data 没 highlights 直接跳过, 留 defaults 空数组兜底.
+- 所有 checkbox 改 select 是/否: `education.isUnified` / `experience.isIntern` UI 布局在分屏编辑器里 checkbox 难看 (`.checkbox-label` 没生效, 复选框 + label 拼一起不规整). 改 `t: 'select', options: ['是', '否']`, defaultItem 是 `'否'`. 老数据 boolean (true/false) normalize 时自动转 '是'/'否'. collectFormData 移除 `isCheckbox ? !!el.checked : el.value` 分支, 统一走 `el.value` (select 值就是 string).
+- 抽 `renderProfileFieldInput(f, profile)` helper: buildProfileFields 里 12 个 profile 字段的 input 拼接抽到顶层, 跟 renderItemFieldInput 对称. 支持 'select' / 'date' / 默认 text. 加新 profile 字段不需要再改 buildProfileFields 主体.
+- expectSalary placeholder 提示单位: "下限 K" / "上限 K" / "月数" (单位 K/月在 label 里, placeholder 跟单位对齐).
+- 抽 `buildEduHead(i)` helper: education item-head 原本 5 个 if 链展开 (school · major · degree · (degreeType) · 统招) 抽到顶层. isUnified 不再挤进 h3, 改走 .item-meta 旁挂 .item-meta-tag 视觉跟 experience.industry/department 对齐. mdItem 同步简化 (主字段走 `if (xxx) md += ' | xxx'`, 跟 if-chain 拆开).
+- 抽 `clearImportDom()` helper: importData 里 15 行 DOM 清空逻辑抽到顶层, 跟 `importData` 主体分离, importData 缩到 24 行, 流水线感更强 (parse → validate → clear → save → render → rebuild).
+- 重命名 `education.experience` (在校经历) → `education.honors` (荣誉奖项): 跟 superset 字段名对齐, 消除"工作经历 section type"和"教育 item 字段"都叫 experience 的歧义. normalizeSavedData + collectFormData 双重兜底 (rename + delete), 老数据下次打开编辑器就自动迁移. 渲染层 label 从 "在校经历" 改成 "荣誉奖项" (语义更准). 老字段 `campus` 保留不变 (校园经历含义已涵盖).
+- 删 `experience.highlights` 字段: 跟 projects.highlights 一致处理 (commit 56be0c2). 用户明确"亮点改成工作业绩", 不留 `highlights` 字段兼容 (老数据由用户手动迁移到 achievements — 见 docs/resume-data.json 已合并 6 个 item, total 19 条 achievements). `_EXP_SHARED.fields / defaultItem / renderItem / mdItem` 全部移除 highlights 引用. normalizeSavedData / collectFormData 不再 rename 兜底 (避免技术债).
+- 加 `language` section (语言能力): SECTION_CONFIG 新增完整实现 (fields + renderItem + mdItem + defaultItem). 5 字段: name (语种 select 9 选项) / proficiency (熟练程度) / level (等级如 CET-6) / listeningSpeaking (听说, 智联拆分) / readingWriting (读写, 智联拆分). 渲染时 level 跟 name 同行, proficiency/readingWriting 走 .item-meta-tag 旁挂. 命名分歧注释里说明 (猎聘=语言+熟练程度+等级, 智联=语种+听说+读写, 超集取并集). 跟 [cv-autofill schema](cv-autofill/schema/cv-superset.schema.json) languageItem 对齐.
+- profile.currentSalary 加数据结构但隐藏字段: 用户要求存数据 (cv-autofill 引擎读得到) 但 UI 不显示 (薪资敏感). 实现: 不在 editor flds / renderer template / markdown 导出出现, 用户手写 JSON 才能填. 代码注释明确这是 "hidden field" 设计, 等需要时再加 input.
+- 顶部时间轴默认关闭 + 配置开关: 当前市场不认可简历里带顶部时间轴 strip (这种设计在 LinkedIn / Boss 等平台上不常见). 默认 cvPrefs.timelineEnabled = false, 顶部时间轴 strip 自动隐藏. 编辑器 "顶部时间轴预览" 小窗同步受开关控制 (关掉时不显示). 用户主动勾选 "显示顶部时间轴" checkbox 还能开 — 计算逻辑 (autoTimeline / getTimelineLabel) 全部保留, pref 字段选择 (prefTlEdu / prefTlExp) 也保留. onPrefTimelineEnabled 在编辑器打开时同时调 buildEditorForm 让预览块立即出现/消失. 3 处一致 (renderer.js / editor.js / prefs.js).
 
 #### 渲染层增强
 

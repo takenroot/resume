@@ -4,7 +4,8 @@
 function buildEditorForm() {
   if (!cvData) return; const ec = document.getElementById('editorContent'); if (!ec) return;
   let hh = buildEditorPrefs() + '<div class="editor-section"><h3>个人信息</h3>' + buildProfileFields(cvData.profile) + '</div>';
-  hh += '<div class="editor-section"><h3>顶部时间轴预览</h3><div class="tl-editor-preview">' + (autoTimeline() || '<span style="color:var(--text-soft)">（无足够时间数据）</span>') + '</div></div>';
+  // ponytail: 顶部时间轴预览受 cvPrefs.timelineEnabled 控制. 关掉时不显示这个预览块 (跟顶部 strip 行为一致).
+  if (cvPrefs && cvPrefs.timelineEnabled === true) hh += '<div class="editor-section"><h3>顶部时间轴预览</h3><div class="tl-editor-preview">' + (autoTimeline() || '<span style="color:var(--text-soft)">（无足够时间数据）</span>') + '</div></div>';
   (cvData.sections || []).forEach(function (sec, idx) { hh += buildEditorSectionForm(sec, idx); });
   hh += '<div class="editor-add-section"><button type="button" class="editor-add-btn" id="addSectionBtn">+ 添加模块</button><div class="add-section-menu" id="addSectionMenu" hidden>' + Object.keys(SECTION_CONFIG).map(function (t) { return '<button type="button" class="dropdown-item" data-add-type="' + t + '">' + (SECTION_CONFIG[t] ? SECTION_CONFIG[t].label : t) + '</button>'; }).join('') + '</div></div>';
   ec.innerHTML = hh;
