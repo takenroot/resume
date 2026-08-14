@@ -902,6 +902,32 @@ html.js .resume-document[data-js-ready="false"] {
   display: inline;
 }
 
+/* ponytail: test/render-all-fields 分支. 头部下方第二行 meta 信息: 期望薪资/城市/行业/微信.
+   灰色 badge 风格, 跟项目经历的 .item-meta-tag 视觉一致. */
+.header-extra {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.header-extra:empty {
+  display: none;
+}
+.header-extra-tag {
+  display: inline-block;
+  margin-right: 12px;
+  padding: 2px 8px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  color: #475569;
+}
+.header-extra-tag em {
+  font-style: normal;
+  font-weight: 600;
+  color: #334155;
+  margin-right: 4px;
+}
+
 .editor-field input:focus,
 .editor-field textarea:focus {
   outline: none;

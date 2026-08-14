@@ -61,6 +61,38 @@ function renderHeaderRow(p) {
   });
 }
 
+// ponytail: test/render-all-fields 分支. 把 profile 隐藏字段 (期望薪资/行业/城市/微信) 都展示出来, 看布局.
+// expectSalary = {low, high, months}, expectCities = [], expectIndustry/wechat = string.
+// 字段为空时不输出对应 tag (整块 .header-extra 没内容则 hide).
+function renderHeaderExtra(p) {
+  const el = document.getElementById('headerExtra'); if (!el) return;
+  el.replaceChildren();
+  const tags = [];
+  if (p.expectSalary && (p.expectSalary.low || p.expectSalary.high || p.expectSalary.months)) {
+    const lo = p.expectSalary.low || '?';
+    const hi = p.expectSalary.high || '?';
+    const mo = p.expectSalary.months || 12;
+    tags.push({ k: '期望薪资', v: lo + '-' + hi + 'K × ' + mo + '月' });
+  }
+  if (Array.isArray(p.expectCities) && p.expectCities.length) {
+    tags.push({ k: '期望城市', v: p.expectCities.join(' / ') });
+  }
+  if (p.expectIndustry && String(p.expectIndustry).trim()) {
+    tags.push({ k: '期望行业', v: p.expectIndustry });
+  }
+  if (p.wechat && String(p.wechat).trim()) {
+    tags.push({ k: '微信', v: p.wechat });
+  }
+  if (!tags.length) { el.style.display = 'none'; return; }
+  el.style.display = '';
+  tags.forEach(function (t) {
+    const tag = document.createElement('span');
+    tag.className = 'header-extra-tag';
+    tag.innerHTML = '<em>' + esc(t.k) + '</em>' + esc(t.v);
+    el.appendChild(tag);
+  });
+}
+
 function renderCv() {
   if (!cvData) return; const d = cvData;
   document.querySelectorAll('[data-render]').forEach(function (el) {
@@ -78,6 +110,7 @@ function renderCv() {
     else { if (v && !(el.children.length > 0 && el.tagName !== 'INPUT' && el.tagName !== 'TEXTAREA')) { el.textContent = v; el.classList.remove('is-empty'); } else if (!v) { el.classList.add('is-empty'); } }
   });
   renderHeaderRow(d.profile || {});
+  renderHeaderExtra(d.profile || {});
   if (d.profile && d.profile.title) document.title = d.profile.name + ' - ' + d.profile.title;
   const rs = document.getElementById('resumeSource'); if (!rs) return;
   const hd = rs.querySelector('.resume-header'); rs.replaceChildren(); if (hd) rs.appendChild(hd);
