@@ -9,12 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `experience[].isIntern` 渲染: item-meta 加「实习」tag (跟 industry/department 同行), mdItem 加 `| 实习` marker.
+- `education[].overseasEdu` 新字段: select 是/否 (存 boolean), 渲染「海外留学」tag, mdItem 加 marker.
+- `profile.firstWorkDate` 新字段: 编辑器 date input (首次参加工作时间, 招聘平台字段), 预览不渲染.
+- `profile.expectJobs` 单条目新 schema: `[{title, jobType, salary:{low,high}, cities[]}]`, 编辑器拍平成一行复合表单 (职位名/工作性质/薪资下限-上限) + 城市 textarea, collectFormData 独立收集重组 (全空 delete).
 - 数据 schema 运行时校验: 新增 `validateSchema(d)` 走 `SECTION_CONFIG` 反查字段类型 (未知 type / items 非数组 / `a:true` 字段类型错 / select 非法选项), 导入前拦截, 错误 toast 列出前 3 条. 自检脚本 `test/validate-schema.mjs` (13 assertions, node 直接跑).
 - 导入覆盖确认 + 自动备份: `importData` 导入前弹 confirm, 当前数据备份到 localStorage `cv_backup` 槽位 (`{ts, reason, data}`).
 - 每 5 分钟自动快照到 `cv_backup` (数据没变跳过), 编辑器底部加「恢复备份」按钮 (恢复前当前数据会先备份为 `pre-restore`).
 - 本地错误队列 (telemetry): `window.onerror` / `unhandledrejection` / 导入异常写 localStorage `cv_errors` (留最近 20 条, 不外发), 编辑器底部加「复制错误」按钮一键拷走 UA + URL + 错误栈.
 - 「重置默认」按钮接上 handler (原来是死按钮, 无 JS 绑定): 点击 confirm 后备份当前数据再 `resetCvData()`.
 - `docs/cv-schema.json`: cv-autofill `schema/cv-superset.schema.json` 的副本, README 所称 "CV 为 canonical 源" 现在有仓库内凭证.
+
+### Fixed
+
+- 修 avatar 选同一文件不触发 change: 头像 input 选完即清 `value`, 换头像不用再切别的文件.
+- 修 B 阶段 boolean 化引入的两处失配: `buildEduHead` / education `mdItem` 判 `isUnified === '是'` 但存储已是 boolean → 「统招」tag 永不渲染; 编辑器是/否 select 跟 boolean 值比较永不命中 → 「否」条目重建表单后视觉回退显示「是」. 新增 `isYes()` helper 统一渲染层判断, `renderItemFieldInput` select 比较前把 boolean 映射回 '是'/'否'. 回归自检 `test/render-tags.mjs` (6 assertions).
 
 ### Removed
 

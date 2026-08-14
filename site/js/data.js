@@ -69,6 +69,7 @@ function normalizeSavedData() {
   if (cvData.profile) {
     // ponytail: profile.expectCities 老数据可能是 string, 拆. expectSalary 已是 object 不动. age 字段独立保留 (不通过 birthDate 派生).
     if (cvData.profile.expectCities && typeof cvData.profile.expectCities === 'string') cvData.profile.expectCities = arr(cvData.profile.expectCities);
+    if (Array.isArray(cvData.profile.expectJobs)) cvData.profile.expectJobs.forEach(function (j) { if (j && typeof j.cities === 'string') j.cities = arr(j.cities); });
   }
   normalizeYesNoFields(cvData);
 }

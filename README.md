@@ -84,10 +84,10 @@ python -m http.server 8000
 
 | 模块 | type | 说明 |
 |------|------|------|
-| 个人信息 | (profile)| 姓名、岗位、求职状态、联系方式、头像、GitHub、微信号、期望薪资/城市/行业 |
+| 个人信息 | (profile)| 姓名、岗位、求职状态、联系方式、头像、GitHub、微信号、期望薪资/城市/行业/职位、首次参加工作时间 |
 | 工作经历 | experience | 公司、职位、时间、所属行业、部门、工作描述、工作业绩、技能标签、是否实习 |
 | 其它经历 | experience_other | 工作经历的 alias（同 schema 不同 label），用于部队/兼职/项目承包等 |
-| 教育背景 | education | 学校、专业、学历、学制、是否统招、时间、主修课程、校园经历、荣誉奖项、毕设/论文 |
+| 教育背景 | education | 学校、专业、学历、学制、是否统招、海外留学经历、时间、主修课程、校园经历、荣誉奖项、毕设/论文 |
 | 项目经验 | projects | 项目名、担任角色、时间、链接、技术栈、项目描述、项目业绩 |
 |专业技能 | skills | 技能名 + 详情（单列布局，便于 OCR/智能解析） |
 | 语言能力 | language | 语种（9 选项 select）、熟练程度、等级（CET-6）、听说、读写（智联拆分） |
@@ -118,12 +118,14 @@ python -m http.server 8000
 | `avatar` | base64 | file (存 localStorage, 导出 JSON 不含) |
 | `expectSalary` | `{low, high, months}` number | 3 个 number input (默认隐藏字段) |
 | `expectCities` | string[] | textarea 每行一条 (默认隐藏字段) |
+| `expectJobs` | `[{title, jobType, salary:{low,high}, cities[]}]` 单条目 | 复合表单: 职位名 + 工作性质 select + 薪资两框 + 城市 textarea (默认隐藏字段) |
+| `firstWorkDate` | string (YYYY-MM-DD) | date (首次参加工作时间, 预览不渲染) |
 | `currentSalary` | `{salary, months, secret}` | 隐藏字段, 见下方说明 |
 
 ### 其它 section item 字段
 
 - **experience / experience_other**: company, position, industry, department, period, summary, achievements, skillTags, isIntern
-- **education**: school, major, degree, degreeType, isUnified, period, courses, campus, honors, thesis
+- **education**: school, major, degree, degreeType, isUnified, overseasEdu, period, courses, campus, honors, thesis
 - **projects**: name, role, period, link, tags, summary, achievements
 
 ### 隐藏字段 (UI 默认不渲染, 数据存)

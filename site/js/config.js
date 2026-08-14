@@ -11,7 +11,8 @@
 function buildEduHead(i) {
   const headParts = [esc(i.school || ''), i.major ? esc(i.major) : null, i.degree ? esc(i.degree) + (i.degreeType ? ' (' + esc(i.degreeType) + ')' : '') : null].filter(Boolean);
   let html = '<div class="item-head"><div><h3>' + headParts.join(' · ') + '</h3>';
-  if (i.isUnified === '是') html += '<div class="item-meta"><span class="item-meta-tag">统招</span></div>';
+  const tags = []; if (isYes(i.isUnified)) tags.push('统招'); if (isYes(i.overseasEdu)) tags.push('海外留学');
+  if (tags.length) html += '<div class="item-meta">' + tags.map(function (t) { return '<span class="item-meta-tag">' + t + '</span>'; }).join('') + '</div>';
   html += '</div><span class="item-time">' + esc(i.period) + '</span></div>';
   return html;
 }
@@ -31,12 +32,8 @@ const _EXP_SHARED = {
   renderItem: function (i) {
     const a = cE('article', 'timeline-item');
     let html = '<div class="item-head"><div><h3>' + esc(i.company) + ' · ' + esc(i.position) + '</h3>';
-    if (i.industry || i.department) {
-      html += '<div class="item-meta">';
-      if (i.industry) html += '<span class="item-meta-tag">' + esc(i.industry) + '</span>';
-      if (i.department) html += '<span class="item-meta-tag">' + esc(i.department) + '</span>';
-      html += '</div>';
-    }
+    const tags = []; if (i.industry) tags.push(i.industry); if (i.department) tags.push(i.department); if (isYes(i.isIntern)) tags.push('实习');
+    if (tags.length) html += '<div class="item-meta">' + tags.map(function (t) { return '<span class="item-meta-tag">' + esc(t) + '</span>'; }).join('') + '</div>';
     html += '</div><span class="item-time">' + esc(i.period) + '</span></div>';
     if (i.summary) html += '<p class="summary">' + esc(i.summary) + '</p>';
     if (i.achievements && i.achievements.length) html += '<div class="item-section"><h4 class="item-section-label">工作业绩</h4><ul class="item-section-list">' + lis(i.achievements) + '</ul></div>';
@@ -48,6 +45,7 @@ const _EXP_SHARED = {
     let md = '**' + (i.period || '') + '** | ' + (i.company || '') + ' | ' + (i.position || '');
     if (i.industry) md += ' | ' + i.industry;
     if (i.department) md += ' | ' + i.department;
+    if (isYes(i.isIntern)) md += ' | 实习';
     md += '\n\n' + (i.summary || '');
     if (i.achievements && i.achievements.length) md += '\n\n### 工作业绩\n' + mli(i.achievements);
     if (i.skillTags && i.skillTags.length) md += '\n\n### 技能标签\n' + i.skillTags.join('、');
@@ -58,7 +56,7 @@ const _EXP_SHARED = {
 const SECTION_CONFIG = {
   experience: { label: '工作经历', ..._EXP_SHARED },
   experience_other: { label: '其它经历', ..._EXP_SHARED },
-  education: { label: '教育背景', fields: [{ n: 'school', l: '学校' }, { n: 'major', l: '专业' }, { n: 'degree', l: '学历' }, { n: 'degreeType', l: '学制', t: 'select', options: ['全日制', '非全日制', '自考'] }, { n: 'isUnified', l: '是否统招', t: 'select', options: ['是', '否'] }, { n: 'period', l: '时间' }, { n: 'courses', l: '主修课程' }, { n: 'campus', l: '校园经历 (每行一条)', t: 'textarea' }, { n: 'honors', l: '荣誉奖项 (每行一条)', t: 'textarea', a: true }, { n: 'thesis', l: '毕设/论文', t: 'textarea' }],
+  education: { label: '教育背景', fields: [{ n: 'school', l: '学校' }, { n: 'major', l: '专业' }, { n: 'degree', l: '学历' }, { n: 'degreeType', l: '学制', t: 'select', options: ['全日制', '非全日制', '自考'] }, { n: 'isUnified', l: '是否统招', t: 'select', options: ['是', '否'] }, { n: 'overseasEdu', l: '海外留学经历', t: 'select', options: ['是', '否'] }, { n: 'period', l: '时间' }, { n: 'courses', l: '主修课程' }, { n: 'campus', l: '校园经历 (每行一条)', t: 'textarea' }, { n: 'honors', l: '荣誉奖项 (每行一条)', t: 'textarea', a: true }, { n: 'thesis', l: '毕设/论文', t: 'textarea' }],
     // ponytail: head 拼接抽到 buildEduHead (string), isUnified 走 item-meta 旁挂不进 h3, 避免 h3 串太长.
     renderItem: function (i) {
       const a = cE('article', 'timeline-item');
@@ -75,14 +73,15 @@ const SECTION_CONFIG = {
       let md = '**' + (i.period || '') + '** | ' + (i.school || '');
       if (i.major) md += ' | ' + i.major;
       if (i.degree) md += ' | ' + i.degree + (i.degreeType ? ' (' + i.degreeType + ')' : '');
-      if (i.isUnified === '是') md += ' | 统招';
+      if (isYes(i.isUnified)) md += ' | 统招';
+      if (isYes(i.overseasEdu)) md += ' | 海外留学';
       if (i.courses) md += '\n\n### 主修课程\n' + i.courses;
       if (i.campus) { const lines = (i.campus || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean); if (lines.length > 0) md += '\n\n### 校园经历\n' + mli(lines); }
       if (i.honors && i.honors.length) md += '\n\n### 荣誉奖项\n' + mli(i.honors);
       if (i.thesis) md += '\n\n### 毕设/论文\n' + i.thesis;
       return md;
     },
-    defaultItem: { school: '', major: '', degree: '', degreeType: '', isUnified: '是', period: '', courses: '', campus: '', honors: [], thesis: '' }
+    defaultItem: { school: '', major: '', degree: '', degreeType: '', isUnified: '是', overseasEdu: '否', period: '', courses: '', campus: '', honors: [], thesis: '' }
   },
   projects: { label: '项目经验', fields: [{ n: 'name', l: '项目名' }, { n: 'role', l: '担任角色' }, { n: 'period', l: '时间' }, { n: 'link', l: '项目链接' }, { n: 'tags', l: '技术栈 (逗号分隔)', t: 'textarea', a: true }, { n: 'summary', l: '项目描述', t: 'textarea' }, { n: 'achievements', l: '项目业绩 (每行一条)', t: 'textarea', a: true }],
     renderItem: function (i) { const tags = arr(i.tags), th = tags.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join(''); const a = cE('article', 'timeline-item'); let html = '<div class="item-head"><div><h3>' + esc(i.name) + (i.role ? ' <span class="item-meta-tag">' + esc(i.role) + '</span>' : '') + '</h3><ul class="tag-list item-subtitle">' + th + '</ul></div><span class="item-time">' + esc(i.period) + '</span></div>'; if (i.summary) html += '<p class="summary">' + esc(i.summary) + '</p>';
