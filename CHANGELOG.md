@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- 数据 schema 运行时校验: 新增 `validateSchema(d)` 走 `SECTION_CONFIG` 反查字段类型 (未知 type / items 非数组 / `a:true` 字段类型错 / select 非法选项), 导入前拦截, 错误 toast 列出前 3 条. 自检脚本 `test/validate-schema.mjs` (13 assertions, node 直接跑).
+- 导入覆盖确认 + 自动备份: `importData` 导入前弹 confirm, 当前数据备份到 localStorage `cv_backup` 槽位 (`{ts, reason, data}`).
+- 每 5 分钟自动快照到 `cv_backup` (数据没变跳过), 编辑器底部加「恢复备份」按钮 (恢复前当前数据会先备份为 `pre-restore`).
+- 本地错误队列 (telemetry): `window.onerror` / `unhandledrejection` / 导入异常写 localStorage `cv_errors` (留最近 20 条, 不外发), 编辑器底部加「复制错误」按钮一键拷走 UA + URL + 错误栈.
+- 「重置默认」按钮接上 handler (原来是死按钮, 无 JS 绑定): 点击 confirm 后备份当前数据再 `resetCvData()`.
+- `docs/cv-schema.json`: cv-autofill `schema/cv-superset.schema.json` 的副本, README 所称 "CV 为 canonical 源" 现在有仓库内凭证.
+
 ### Removed
 
 - 删顶部时间轴整条链 (`autoTimeline` / `extractStartDate` / `getTimelineLabel` / `timeline-strip` / `.tl-*` CSS / 3 个 timeline pref (`timelineEnabled` / `timelineEduField` / `timelineExpField`) / 编辑器预览块 / HTML `<div class="timeline-strip">` 节点). README 时间轴说明同步移除.
@@ -26,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - select 是/否字段统一在代码里存 boolean: 老 boolean→string `'是'/'否'` 反向成 string→boolean (`yesNoToBool`). `collectFormData` 末尾调 `normalizeYesNoFields(cvData)` 跟 `loadCvData` 走同一份归一化逻辑.
 - `education.campus` / `education.honors` "每行一条"渲染/导出统一走 `lis()` / `mli()` helper (前者原 inline `.map('<li>')`, 后者 `mli(...)`).
 - editor.js click handler 合并: `import-json` / `import-md` 重复分支合一 (`importData` 按文件扩展名分支解析); 重复 `closest('[data-action]')` 合并成单次 query.
-- `importData` 末尾加 `window.scrollTo(0, 0)` (导入后滚动到顶, 之前停在原滚动位置看不到新内容).
+- `importData` 末尾加 `window.scrollTo(0, 0)` (导入后滚动到顶, 之前停在原滚动位置看不到新内容). 导入/恢复共用 `applyImportedData()` 应用路径 (归一 → 清 DOM → 存 → 渲染 → 滚顶 → 重建编辑器).
 
 ## [1.2.0] - 2026-08-14
 

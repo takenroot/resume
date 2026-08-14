@@ -219,6 +219,9 @@ function bindEditorEvents() {
       else if (a === 'export-md') { collectFormData(); exportMarkdown(); return; }
       else if (a === 'print') { exportPdf(); return; }
       else if (a === 'export-pdf-image') { collectFormData(); exportPdfImage(); return; }
+      else if (a === 'restore-backup') { restoreBackup(); return; }
+      else if (a === 'copy-errors') { copyErrorReport(); return; }
+      else if (a === 'reset-data') { if (confirm('重置将清空当前简历并恢复初始数据（当前数据会自动备份）。继续？')) { backupCvData('pre-reset'); resetCvData(); } return; }
     }
     const aib = ev.target.closest('[data-add-item]'); if (aib) { addItem(parseInt(aib.dataset.addItem, 10)); return; }
     const rib = ev.target.closest('.editor-item-remove'); if (rib) { removeItem(parseInt(rib.dataset.sectionIndex, 10), parseInt(rib.dataset.itemIndex, 10)); return; }

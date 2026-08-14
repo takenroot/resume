@@ -66,7 +66,38 @@ async function captureSequential(pages) {
   }
   return pdf;
 }
+/* ---- 错误队列 (telemetry) ---- */
+// ponytail: 本地错误队列, localStorage 留最近 20 条. 不外发, 用户手动「复制错误」带走.
+const ERROR_KEY = 'cv_errors';
+function logError(kind, err) {
+  try {
+    const q = JSON.parse(localStorage.getItem(ERROR_KEY) || '[]');
+    q.push({ ts: new Date().toISOString(), kind: kind, msg: String(err && err.message || err), stack: String(err && err.stack || '').split('\n').slice(0, 5).join('\n') });
+    while (q.length > 20) q.shift();
+    localStorage.setItem(ERROR_KEY, JSON.stringify(q));
+  } catch (e) {}
+}
+function copyErrorReport() {
+  let q = [];
+  try { q = JSON.parse(localStorage.getItem(ERROR_KEY) || '[]'); } catch (e) {}
+  const report = 'UA: ' + navigator.userAgent + '\nURL: ' + location.href + '\nErrors (' + q.length + '):\n' + (q.length ? q.map(function (x) { return '[' + x.ts + '] ' + x.kind + ': ' + x.msg + (x.stack ? '\n' + x.stack : ''); }).join('\n---\n') : '(无记录)');
+  copyText(report).then(function () { showToast('错误详情已复制', 'success'); }).catch(function () { showToast('复制失败', 'error'); });
+}
+window.addEventListener('error', function (ev) { logError('window', ev.error || ev.message); });
+window.addEventListener('unhandledrejection', function (ev) { logError('promise', ev.reason); });
+
+/* ---- 自动快照 ---- */
+// ponytail: 每 5 分钟备份到 cv_backup (跟导入前备份同槽位), 数据没变就跳过.
+function startAutoSnapshot() {
+  setInterval(function () {
+    if (!cvData) return;
+    const b = loadBackup();
+    if (b && JSON.stringify(b.data) === JSON.stringify(cvData)) return;
+    backupCvData('auto');
+  }, 5 * 60 * 1000);
+}
+
 function init() { loadPrefs(); applyPrefs(); const rd = document.getElementById('resumeDocument'); if (rd) { handleViewportChange(); window.addEventListener('resize', debounce(handleViewportChange, 100)); window.addEventListener('load', handleViewportChange); } const tb = document.querySelector('.floating-toolbar'); if (tb) updateScale(DEFAULT_SCALE); bindCopyActions(); bindToolbarActions(); bindEditorEvents(); if (new URLSearchParams(location.search).get('edit') === '1') openEditor(); }
 
 /* ---- 启动 ---- */
-loadCvData().then(function () { loadPrefs(); renderCv(); init(); });
+loadCvData().then(function () { loadPrefs(); renderCv(); init(); startAutoSnapshot(); });

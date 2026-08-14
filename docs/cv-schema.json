@@ -1,0 +1,167 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "cv-superset.schema.json",
+  "title": "CV 数据超集 schema(Boss/猎聘/智联三平台字段并集)",
+  "comment": "命名以 cv 项目 docs/SCHEMA_NAMING.md 为准。x-platforms=该字段在哪些平台出现;x-tier=core(三平台必填)/common(≥2平台)/longtail(单平台);x-status=current(CV已有)/proposed(待新增)。全部 proposed 字段均为可选,不破坏现有 data.json。文档表: docs/PLATFORM_FIELDS.md",
+  "type": "object",
+  "required": ["profile", "sections"],
+  "properties": {
+    "profile": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current" },
+        "phone": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current" },
+        "email": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current" },
+        "所在地": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current", "comment": "中文 key,平台别名:现居地/居住地/所在城市" },
+        "title": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current" },
+        "experience": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current", "comment": "工作年限,如 '5年'" },
+        "求职状态": { "type": "string", "x-platforms": ["boss", "zhaopin"], "x-tier": "common", "x-status": "current", "comment": "中文 key" },
+        "gender": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "longtail", "x-status": "current" },
+        "birthDate": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$", "x-platforms": ["boss", "liepin"], "x-tier": "longtail", "x-status": "current" },
+        "github": { "type": "string", "x-platforms": ["boss", "liepin"], "x-tier": "longtail", "x-status": "current" },
+        "avatar": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current", "comment": "file 上传,引擎永不自动传;导出 JSON 时清空" },
+        "timeline": { "type": "string", "x-platforms": [], "x-status": "current", "comment": "CV 自有字段,平台无" },
+        "expectSalary": {
+          "type": "object",
+          "x-platforms": ["liepin", "zhaopin"], "x-tier": "common", "x-status": "proposed",
+          "comment": "三框联动,单位 K",
+          "properties": {
+            "low": { "type": "number" },
+            "high": { "type": "number" },
+            "months": { "type": "number" }
+          },
+          "required": ["low", "high", "months"]
+        },
+        "expectCities": { "type": "array", "items": { "type": "string" }, "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "common", "x-status": "proposed" },
+        "expectIndustry": { "type": "string", "x-platforms": ["liepin"], "x-tier": "longtail", "x-status": "proposed" },
+        "expectJobs": {
+          "type": "array",
+          "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "common", "x-status": "proposed",
+          "comment": "期望职位多条目结构。⚠️ 单位分歧:猎聘薪资是 K,智联选项'N千'是元/月。智联上限:职位≤5/行业≤3/城市≤5。Boss 条目含 面议 选项",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "jobType": { "type": "string", "comment": "工作性质:全职/兼职/实习(智联 radio)" },
+              "salary": { "type": "object", "properties": { "low": { "type": "number" }, "high": { "type": "number" } }, "comment": "单位 K;面议则省略" },
+              "cities": { "type": "array", "items": { "type": "string" } },
+              "industries": { "type": "array", "items": { "type": "string" }, "comment": "期望行业多选(智联≤3)" }
+            }
+          }
+        },
+        "expectPreference": { "type": "string", "x-platforms": ["zhaopin"], "x-tier": "longtail", "x-status": "proposed", "comment": "求职偏好(智联)" },
+        "wechat": { "type": "string", "x-platforms": ["liepin"], "x-tier": "longtail", "x-status": "proposed" },
+        "politicalStatus": { "type": "string", "x-platforms": ["liepin"], "x-tier": "longtail", "x-status": "proposed", "comment": "政治面貌" },
+        "currentSalary": {
+          "type": "object",
+          "x-platforms": ["liepin", "zhaopin"], "x-tier": "common", "x-status": "proposed",
+          "comment": "当前薪资:猎聘 nowSalary+nowSalaryMonths+保密checkbox;智联单框",
+          "properties": {
+            "salary": { "type": "number", "comment": "月薪,单位 K" },
+            "months": { "type": "number" },
+            "secret": { "type": "boolean", "comment": "薪资保密" }
+          }
+        },
+        "firstWorkDate": { "type": "string", "pattern": "^\\d{4}(-\\d{2})?$", "x-platforms": ["zhaopin"], "x-tier": "longtail", "x-status": "proposed", "comment": "参加工作时间;profile.experience('5年')是它的派生值" }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "items"],
+        "properties": {
+          "type": { "enum": ["summary", "experience", "education", "projects", "skills", "certificate", "language", "training"] },
+          "items": { "type": "array" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "experienceItem": {
+      "type": "object",
+      "required": ["company", "position", "period"],
+      "properties": {
+        "company": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current" },
+        "position": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current" },
+        "period": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current", "comment": "字符串 '2023.09 - 2025.07'/'至今',引擎 splitPeriod 拆双框" },
+        "summary": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current", "comment": "平台别名:工作内容/职责描述/工作简介" },
+        "highlights": { "type": "array", "items": { "type": "string" }, "x-platforms": ["boss", "liepin"], "x-tier": "core", "x-status": "current", "comment": "⚠️ 现承担'工作内容补充+工作业绩'两个角色,achievements 落地后各司其职" },
+        "achievements": { "type": "array", "items": { "type": "string" }, "x-platforms": ["boss", "liepin"], "x-tier": "common", "x-status": "proposed", "comment": "P0:工作业绩独立框" },
+        "industry": { "type": "string", "x-platforms": ["boss"], "x-tier": "longtail", "x-status": "proposed" },
+        "department": { "type": "string", "x-platforms": ["boss"], "x-tier": "longtail", "x-status": "proposed" },
+        "isIntern": { "type": "boolean", "x-platforms": ["liepin", "zhaopin"], "x-tier": "common", "x-status": "proposed", "comment": "误勾比不填更糟,引擎只读不猜" },
+        "currentSalary": { "type": "object", "x-platforms": ["liepin", "zhaopin"], "x-tier": "common", "x-status": "proposed", "comment": "段级当前薪资(选填);profile 级同名字段优先", "properties": { "salary": { "type": "number" }, "months": { "type": "number" } } },
+        "skillTags": { "type": "array", "items": { "type": "string" }, "x-platforms": ["boss"], "x-tier": "longtail", "x-status": "proposed" }
+      }
+    },
+    "educationItem": {
+      "type": "object",
+      "required": ["school", "major", "period"],
+      "properties": {
+        "school": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current" },
+        "major": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current" },
+        "degree": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current" },
+        "degreeType": { "type": "string", "enum": ["全日制", "非全日制", "自考", "成考"], "x-platforms": ["boss"], "x-tier": "longtail", "x-status": "proposed", "comment": "P1:Boss 学历是 本科/全日制 组合选择器" },
+        "period": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current" },
+        "courses": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "longtail", "x-status": "current" },
+        "campus": { "type": "string", "x-platforms": ["boss", "liepin"], "x-tier": "common", "x-status": "current", "comment": "⚠️ 平台口径更宽(职务/荣誉/活动/课程);猎聘字段名就叫 experience" },
+        "thesisTitle": { "type": "string", "x-platforms": ["boss"], "x-tier": "longtail", "x-status": "proposed", "comment": "毕设/论文题目(Boss 与描述是两个框)" },
+        "thesis": { "type": "string", "x-platforms": ["boss"], "x-tier": "longtail", "x-status": "proposed", "comment": "毕设/论文描述(600 字)" },
+        "isUnified": { "type": "boolean", "x-platforms": ["liepin"], "x-tier": "longtail", "x-status": "proposed" },
+        "overseasEdu": { "type": "boolean", "x-platforms": ["zhaopin"], "x-tier": "longtail", "x-status": "proposed", "comment": "海外学习经历 checkbox" },
+        "_periodNote": { "comment": "Boss 教育时间段是仅年份选择器(2023 至 2025),与工作/项目的年月格式不同" }
+      }
+    },
+    "projectItem": {
+      "type": "object",
+      "required": ["name", "period"],
+      "properties": {
+        "name": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current" },
+        "period": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current" },
+        "tags": { "type": "array", "items": { "type": "string" }, "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "longtail", "x-status": "current", "comment": "⚠️ 平台叫 技术栈/技能标签,从不叫 tags" },
+        "summary": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current" },
+        "highlights": { "type": "array", "items": { "type": "string" }, "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "common", "x-status": "current" },
+        "role": { "type": "string", "x-platforms": ["boss"], "x-tier": "longtail", "x-status": "proposed" },
+        "link": { "type": "string", "x-platforms": ["boss"], "x-tier": "longtail", "x-status": "proposed" },
+        "achievements": { "type": "array", "items": { "type": "string" }, "x-platforms": ["boss"], "x-tier": "longtail", "x-status": "proposed" }
+      },
+      "not": { "required": ["challenges"] },
+      "comment": "challenges 已于 2026-08-13 删除,勿复活"
+    },
+    "certificateItem": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current", "comment": "证书名称/资格证书" },
+        "issuer": { "type": "string", "x-platforms": ["liepin"], "x-tier": "longtail", "x-status": "current" },
+        "period": { "type": "string", "x-platforms": ["boss", "liepin"], "x-tier": "longtail", "x-status": "current", "comment": "获得时间" }
+      }
+    },
+    "languageItem": {
+      "type": "object",
+      "required": ["name"],
+      "x-status": "proposed",
+      "comment": "整段新增:CV 当前无 languages section。⚠️ 命名分歧:猎聘=语言+熟练程度(proficiency)+等级(level);智联=语种(name)+听说(listeningSpeaking)+读写(readingWriting)。超集取并集,按平台填子集。智联语种选项:英语/汉语/日语/法语/德语/俄语/韩语(朝鲜语)/西班牙语…",
+      "properties": {
+        "name": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "common", "x-status": "proposed", "comment": "语种,如 英语" },
+        "proficiency": { "type": "string", "x-platforms": ["liepin"], "x-tier": "common", "x-status": "proposed", "comment": "熟练程度:一般/良好/熟练/精通" },
+        "level": { "type": "string", "x-platforms": ["liepin"], "x-tier": "common", "x-status": "proposed", "comment": "语言等级:如 CET-6" },
+        "listeningSpeaking": { "type": "string", "x-platforms": ["zhaopin"], "x-tier": "common", "x-status": "proposed", "comment": "听说能力(智联拆分)" },
+        "readingWriting": { "type": "string", "x-platforms": ["zhaopin"], "x-tier": "common", "x-status": "proposed", "comment": "读写能力(智联拆分)" }
+      }
+    },
+    "trainingItem": {
+      "type": "object",
+      "required": ["institution", "course"],
+      "x-status": "proposed",
+      "comment": "整段新增:培训经历。智联实测:培训机构(必填)+培训课程(必填)+培训时间(双date+至今)",
+      "properties": {
+        "institution": { "type": "string", "x-platforms": ["zhaopin"], "x-tier": "longtail", "x-status": "proposed" },
+        "course": { "type": "string", "x-platforms": ["zhaopin"], "x-tier": "longtail", "x-status": "proposed" },
+        "period": { "type": "string", "x-platforms": ["zhaopin"], "x-tier": "longtail", "x-status": "proposed", "comment": "支持至今" }
+      }
+    }
+  }
+}

@@ -11,6 +11,7 @@
 - **PDF 导出** — 支持截图导出（图片 PDF）和浏览器打印（可搜索/可复制）两种模式
 - **招聘平台智能解析友好** — 系统字体 + 打印字号锁定 + OCR 友好排版；已验证支持 **Boss 直聘** 和 **智联招聘** 智能解析（需 PDF 中的姓名、联系方式等个人信息与本人一致）
 - **本地存储** — 编辑内容自动保存到浏览器 `localStorage`
+- **数据安全** — 导入/重置前自动备份 + 每 5 分钟快照到 `cv_backup` 槽位，编辑器底部「恢复备份」一键找回；导入前走 schema 校验拦截坏数据
 - **编辑器实时联动** — 任意表单改动触发 50ms debounce 重渲染预览，不需要点保存
 - **头像上传** — 上传后自动转为 base64 存入浏览器 localStorage，按姓名绑定；导出 JSON/Markdown 时不含头像，减轻文件体积
 - **缩放控制** — 右下角悬浮工具栏，范围 100%–130%，步进 10%
@@ -170,6 +171,7 @@ CV 项目与 [cv-autofill](https://github.com/takenroot/cv-autofill) 项目协�
 
 - [docs/CV_SCHEMA_FEEDBACK.md](docs/CV_SCHEMA_FEEDBACK.md) — 招聘平台字段反馈
 - [docs/SCHEMA_NAMING.md](docs/SCHEMA_NAMING.md) — CV 字段 ↔ 平台输入框 命名对照表 + 自动填充映射建议
+- [docs/cv-schema.json](docs/cv-schema.json) — cv-autofill 超集 schema 的仓库内副本 (三平台字段并集, 含 x-platforms / x-tier / x-status 标注)
 
 ## 自定义样式
 

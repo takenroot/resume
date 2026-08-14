@@ -1,7 +1,7 @@
 /* ===========================================================
    CV 简历网页 — 数据加载 / 持久化 / 导入导出
    =========================================================== */
-const STORAGE_KEY = 'cv_data', AVATAR_PREFIX = '__cv_avatar_';
+const STORAGE_KEY = 'cv_data', AVATAR_PREFIX = '__cv_avatar_', BACKUP_KEY = 'cv_backup';
 let cvData = null;
 
 // ponytail: 从 cfg.fields 读所有 a:true (数组字段) 列表, 统一走 arr() 拆.
@@ -22,6 +22,37 @@ function normalizeYesNoFields(d) {
       });
     });
   });
+}
+
+// ponytail: 导入/恢复前校验, 走 SECTION_CONFIG 反查字段类型. 只查结构性错误
+// (坏 JSON / 未知 type / 字段类型错), 不查业务合法性 (日期格式等). 返回错误数组, 空 = 通过.
+function validateSchema(d) {
+  const errs = [];
+  if (!d || typeof d !== 'object' || Array.isArray(d)) return ['数据不是对象'];
+  if (!d.profile || typeof d.profile !== 'object' || Array.isArray(d.profile)) errs.push('缺少 profile 对象');
+  if (!Array.isArray(d.sections)) { errs.push('缺少 sections 数组'); return errs; }
+  d.sections.forEach(function (s, i) {
+    const w = 'sections[' + i + ']';
+    if (!s || typeof s !== 'object' || Array.isArray(s)) { errs.push(w + ' 不是对象'); return; }
+    const cfg = SECTION_CONFIG[s.type];
+    if (!cfg) { errs.push(w + ' 未知 type: ' + s.type); return; }
+    if (cfg.contentField === 'content') { if (s.content !== undefined && typeof s.content !== 'string') errs.push(w + '.content 应为字符串'); return; }
+    if (!Array.isArray(s.items)) { errs.push(w + '.items 应为数组'); return; }
+    s.items.forEach(function (it, j) {
+      const w2 = w + '.items[' + j + ']';
+      if (cfg.contentField === 'items') { if (typeof it !== 'string') errs.push(w2 + ' 应为字符串'); return; }
+      if (!it || typeof it !== 'object' || Array.isArray(it)) { errs.push(w2 + ' 不是对象'); return; }
+      (cfg.fields || []).forEach(function (f) {
+        const v = it[f.n];
+        if (v === undefined || v === null || v === '') return;
+        if (f.a && !Array.isArray(v) && typeof v !== 'string') errs.push(w2 + '.' + f.n + ' 应为数组或字符串');
+        else if (!f.a && f.t !== 'textarea' && typeof v === 'object') errs.push(w2 + '.' + f.n + ' 应为标量');
+        // ponytail: select 是/否字段存 boolean, 只对 string 值查 options.
+        else if (f.t === 'select' && f.options && f.options.length && typeof v === 'string' && f.options.indexOf(v) < 0) errs.push(w2 + '.' + f.n + ' 值 "' + v + '" 不在选项里');
+      });
+    });
+  });
+  return errs;
 }
 
 function normalizeSavedData() {
@@ -53,6 +84,19 @@ function resolveAvatarUrl() {
   return local || '';
 }
 function saveCvData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(cvData)); }
+// ponytail: 单备份槽位 — 导入前备份 + 每 5 分钟自动快照共用. reason 记来源便于排查.
+function backupCvData(reason) { if (!cvData) return; try { localStorage.setItem(BACKUP_KEY, JSON.stringify({ ts: new Date().toISOString(), reason: reason || 'auto', data: cvData })); } catch (e) {} }
+function loadBackup() { try { const s = localStorage.getItem(BACKUP_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
+function restoreBackup() {
+  const b = loadBackup();
+  if (!b || !b.data) { showToast('没有可用备份', 'info'); return; }
+  const errs = validateSchema(b.data);
+  if (errs.length) { showToast('备份数据损坏：' + errs[0], 'error', 4000); return; }
+  if (!confirm('恢复到 ' + b.ts.slice(0, 19).replace('T', ' ') + ' 的备份（' + (b.reason || 'auto') + '）？当前数据会先备份。')) return;
+  backupCvData('pre-restore');
+  applyImportedData(b.data);
+  showToast('已恢复备份', 'success');
+}
 function resetCvData() { localStorage.removeItem(STORAGE_KEY); location.reload(); }
 function loadCvData() { return new Promise(function (rs) { const st = localStorage.getItem(STORAGE_KEY); if (st) { try { cvData = JSON.parse(st); normalizeSavedData(); rs(); return; } catch (e) {} } fetch('./data.json').then(function (r) { return r.json(); }).then(function (d) { cvData = d; normalizeSavedData(); rs(); }).catch(function () { cvData = { profile: {}, sections: [] }; normalizeSavedData(); rs(); }); }); }
 function exportJson() { const exportData = JSON.parse(JSON.stringify(cvData)); exportData.profile.avatar = ''; const b = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' }), u = URL.createObjectURL(b), a = document.createElement('a'); a.href = u; a.download = 'resume-data.json'; a.click(); URL.revokeObjectURL(u); }
@@ -75,6 +119,19 @@ function clearImportDom() {
   const hr = document.getElementById('headerRow'); if (hr) hr.replaceChildren();
 }
 
+// ponytail: 导入/恢复备份共用的应用路径 — 归一 → 清 DOM → 存 → 渲染 → 滚顶 → 重建编辑器.
+function applyImportedData(d) {
+  cvData = d;
+  normalizeSavedData();
+  clearImportDom();
+  saveCvData();
+  renderCv();
+  syncResumeLayout();
+  updateStageSize();
+  window.scrollTo(0, 0);
+  if (!document.getElementById('editorPanel').hidden) buildEditorForm();
+}
+
 function importData(file) {
   const r = new FileReader();
   r.onload = function (e) {
@@ -82,19 +139,16 @@ function importData(file) {
       let d;
       if (file.name.toLowerCase().endsWith('.md')) d = parseMarkdown(e.target.result);
       else d = JSON.parse(e.target.result);
-      if (!d.profile) throw new Error('缺少 profile 字段');
-      cvData = d;
-      normalizeSavedData();
-      if (cvData.profile) cvData.profile.avatar = '';
-      clearImportDom();
-      saveCvData();
-      renderCv();
-      syncResumeLayout();
-      updateStageSize();
-      window.scrollTo(0, 0);
-      if (!document.getElementById('editorPanel').hidden) buildEditorForm();
+      const errs = validateSchema(d);
+      if (errs.length) { showToast('导入失败：' + errs.slice(0, 3).join('；') + (errs.length > 3 ? '（共 ' + errs.length + ' 处）' : ''), 'error', 6000); return; }
+      if (!confirm('导入将覆盖当前简历（当前数据会自动备份，可在编辑器底部「恢复备份」找回）。继续？')) return;
+      backupCvData('import');
+      // ponytail: 外部文件的 avatar 可能是别人简历的 base64, 清掉防泄露; 头像走本地 AVATAR_PREFIX 槽位.
+      if (d.profile) d.profile.avatar = '';
+      applyImportedData(d);
       showToast('导入成功', 'success');
     } catch (err) {
+      logError('import', err);
       showToast('导入失败：' + err.message, 'error', 3600);
     }
   };
