@@ -218,7 +218,7 @@ function bindEditorEvents() {
       else if (a === 'export-json') { collectFormData(); exportJson(); return; }
       else if (a === 'export-md') { collectFormData(); exportMarkdown(); return; }
       else if (a === 'print') { exportPdf(); return; }
-      else if (a === 'export-pdf-image') { collectFormData(); exportPdfImage(); return; }
+      else if (a === 'export-png') { exportPng(); return; }
       else if (a === 'restore-backup') { restoreBackup(); return; }
       else if (a === 'copy-errors') { copyErrorReport(); return; }
       else if (a === 'reset-data') { if (confirm('重置将清空当前简历并恢复初始数据（当前数据会自动备份）。继续？')) { backupCvData('pre-reset'); resetCvData(); } return; }

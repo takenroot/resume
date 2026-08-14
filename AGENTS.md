@@ -20,10 +20,10 @@ No build step — edit source files directly, reload browser.
 | `site/js/` | Modular JS — app.js (entry), editor.js, renderer.js, pagination.js, zoom.js, config.js, utils.js, markdown.js, data.js, prefs.js |
 | `site/data.json` | Default resume data |
 
-## PDF Export
+## PDF / PNG Export
 
 Two modes available:
-- **导出为图片（PDF）** — html2canvas + jsPDF (screenshot, text not searchable)
+- **导出 PNG（图片）** — html2canvas screenshot, one PNG per page (text not searchable)
 - **导出 PDF（浏览器打印）** — `window.print()` via `@media print` (text searchable)
 
 ## Important Notes

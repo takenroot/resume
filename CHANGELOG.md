@@ -28,9 +28,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 删 `copyText` 的 `document.execCommand('copy')` textarea fallback (现代浏览器全支持 `navigator.clipboard.writeText`).
 - 删 `docs/个人简历袁文娇(1).doc` + `docs/resume-data*.json` 个人数据文件挪出仓库.
 - 删 `SECTION_TYPES` 死常量 + `prefs.js` 顶层 static-bind (DOM 未就绪就挂监听, 全 miss).
+- 删 `.pdf-exporting` body class 切换 (CSS 里无定义, 纯死代码) 随截图 PDF 一起清掉.
 
 ### Changed
 
+- 导出菜单重设计 (图片就是图片, PDF 就是 PDF): 砍「截图嵌 PDF」(`exportPdfImage` + `captureSequential` + jsPDF CDN, -1 依赖), 截图导出改 `exportPng()` 每页一张 PNG (多页 `_p1`/`_p2` 后缀, 不拼长图); PDF 只走浏览器打印. 导出 dropdown 收编全部 4 项 (JSON / Markdown / PNG / PDF 打印), 编辑器底部独立「导出 PDF」按钮撤掉.
 - `education.isUnified` 默认从 `'否'` 改为 `'是'` (主流本科生是统招, 每次添加都改的体验问题).
 - select 是/否字段统一在代码里存 boolean: 老 boolean→string `'是'/'否'` 反向成 string→boolean (`yesNoToBool`). `collectFormData` 末尾调 `normalizeYesNoFields(cvData)` 跟 `loadCvData` 走同一份归一化逻辑.
 - `education.campus` / `education.honors` "每行一条"渲染/导出统一走 `lis()` / `mli()` helper (前者原 inline `.map('<li>')`, 后者 `mli(...)`).

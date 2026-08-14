@@ -17,54 +17,26 @@ function exportPdf() {
   window.print();
 }
 
-/* ---- 导出 PDF（截图嵌入，文字不可搜索） ---- */
-function exportPdfImage() {
-  // jspdf 在 UMD 下挂在 window.jspdf.jsPDF（v2+）或 window.jsPDF（v1）
-  const JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
-  if (typeof JsPDF !== 'function' || typeof html2canvas !== 'function') {
-    showToast('PDF 库未加载，无法导出', 'error', 3000);
-    return;
-  }
+/* ---- 导出 PNG（截图，文字不可搜索） ---- */
+// ponytail: 每页一张 PNG (多页加 _p1/_p2 后缀), 不拼长图 — 长图高度上限 ~32k px 容易翻车.
+// 多页连续 a.click() 下载, 浏览器首次会问「允许下载多个文件」.
+function exportPng() {
+  if (typeof html2canvas !== 'function') { showToast('截图库未加载，无法导出', 'error', 3000); return; }
   const pages = Array.from(document.querySelectorAll('#resumePages .resume-page'));
-  if (pages.length === 0) {
-    showToast('未检测到分页内容，请改用打印导出', 'info', 3000);
-    return;
-  }
-
-  showToast('正在生成图片版 PDF（' + pages.length + ' 页）…', 'info', 10000);
-
-  // 临时禁用指针/文本选中，避免截图过程中用户点击/选中干扰
-  const body = document.body;
-  body.classList.add('pdf-exporting');
-
-  // 截图前强制重排：等一帧让浏览器绘制稳定状态
-  requestAnimationFrame(function () {
-    captureSequential(pages)
-      .then(function (pdf) {
-        const name = (cvData && cvData.profile && cvData.profile.name ? cvData.profile.name + '_' : '') + 'resume.pdf';
-        pdf.save(name);
-        showToast('图片 PDF 导出成功（文字不可搜索）', 'success', 2000);
-      })
-      .catch(function (err) {
-        console.error('PDF export failed:', err);
-        showToast('图片 PDF 导出失败：' + (err && err.message || err), 'error', 4000);
-      })
-      .then(function () { body.classList.remove('pdf-exporting'); });
+  if (!pages.length) { showToast('未检测到分页内容', 'info', 3000); return; }
+  showToast('正在生成 PNG（' + pages.length + ' 页）…', 'info', 10000);
+  const name = (cvData && cvData.profile && cvData.profile.name ? cvData.profile.name + '_' : '') + 'resume';
+  let chain = Promise.resolve();
+  pages.forEach(function (pg, i) {
+    chain = chain.then(function () { return html2canvas(pg, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' }); }).then(function (canvas) {
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = name + (pages.length > 1 ? '_p' + (i + 1) : '') + '.png';
+      a.click();
+    });
   });
-}
-
-// 顺序截图：保证多页 PDF 的页序，避免 Promise.all 竞态导致乱序. async/await 顺序执行, 单例 pdf 实例贯穿全流程
-async function captureSequential(pages) {
-  const JsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
-  const pdf = new JsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-  const w = 210, h = 297; // A4 portrait mm
-  for (let i = 0; i < pages.length; i++) {
-    const canvas = await html2canvas(pages[i], { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
-    const imgData = canvas.toDataURL('image/png');
-    if (i > 0) pdf.addPage();
-    pdf.addImage(imgData, 'PNG', 0, 0, w, h);
-  }
-  return pdf;
+  chain.then(function () { showToast('PNG 导出成功（' + pages.length + ' 张）', 'success', 2000); })
+    .catch(function (err) { logError('export-png', err); showToast('PNG 导出失败：' + (err && err.message || err), 'error', 4000); });
 }
 /* ---- 错误队列 (telemetry) ---- */
 // ponytail: 本地错误队列, localStorage 留最近 20 条. 不外发, 用户手动「复制错误」带走.
