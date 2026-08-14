@@ -7,85 +7,109 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-08-14
+
+> 11 个 commit 自 1.1.0 累积。**核心**: 全字段 schema 升级 (P0/P1/P2 招聘平台字段) + 编辑器 bug 修复 + 文档化 + 时间轴默认关闭。
+
 ### Added
 
-- Editor "个人信息" 模块: "年龄" 字段改用 "出生日期" (HTML5 原生日期选择器 `<input type="date">`, YYYY-MM-DD); 简历预览按今日日期自动算出年龄 ("X岁")
-- Editor now shows a "清除头像" (Clear Avatar) button when a local avatar exists.
-- Resume automatically loads the local avatar for the current profile name on render.
+#### 编辑器增强
+
 - 编辑器实时联动: 任意表单项改动触发 `input` 事件 → debounce 50ms → `collectFormData({ skipSave: true })` (内存更新, **不写 localStorage**) + `renderCv()` + `syncResumeLayout()`. 预览页跟随实时刷新, 不需要点保存.
 - 编辑器聚焦联动定位 (按 item): 表单 input 获得焦点时, JS 找最近的 `.editor-section` 容器, 按 `input.name` 解析: `profile.*` → 跳 `.resume-header`; `sectionTitle.I` / `sectionSummary.I` / `sectionText.I` → 跳该 section 标题; **`item.S.I.F` → 跳到该 section 的第 I 个 item** (article/li/p, 通过 `querySelectorAll` 按 DOM 顺序取索引, 跨分页也成立). `scrollIntoView({ behavior: 'smooth', block: 'center' })` + 加 `.preview-highlight` 类触发 1.5s 蓝色淡出动画, 高亮落在具体 item 上. 实时同步重渲后重新定位并高亮当前聚焦字段所属 item.
-- 教育背景模块条目新增 `校园经历` 字段 (textarea 多行, 类似自我评价的输入方式): 在 `school/major/degree/period/courses` 之后, 渲染为 `<p class="summary">` (多行用 `<br>` 分隔), Markdown 导出保持缩进的多行列表项. 老 data 自动兼容 (campus 缺省视为空).
-- 教育背景条目渲染重构: 主修课程 + 校园经历 都从 item-head 里移出, 各自一个 `.item-section` 容器, 上面有 `.item-section-label` 小标题 (`<h4>`, 灰小粗体), 校园经历按行 split 成 `<ul class="item-section-list">` (有项目符号, 与自我评价对齐), Markdown 导出用 `### 主修课程` / `### 校园经历` 三级标题 + `-` 列表项.
-- 示例数据内嵌: `site/js/data.js` 顶部新增 `DEFAULT_DATA` 常量 (原 data.json 内容), `loadCvData` 在 localStorage 为空 + `fetch('./data.json')` 失败时, 改用 `DEFAULT_DATA` 作为示例 demo (不弹错). 这样 `file://` 协议直接打开也能看到示例简历, 不再受 CORS 阻挡. 用户自己的 data.json (HTTP 部署时) 仍走 fetch 优先.
-- 修复图片 PDF 导出 (多页简历): 旧 `captureSequential` 用递归实现, 每层递归重新声明 `const pdf = ... null`, 导致 idx>0 时 `pdf.addPage()` 在 null 上调用, 多页简历直接报错 `Cannot read properties of null (reading 'addPage')`. 改为 async/await 顺序执行, 单例 pdf 实例贯穿全流程, 修后多页简历可正常导出.
-- 项目经验条目新增 `难点` 字段 (与亮点完全一致机制: textarea 多行, 每行一条): 加在 highlights 之后, 渲染为独立的 `<ul>` bullet 列表 (有内容才渲染), Markdown 导出追加一段 `- ` 列表项. 让项目经历更真实不干巴 (开发者遇到的困难). 老条目自动兼容 (challenges 缺省视为空数组).
-- 亮点 + 难点列表加 subheading: 跟教育背景的"主修课程/校园经历"对齐, 都用 `.item-section` 容器 + `<h4 class="item-section-label">` 小标题 (灰小粗体) + `<ul class="item-section-list">` 项目符号. Markdown 导出用 `### 亮点` / `### 难点` 三级标题. 视觉上不再是同一组 bullet, 两个 list 各自带标头.
-- 修复跨项目 JSON 导入崩溃: 旧 `normalizeSavedData` 只对 projects.tags 做数组化, 其他字段 (highlights / challenges) 如果来源 JSON 是字符串/object, 直接传到渲染层 `lis()` 的 `(arr || []).map` 报 `(arr || []).map is not a function`. 改为统一对所有 section 条目的 highlights / challenges / tags 走 `arr()` helper (utils.js, 已支持 string→array 拆分), undefined 跳过不创建空数组.
-- 修复 live sync 后渲染崩溃 (同上根因): `collectFormData` 把表单 textarea 的字符串值写回 `cvData.items[i].field` 时只 normalize 了 highlights+tags, 没管 challenges. 编辑后页面没更新是因为 renderCv 在 `lis()` 抛错中断. 改为统一对三个数组字段走 `arr()` helper. import 后做表单编辑, 数据形状现在始终是数组.
-- 顶部时间轴自动隐藏: 之前 `.timeline-strip` 始终在 DOM 里 (没内容时仍占 padding 留空条). 改为渲染后若 `profile.timeline` 为空 + 无任何教育/工作经历的 period 可抽, 自动 `display: none`. 用户填了自定义 timeline 文字 或 加了带 period 的经历, 才显示. 想完全关掉时间轴, 清空对应字段即可.
-- 顶部时间轴显式开关: 编辑器"页面设置"区加 checkbox "显示顶部时间轴" (默认勾选), 状态存到 `cvPrefs.timelineEnabled` (localStorage). 关闭后强制 `display: none`, 不受内容影响. 不依赖 auto-hide 边角条件, 关掉就是关掉. 与 auto-hide 配合: 关掉 → 全隐藏; 勾上 → 自动按内容判定.
-- 编辑器模块加折叠按钮: 每个 section 头部多一个 ▾ 按钮 (在 ↑↓× 前面), 点击切换 `.is-collapsed` class. 折叠后 `.editor-module-body { display: none }`, 整个模块正文 (标题输入框 + 条目) 收起, 只剩模块名 + 折叠按钮 + 排序/删除按钮, 操作多个模块之间位置时清爽. chevron 旋转 -90° 视觉上从 ▾ 变 ▸. 不持久化 (关掉编辑器再开会重置, 但这是局部 UI 状态, 不影响简历数据).
-- 项目经历渲染补上 period 显示: 之前 experience 和 education 都有 `<span class="item-time">` 显示日期, projects 漏了 (只显示名字 + tags + summary + 亮点/难点). 加 span 后项目日期也右对齐显示.
-- `.item-time` 加 `white-space: nowrap` + `flex-shrink: 0`: 日期字符串 (含中文) 在窄容器里会从中间断开 (如 `2025年12月-2026年6\n月`), 因为没强制不换行. 加 nowrap 后日期完整在一行; flex-shrink:0 保证 flex 不压缩日期. 项目 tags 多 (内层 div 宽) 时仍完整显示.
-- 个人信息加 `求职状态` 字段 (select, 选项: 随时到岗 / 在职-看机会 / 在职-暂不考虑 / 暂不找工作): 编辑器字段加在 经验 和 所在地 之间, 简历顶部 badge 样式 (蓝填充 + 边框 + 圆角). 空值时 `:empty` 选择器自动隐藏 badge. 个人信息同时删除 `年龄` 字段 (renderer.js 移除 profile.age 特殊处理 computeAge, index.html 移除 / age 那段 span).
-- `求职状态` 重排到 identity-meta (替换原来的性别显示位): 用公文包 SVG icon (24×24, fill=currentColor) + 纯文字, 无 badge 样式 (按用户要求"直接上文字即可, 不要用样式"). 头部姓名下方一横条 title/experience/所在地 之间用 ` | ` 字面分隔. 删了 .profile-status / .profile-status:empty CSS 规则. 性别 (profile.gender) 不再渲染 (data 字段保留在 form, 不强制删).
-- 头部姓名下方"如果不填就不显示 |" 的规则: 之前用字面 " | " 隔, 字段为空时周围的 | 还在 (例: "全栈开发工程师 |  | 内蒙古巴彦淖尔"). 改为 renderer.js 里 `renderHeaderRow()` 动态构建这条横条: 遍历 `[title, experience, 所在地]` 三个字段, 过滤出非空项, 只在非空项之间插 " | " (最后一个非空项后面不插). 旧 CSS ::before + :has() 方案已撤掉, 逻辑收敛在一处更直观. index.html 那三个 .hdr-item wrapper 合并成单个 `<span class="header-row" id="headerRow"></span>`.
-- 修复 collectFormData 浅拷贝引发的跨模块越界: 旧 `cvData.sections.map(s => Object.assign({}, s))` 只复制外层对象, `s.items` 沿用同一引用. 若两份 sections 共享同一个 items 数组 (历史数据/异常导入), 在一段上 push 会让所有共用方一起涨, 表现为"加一条其他模块也加一条". 改为对 `s.items` 显式 `slice()` 拆掉数组级引用. 内部对象仍共享 (collectFormData 不替换 item 对象本身, 只在已有 item 上写字段或 push/splice), 性能比深拷贝好.
-- 修复 summary 模块占位项首次 collectFormData 后被清空: 旧 `sectionSummary` handler 对空 textarea 走 `filter(Boolean)`, 把默认占位 `[""]` 变成 `[]`, 让新建的空 summary 模块在预览里直接消失 (`renderContent` 见 items.length===0 就 return). 改为占位且未输入时保留 `[""]`.
-- 新增模块类型 `其它经历` (SECTION_CONFIG.experience_other): 与 `工作经历` (experience) 共享同一份 fields / renderItem / mdItem / defaultItem, 只换 label. 把经验模块的共享配置抽到顶层 const `_EXP_SHARED`, 两个 SECTION_CONFIG 条目用 `..._EXP_SHARED` 展开, 单一数据源 — 之后再加 alias (如 '其它教育') 加一行就行. 不会进入顶部时间轴 (getTimelineLabel 只硬编码 'education' / 'experience'), 也不会污染源 defaultItem (`getDefaultItem` 走 JSON 深拷). 添加模块下拉自动出现.
-- 复制 [cv-autofill/docs/CV_SCHEMA_FEEDBACK.md](docs/CV_SCHEMA_FEEDBACK.md) 到本项目 docs, 配套新增 [docs/SCHEMA_NAMING.md](docs/SCHEMA_NAMING.md) 字段命名对照表: 列出 CV 项目每个字段在 Boss/猎聘/智联三平台的对应输入框名 + 字段缺口清单 + 自动填充映射建议. 给 cv-autofill 引擎做字段映射时直接查这表, 不用反推 CV schema.
-- 修复导入 JSON 后姓名/个人信息不更新: 旧 `importData` 调 `renderCv()` 但没清空旧 DOM 的 textContent, 而 renderCv 的 data-render 分支在 `v` 为空且元素已有 children 时只 add `is-empty` 类不清 textContent, 残留上次的值. 改为导入前显式清空所有 data-render 元素的 textContent + 整块 replaceChildren resumeSource + 清空 headerRow. 普通的 live-sync 走输入框赋值不受影响. Playwright 验证: 旧"张三" → 新"测试用户甲" / "另一用户乙", sections 数量跟着 JSON 走 (2 → 0), 残留清干净.
-- 删除项目 `challenges` (难点) 字段: 用户确认用不上, 编辑器不放该输入框, 渲染和 Markdown 导出也不再生成对应 block, 老数据迁移时 (normalizeSavedData + collectFormData) 主动 delete challenges. Playwright 验证: 导入含 `challenges: ""` 的 JSON 后 localStorage 里再无该字段.
-- 修复编辑器模块标签 (module-type-label) 跟用户改的标题 (sectionTitle 输入框) 视觉错位: 旧 buildEditorSectionForm 里 `module-type-label` 写死 `cfg.label` (来自 sec.type), 与 `sec.title` 完全解耦. 用户改 "项目经验" → "项目集" 后, 标签仍显示 "项目经验" 跟输入框内容不一致, 让用户以为 "标题写错了". 改为 `(sec.title || cfg.label)` — 用户没改时仍显示默认 label, 改过就用用户改的. liveSyncPreview 跑 collectFormData 后再同步刷一遍 label 文字 (不改 DOM 结构, 保留 input focus). Playwright 验证: 改 idx=3 "项目经验"→"项目集" / "项目经验"→"自我评价" / idx=1 "专业技能"→"工作经历" 全部同步.
-- 修复 editorPanel hidden 状态错位: index.html 初始 `<div class="editor-panel" hidden>`, HTML `hidden` 属性会强制 `display: none` 覆盖 CSS `display: flex`; openEditor 只加 `is-open` class, 没取消 hidden, 关闭后 hidden 也保留. 改为去掉 index.html 上的 hidden 初始属性, openEditor / closeEditor 显式设 `ep.hidden = false / true` 跟 class 同步. 顺带修 importData 里 `if (!editorPanel.hidden) buildEditorForm()` 现在能可靠判定编辑器状态, 导入时编辑器开着的会 rebuild.
-- 抽 `moduleLabel(sec)` helper: 之前 buildEditorSectionForm (静态渲染) 跟 liveSyncPreview (实时刷新) 各写一遍 `sec.title || (SECTION_CONFIG[s.type] || {}).label || ''` 表达式, 两处回退逻辑一致但分散. 抽到顶层单一函数, buildEditorForm 走 `esc(moduleLabel(sec))` (HTML 上下文), liveSync 走 `moduleLabel(sec)` (textContent 上下文, 不需要 esc). Playwright 验证: 改 idx=3 "项目经验"→"项目集" 同步, 清空 title 自动回退到 "项目经验", 保存后 localStorage 持久化正常.
-- 实现优化文档 [CV_SCHEMA_FEEDBACK.md](docs/CV_SCHEMA_FEEDBACK.md) 里 P0/P1/P2 全部缺口字段 (P3 暂缓):
-  - **P0 experience.achievements** (string[], textarea 每行一条): 工作业绩独立于工作内容, 解决 Boss/猎聘双 textarea 硬结构. 渲染跟 highlights 同款 subheading 列表 (`工作业绩` 标题). 走 achievements/industry/skillTags 一并加进 _EXP_SHARED.
-  - **P1 profile.expectSalary** ({low, high, months}): 三框联动数字输入 (K/月). 只存不渲染 — 数据用于自动填充引擎去填猎聘. 三框都空时 delete 对象避免残留空 string.
-  - **P1 profile.expectCities** (string[], textarea): 期望城市多选. 老数据 string 自动 arr() 拆分.
-  - **P1 profile.expectIndustry / wechat**: 期望行业 + 微信号, 跟现有字段同一行布局.
-  - **P1 education.degreeType** (select 3 选项): 全日制 / 非全日制 / 自考. 渲染时跟 degree 拼成 `本科 (全日制)`.
-  - **P1 education.isUnified** (checkbox): 统招标记, 渲染时 title 旁加 `<span class="item-meta-tag">统招</span>`.
-  - **P1 experience.isIntern** (checkbox): 实习 checkbox, 用 `el.checked` 转 boolean 而非 `el.value` 字符串.
-  - **P2 education.experience** (string[], textarea): 在校经历, 跟 `campus` 区分 — campus 是职务/活动, experience 是荣誉/奖项. 渲染独立 subheading.
-  - **P2 education.thesis** (textarea): 毕设/论文描述.
-  - **P2 experience.industry / department**: 工作 head 旁边 meta-tag badge.
-  - **P2 experience.skillTags** (string[], textarea 逗号分隔): 每段经历独立技能标签, 渲染独立 subheading (`技能标签`).
-  - **P2 projects.role / link / achievements**: 担任角色 (meta-tag badge), 项目链接 (独立 .project-link 区块带 target=_blank), 项目业绩 (subheading).
+- 编辑器模块加折叠按钮: 每个 section 头部多一个 ▾ 按钮 (在 ↑↓× 前面), 点击切换 `.is-collapsed` class. 折叠后 `.editor-module-body { display: none }`, 整个模块正文 (标题输入框 + 条目) 收起, 只剩模块名 + 折叠按钮 + 排序/删除按钮. chevron 旋转 -90° 视觉上从 ▾ 变 ▸. 不持久化.
 - 编辑器新增 `select` / `checkbox` 字段类型支持: buildItemCard 原本只识别 textarea / 默认 input, 扩展后支持 `f.t === 'select'` (走 f.options) / `f.t === 'checkbox'` (走 el.checked 转 boolean). profile 级字段里 `求职状态` select 路径保留不动 (它已经走独立 buildProfileFields).
-- collectFormData 扩展: profile 路径支持嵌套对象 (`profile.expectSalary.low` 三段路径写入到 nd.profile.expectSalary.low); item 路径 checkbox 走 `el.checked` 而不是 `el.value`; 数组字段 (highlights / achievements / tags / skillTags / experience) collectFormData 末尾统一 arr() 拆 string.
-- normalizeSavedData 同步扩展: 老数据 string-shape achievements/skillTags/experience 字段加载时自动 arr() 拆, 老 expectCities string 同处理. 老数据 (achievements='业绩1\n业绩2') 渲染出 `<li>业绩1</li>` 通过.
-- 修 XSS: `projects.link` 用 `new URL()` 验证协议是 http(s), 否则拒绝渲染 `<a>` 标签. 修前 `esc()` 不防 URL 协议层攻击, 用户输入 `javascript:alert(1)` / `data:text/html,...` 会被 click 触发.
-- 修 type 契约: `profile.expectSalary.{low,high,months}` 从 string 改 number 存储 (符合文档定义 `{ low: 7, high: 10, months: 12 }`). collectFormData 给 number input 走 `Number()` 转换, 空字符串保留让 delete 逻辑判定.
-- 修 number 0 误删: expectSalary 三个字段 delete 判断从 `!x` 改 `x === ''`, number 0 (合法薪资) 不会被误判空值删除.
-- 抽 `renderItemFieldInput(f, v, name)` helper: buildItemCard 原本 4 个 if/else if 链 (select/checkbox/textarea/input) 抽到顶层, 加新类型只改一处. dispatch 风格而非 dispatcher map (YAGNI, 4 类型够直读).
-- 抽 `arrFieldsOf(cfg)` helper: collectFormData 末尾的数组 normalize 列表和 normalizeSavedData 都从硬编码 `['highlights', 'achievements', 'tags', 'skillTags', 'experience']` 改成从 `cfg.fields.filter(f.a).map(f.n)` 动态读. 加新数组字段只需在 fields 加 `{ a: true }`, 不需要再维护两处 normalize 列表.
-- 删 `projects.highlights` 字段: 用户确认跟项目业绩是同义重复, 编辑器不放, 渲染和 Markdown 导出也不生成对应 block. 老 data 没 highlights 直接跳过, 留 defaults 空数组兜底.
-- 所有 checkbox 改 select 是/否: `education.isUnified` / `experience.isIntern` UI 布局在分屏编辑器里 checkbox 难看 (`.checkbox-label` 没生效, 复选框 + label 拼一起不规整). 改 `t: 'select', options: ['是', '否']`, defaultItem 是 `'否'`. 老数据 boolean (true/false) normalize 时自动转 '是'/'否'. collectFormData 移除 `isCheckbox ? !!el.checked : el.value` 分支, 统一走 `el.value` (select 值就是 string).
-- 抽 `renderProfileFieldInput(f, profile)` helper: buildProfileFields 里 12 个 profile 字段的 input 拼接抽到顶层, 跟 renderItemFieldInput 对称. 支持 'select' / 'date' / 默认 text. 加新 profile 字段不需要再改 buildProfileFields 主体.
-- expectSalary placeholder 提示单位: "下限 K" / "上限 K" / "月数" (单位 K/月在 label 里, placeholder 跟单位对齐).
-- 抽 `buildEduHead(i)` helper: education item-head 原本 5 个 if 链展开 (school · major · degree · (degreeType) · 统招) 抽到顶层. isUnified 不再挤进 h3, 改走 .item-meta 旁挂 .item-meta-tag 视觉跟 experience.industry/department 对齐. mdItem 同步简化 (主字段走 `if (xxx) md += ' | xxx'`, 跟 if-chain 拆开).
-- 抽 `clearImportDom()` helper: importData 里 15 行 DOM 清空逻辑抽到顶层, 跟 `importData` 主体分离, importData 缩到 24 行, 流水线感更强 (parse → validate → clear → save → render → rebuild).
-- 重命名 `education.experience` (在校经历) → `education.honors` (荣誉奖项): 跟 superset 字段名对齐, 消除"工作经历 section type"和"教育 item 字段"都叫 experience 的歧义. normalizeSavedData + collectFormData 双重兜底 (rename + delete), 老数据下次打开编辑器就自动迁移. 渲染层 label 从 "在校经历" 改成 "荣誉奖项" (语义更准). 老字段 `campus` 保留不变 (校园经历含义已涵盖).
-- 删 `experience.highlights` 字段: 跟 projects.highlights 一致处理 (commit 56be0c2). 用户明确"亮点改成工作业绩", 不留 `highlights` 字段兼容 (老数据由用户手动迁移到 achievements — 见 docs/resume-data.json 已合并 6 个 item, total 19 条 achievements). `_EXP_SHARED.fields / defaultItem / renderItem / mdItem` 全部移除 highlights 引用. normalizeSavedData / collectFormData 不再 rename 兜底 (避免技术债).
-- 加 `language` section (语言能力): SECTION_CONFIG 新增完整实现 (fields + renderItem + mdItem + defaultItem). 5 字段: name (语种 select 9 选项) / proficiency (熟练程度) / level (等级如 CET-6) / listeningSpeaking (听说, 智联拆分) / readingWriting (读写, 智联拆分). 渲染时 level 跟 name 同行, proficiency/readingWriting 走 .item-meta-tag 旁挂. 命名分歧注释里说明 (猎聘=语言+熟练程度+等级, 智联=语种+听说+读写, 超集取并集). 跟 [cv-autofill schema](cv-autofill/schema/cv-superset.schema.json) languageItem 对齐.
-- profile.currentSalary 加数据结构但隐藏字段: 用户要求存数据 (cv-autofill 引擎读得到) 但 UI 不显示 (薪资敏感). 实现: 不在 editor flds / renderer template / markdown 导出出现, 用户手写 JSON 才能填. 代码注释明确这是 "hidden field" 设计, 等需要时再加 input.
+- Editor "个人信息" 模块: "年龄" 字段改用 "出生日期" (HTML5 原生日期选择器 `<input type="date">`, YYYY-MM-DD); 简历预览按今日日期自动算出年龄 ("X岁").
+- Editor now shows a "清除头像" (Clear Avatar) button when a local avatar exists.
+- Resume automatically loads the local avatar for the current profile name on render.
+
+#### 渲染层增强
+
+- 项目经历渲染补上 period 显示: 之前 experience 和 education 都有 `<span class="item-time">` 显示日期, projects 漏了. 加 span 后项目日期也右对齐显示.
+- `.item-time` 加 `white-space: nowrap` + `flex-shrink: 0`: 日期字符串 (含中文) 在窄容器里会从中间断开 (如 `2025年12月-2026年6\n月`), 因为没强制不换行. 加 nowrap 后日期完整在一行; flex-shrink:0 保证 flex 不压缩日期.
+- 教育背景条目渲染重构: 主修课程 + 校园经历 都从 item-head 里移出, 各自一个 `.item-section` 容器, 上面有 `.item-section-label` 小标题 (`<h4>`, 灰小粗体), 校园经历按行 split 成 `<ul class="item-section-list">` (有项目符号, 与自我评价对齐), Markdown 导出用 `### 主修课程` / `### 校园经历` 三级标题 + `-` 列表项.
+- 亮点 + 难点列表加 subheading: 跟教育背景的"主修课程/校园经历"对齐, 都用 `.item-section` 容器 + `<h4 class="item-section-label">` 小标题 (灰小粗体) + `<ul class="item-section-list">` 项目符号. Markdown 导出用 `### 亮点` / `### 难点` 三级标题.
+
+#### 字段扩展 (招聘平台字段反馈 P0/P1/P2)
+
+> 完整设计来自 [docs/CV_SCHEMA_FEEDBACK.md](docs/CV_SCHEMA_FEEDBACK.md) + [docs/SCHEMA_NAMING.md](docs/SCHEMA_NAMING.md). 跟 cv-autofill superset schema 对齐.
+
+- **P0 experience.achievements** (string[]): 工作业绩独立于工作内容, 解决 Boss/猎聘双 textarea 硬结构.
+- **P1 profile.expectSalary** ({low, high, months}): 三框联动数字输入 (K/月). number 类型存储.
+- **P1 profile.expectCities** (string[]): 期望城市多选.
+- **P1 profile.expectIndustry / wechat**: 期望行业 + 微信号.
+- **P1 education.degreeType** (select 3 选项): 全日制 / 非全日制 / 自考. 渲染时跟 degree 拼成 `本科 (全日制)`.
+- **P1 experience.isIntern** (select 是/否): 实习 checkbox UI 难看, 改 select options ['是','否'].
+- **P2 education.experience** (string[]): 在校经历. **注意**: 同 session 后续 commit 重命名为 `honors` (语义更准, 消歧义).
+- **P2 education.thesis** (textarea): 毕设/论文描述.
+- **P2 education.campus** (textarea 多行): 校园经历 (职务/活动).
+- **P2 experience.industry / department / skillTags** (string / string / string[]): 行业 / 部门 / 每段经历技能标签.
+- **P2 projects.role / link / achievements**: 担任角色 (meta-tag badge) / 项目链接 (`.project-link` 区块带 target=_blank, 走 new URL() XSS 防护) / 项目业绩.
+
+#### 新模块类型
+
+- 新增模块类型 `其它经历` (SECTION_CONFIG.experience_other): 与 `工作经历` (experience) 共享同一份 fields / renderItem / mdItem / defaultItem, 只换 label. 把经验模块的共享配置抽到顶层 const `_EXP_SHARED`, 两个 SECTION_CONFIG 条目用 `..._EXP_SHARED` 展开, 单一数据源.
+- 加 `language` section (语言能力): 5 字段 (name 语种 / proficiency 熟练程度 / level 等级 / listeningSpeaking 听说 / readingWriting 读写). 跟 cv-superset.languageItem 对齐.
+
+#### 隐藏字段 (UI 不渲染, 数据存)
+
+- `profile.expectSalary` / `expectCities` / `currentSalary` 加数据结构但默认隐藏 UI (薪资敏感). 用户主动在编辑器填或手写 JSON 才有. 代码注释明确这是 "hidden field" 设计.
+
+#### 文档
+
+- 复制 [cv-autofill/docs/CV_SCHEMA_FEEDBACK.md](docs/CV_SCHEMA_FEEDBACK.md) 到本项目 docs, 配套新增 [docs/SCHEMA_NAMING.md](docs/SCHEMA_NAMING.md) 字段命名对照表.
+- README 大幅更新: 模块清单补到 11 个 / 字段详细说明 / 隐藏字段机制 / start.sh 端口探测说明.
 
 ### Changed
-- Playwright 验证: 17 个新字段全在编辑器 + 渲染 subheading 全过 (`工作业绩` / `技能标签` / `在校经历` / `毕设/论文` / `统招` badge / `全日制` meta / `全栈` role badge / `.project-link a[href]`) + 老数据 string→array 兼容 + checkbox isIntern 勾选保存=true.
 
-### Changed
+- 个人信息加 `求职状态` 字段 (select, 选项: 随时到岗 / 在职-看机会 / 在职-暂不考虑 / 暂不找工作): 编辑器字段加在 经验 和 所在地 之间.
+- `求职状态` 重排到 identity-meta (替换原来的性别显示位): 用公文包 SVG icon + 纯文字, 无 badge 样式. 头部姓名下方一横条 title/experience/所在地 之间用 ` | ` 字面分隔. 删了 .profile-status / .profile-status:empty CSS 规则. 性别 (profile.gender) 不再渲染 (data 字段保留在 form, 不强制删).
+- 头部姓名下方"如果不填就不显示 |" 的规则: renderer.js 里 `renderHeaderRow()` 动态构建这条横条: 遍历 `[title, experience, 所在地]` 三个字段, 过滤出非空项, 只在非空项之间插 " | " (最后一个非空项后面不插). 旧 CSS ::before + :has() 方案已撤掉, 逻辑收敛在一处更直观.
+- 顶部时间轴显式开关: 编辑器"页面设置"区加 checkbox "显示顶部时间轴", 状态存到 `cvPrefs.timelineEnabled` (localStorage). 默认 false (市场不认可,主流招聘平台都没这设计). 计算逻辑 (autoTimeline / getTimelineLabel) 全部保留. 3 处一致 (renderer.js / editor.js / prefs.js).
 
-- 编辑器 UI 重构: 桌面端 (≥769px) 改为左右分屏布局 — 编辑器固定 44vw (无 max-width 上限, 与 page-shell padding-right 严格一致避免覆盖), 编辑器从右滑入同时简历让出右半部分, 两边同时可见互不遮挡. 移动端 (<768px) 保持侧边栏滑入行为不变. 触发按钮改为右上角 ☰, 切换时图标 ☰ ↔ ×, 支持 Esc 关闭. 移除原 modal 半透明背景叠层.
+### Deprecated
 
-### Changed
-
-- Avatar storage moved from `data.json` to browser `localStorage`, keyed by profile name. New uploads overwrite the old one; no history is kept.
-- JSON/Markdown export no longer includes avatar data, significantly reducing export file size.
+- `projects.highlights` 字段已删除,统一由 `achievements` 承担.
+- `experience.highlights` 字段已删除,统一由 `achievements` 承担.
+- `education.experience` 字段已重命名为 `education.honors`. 老数据下次打开编辑器自动迁移.
 
 ### Removed
 
-- `docs/spec-ocr-friendly-resume.md` 已完成, 全文删除. Spec 内 "实施历史与关键教训" 已通过 commit 历史 + CHANGELOG 体现, 不再单独归档
+- `projects.highlights` 字段: 用户确认跟项目业绩是同义重复.
+- `experience.highlights` 字段: 同上.
+- `profile.age` 字段: 被 `birthDate` 替代 (HTML5 原生日期选择器).
+- `docs/spec-ocr-friendly-resume.md` 已完成, 全文删除. Spec 内 "实施历史与关键教训" 已通过 commit 历史 + CHANGELOG 体现.
+
+### Fixed
+
+- 修复导入 JSON 后姓名/个人信息不更新: renderCv 的 data-render 分支在 `v` 为空且元素已有 children 时只 add `is-empty` 类不清 textContent. 改为导入前显式清空所有 data-render 元素的 textContent + 整块 replaceChildren resumeSource + 清空 headerRow.
+- 修复编辑器模块标签 (module-type-label) 跟用户改的标题 (sectionTitle 输入框) 视觉错位: buildEditorSectionForm 里 `module-type-label` 改用 `(sec.title || cfg.label)`. liveSyncPreview 跑 collectFormData 后再同步刷一遍 label 文字.
+- 修复 editorPanel hidden 状态错位: index.html 初始 `hidden` 属性覆盖 CSS `display: flex`. 去掉初始 hidden, openEditor / closeEditor 显式设 `ep.hidden = false / true`.
+- 修复 collectFormData 浅拷贝引发的跨模块越界: `cvData.sections.map(s => Object.assign({}, s))` 浅拷只复制外层, `s.items` 沿用同一引用. push 会越界. 改为对 `s.items` 显式 `slice()`.
+- 修复 summary 模块占位项首次 collectFormData 后被清空: 默认占位 `[""]` 被 `filter(Boolean)` 变成 `[]`. 改为占位且未输入时保留 `[""]`.
+- 修复图片 PDF 导出 (多页简历): 旧 `captureSequential` 递归每层重新声明 `pdf = null`, 多页简历直接报错 `addPage()` on null. 改为 async/await 顺序执行.
+- 修复跨项目 JSON 导入崩溃: `normalizeSavedData` 只对 projects.tags 做数组化, 其他字段 (highlights / challenges) 字符串/object 传到 `lis()` 报 `map is not a function`. 改为统一走 `arr()` helper.
+- 修复 live sync 后渲染崩溃 (同上根因): collectFormData 把表单 textarea 字符串值写回 cvData.items, 没 normalize challenges. 改为统一对三个数组字段走 `arr()` helper.
+- 修 XSS: `projects.link` 用 `new URL()` 验证协议是 http(s), 否则拒绝渲染 `<a>`. 修前 `esc()` 不防 URL 协议层攻击 (用户输入 `javascript:alert(1)` / `data:text/html,...` 会被 click 触发).
+- 修 type 契约: `profile.expectSalary.{low,high,months}` 从 string 改 number 存储. collectFormData 给 number input 走 `Number()` 转换.
+- 修 number 0 误删: expectSalary delete 判断从 `!x` 改 `x === ''`, number 0 (合法薪资) 不会被误删.
+- 所有 checkbox 改 select 是/否: `education.isUnified` / `experience.isIntern` UI 布局在分屏编辑器里 checkbox 难看. 老数据 boolean normalize 时自动转 '是'/'否'.
+- 重命名 `education.experience` → `education.honors` (荣誉奖项): 跟 superset 字段名对齐, 消除跟"工作经历 section type"同名歧义.
+
+### Refactored
+
+- 抽 `moduleLabel(sec)` helper: buildEditorSectionForm 跟 liveSyncPreview 各写一遍 `sec.title || ...label...` 表达式, 抽到顶层单一函数.
+- 抽 `renderItemFieldInput(f, v, name)` helper: buildItemCard 原本 4 个 if/else if 链 (select/checkbox/textarea/input) 抽到顶层, 加新类型只改一处.
+- 抽 `renderProfileFieldInput(f, profile)` helper: buildProfileFields 里 12 个 profile 字段的 input 拼接抽到顶层, 跟 renderItemFieldInput 对称.
+- 抽 `buildEduHead(i)` helper: education item-head 原本 5 个 if 链展开 (school · major · degree · (degreeType) · 统招) 抽到顶层. mdItem 同步简化.
+- 抽 `clearImportDom()` helper: importData 里 15 行 DOM 清空逻辑抽到顶层, importData 缩到 24 行.
+- 抽 `arrFieldsOf(cfg)` helper: collectFormData 末尾的数组 normalize 列表和 normalizeSavedData 都从硬编码改成从 `cfg.fields.filter(f.a)` 动态读.
+- expectSalary placeholder 提示单位: "下限 K" / "上限 K" / "月数" (跟 label 里 "K/月" 单位对齐).
+- 删 normalizeSavedData / collectFormData 里的 highlights rename 兜底 (用户明确"不留技术债"), 老数据由用户手动迁移.
+
+### Verification
+
+- Playwright 黑盒测试 30+ 场景全过: 导入 / 导出 / 编辑器 / 字段渲染 / 老数据兼容 / 排序 / 折叠 / 实时联动 / 字段显隐。
 
 ## [1.1.0] - 2026-07-05
 
