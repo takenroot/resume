@@ -35,8 +35,7 @@ function normalizeSavedData() {
       // ponytail: 2026-08-13 删除 challenges 字段, 老数据迁移时直接 delete.
       delete it.challenges;
       arrKeys.forEach(function (k) { if (it[k] !== undefined) it[k] = arr(it[k]); });
-      // ponytail: 2026-08-13 老字段 education.experience (在校经历, 与工作经历 section type 同名易混) 重命名为 honors.
-      // normalize 时检测老字段, rename 到 honors, 渲染前清干净. 一次性兜底, 老数据三个月后自然消亡.
+      // ponytail: 老字段 education.experience (在校经历) → honors.
       if (s.type === 'education' && it.experience !== undefined) { it.honors = it.experience; delete it.experience; }
       // 遍历 fields, 是/否 select 字段走 boolean → string 转换. 老 checkbox 留 boolean 不会跑这条.
       (cfg.fields || []).forEach(function (f) {

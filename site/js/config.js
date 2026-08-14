@@ -24,7 +24,6 @@ const _EXP_SHARED = {
     { n: 'department', l: '部门' },
     { n: 'period', l: '时间' },
     { n: 'summary', l: '工作描述', t: 'textarea' },
-    { n: 'highlights', l: '亮点 (每行一条)', t: 'textarea', a: true },
     { n: 'achievements', l: '工作业绩 (每行一条)', t: 'textarea', a: true },
     { n: 'skillTags', l: '技能标签 (逗号分隔)', t: 'textarea', a: true },
     { n: 'isIntern', l: '是否实习', t: 'select', options: ['是', '否'] }
@@ -40,7 +39,6 @@ const _EXP_SHARED = {
     }
     html += '</div><span class="item-time">' + esc(i.period) + '</span></div>';
     if (i.summary) html += '<p class="summary">' + esc(i.summary) + '</p>';
-    if (i.highlights && i.highlights.length) html += '<div class="item-section"><h4 class="item-section-label">亮点</h4><ul class="item-section-list">' + lis(i.highlights) + '</ul></div>';
     if (i.achievements && i.achievements.length) html += '<div class="item-section"><h4 class="item-section-label">工作业绩</h4><ul class="item-section-list">' + lis(i.achievements) + '</ul></div>';
     if (i.skillTags && i.skillTags.length) html += '<div class="item-section"><h4 class="item-section-label">技能标签</h4><ul class="tag-list">' + i.skillTags.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>';
     a.innerHTML = html;
@@ -51,12 +49,11 @@ const _EXP_SHARED = {
     if (i.industry) md += ' | ' + i.industry;
     if (i.department) md += ' | ' + i.department;
     md += '\n\n' + (i.summary || '');
-    if (i.highlights && i.highlights.length) md += '\n\n### 亮点\n' + mli(i.highlights);
     if (i.achievements && i.achievements.length) md += '\n\n### 工作业绩\n' + mli(i.achievements);
     if (i.skillTags && i.skillTags.length) md += '\n\n### 技能标签\n' + i.skillTags.join('、');
     return md;
   },
-  defaultItem: { company: '', position: '', period: '', summary: '', highlights: [], achievements: [], skillTags: [], industry: '', department: '', isIntern: '否' }
+  defaultItem: { company: '', position: '', period: '', summary: '', achievements: [], skillTags: [], industry: '', department: '', isIntern: '否' }
 };
 const SECTION_CONFIG = {
   experience: { label: '工作经历', ..._EXP_SHARED },
