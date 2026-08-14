@@ -42,7 +42,24 @@ function buildItemCard(si, ii, fields, item) {
   hh += '<button type="button" class="item-action-btn" data-action="copy-item" data-section-index="' + si + '" data-item-index="' + ii + '" title="复制">⧉</button>';
   hh += '<button type="button" class="editor-item-remove" data-section-index="' + si + '" data-item-index="' + ii + '" aria-label="移除">×</button></div></div>';
   hh += '<div class="editor-item-content">';
-  fields.forEach(function (f) { const v = item[f.n] || '', dv = f.a ? (Array.isArray(v) ? v.join(f.n === 'tags' ? ', ' : '\n') : v) : v; hh += '<div class="editor-field"><label>' + f.l + '</label>' + (f.t === 'textarea' ? '<textarea name="item.' + si + '.' + ii + '.' + f.n + '">' + esc(dv) + '</textarea>' : '<input name="item.' + si + '.' + ii + '.' + f.n + '" value="' + esc(dv) + '">') + '</div>'; });
+  fields.forEach(function (f) {
+    const v = item[f.n];
+    let inputHtml;
+    if (f.t === 'select') {
+      const opts = (f.options || []).map(function (o) { return '<option value="' + esc(o) + '"' + (v === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('');
+      inputHtml = '<select name="item.' + si + '.' + ii + '.' + f.n + '">' + opts + '</select>';
+    } else if (f.t === 'checkbox') {
+      // ponytail: checkbox 用 0/1 字符串序列化, 保证 form 值非空走 collectFormData 的统一 string 路径.
+      inputHtml = '<input type="checkbox" name="item.' + si + '.' + ii + '.' + f.n + '" value="1"' + (v ? ' checked' : '') + '>';
+    } else if (f.t === 'textarea') {
+      const dv = f.a ? (Array.isArray(v) ? v.join('\n') : v) : v;
+      inputHtml = '<textarea name="item.' + si + '.' + ii + '.' + f.n + '">' + esc(dv || '') + '</textarea>';
+    } else {
+      const dv = f.a ? (Array.isArray(v) ? v.join(f.n === 'tags' ? ', ' : '\n') : v) : v;
+      inputHtml = '<input name="item.' + si + '.' + ii + '.' + f.n + '" value="' + esc(dv || '') + '">';
+    }
+    hh += '<div class="editor-field"><label>' + f.l + '</label>' + inputHtml + '</div>';
+  });
   hh += '</div></div>';
   return hh;
 }
@@ -62,7 +79,7 @@ function buildProfileFields(profile) {
   const av = profile && profile.avatar ? profile.avatar : '';
   const localAvatar = av ? av : loadAvatar(name);
   const hasLocalAvatar = !!loadAvatar(name);
-  const flds = [{ n: 'name', l: '姓名' }, { n: 'title', l: '岗位' }, { n: 'experience', l: '工作经验' }, { n: '求职状态', l: '求职状态', t: 'select', options: ['随时到岗', '在职-看机会', '在职-暂不考虑', '暂不找工作'] }, { n: '所在地', l: '所在地' }, { n: 'gender', l: '性别' }, { n: 'birthDate', l: '出生日期', t: 'date' }, { n: 'phone', l: '电话' }, { n: 'email', l: '邮箱' }, { n: 'github', l: 'GitHub' }, { n: 'timeline', l: '顶部时间线', p: '留空则自动从经历中提取' }];
+  const flds = [{ n: 'name', l: '姓名' }, { n: 'title', l: '岗位' }, { n: 'experience', l: '工作经验' }, { n: '求职状态', l: '求职状态', t: 'select', options: ['随时到岗', '在职-看机会', '在职-暂不考虑', '暂不找工作'] }, { n: '所在地', l: '所在地' }, { n: 'gender', l: '性别' }, { n: 'birthDate', l: '出生日期', t: 'date' }, { n: 'phone', l: '电话' }, { n: 'email', l: '邮箱' }, { n: 'github', l: 'GitHub' }, { n: 'wechat', l: '微信号' }, { n: 'expectIndustry', l: '期望行业' }, { n: 'timeline', l: '顶部时间线', p: '留空则自动从经历中提取' }];
   let hh = '<div class="editor-field editor-field-avatar"><label>头像</label><div class="avatar-upload"><div class="avatar-preview" id="avatarPreview" style="' + (localAvatar ? "background-image: url('" + esc(localAvatar) + "')" : '') + '"></div><div class="avatar-upload-inputs"><input type="file" id="avatarFileInput" accept="image/*">' + (hasLocalAvatar ? '<button type="button" class="editor-btn" id="clearAvatarBtn" style="font-size:12px;padding:4px 8px">清除头像</button>' : '') + '<input type="text" name="profile.avatar" value="' + esc(av) + '" placeholder="留空则使用浏览器本地头像"></div><p style="font-size:11px;color:var(--text-soft);margin:4px 0 0">选择图片后自动转为 base64 存入浏览器本地，导出 JSON/Markdown 时不含头像</p></div></div>';
   hh += flds.map(function (f) {
     let inputHtml;
@@ -74,6 +91,16 @@ function buildProfileFields(profile) {
     }
     return '<div class="editor-field"><label>' + f.l + '</label>' + inputHtml + '</div>';
   }).join('');
+  // ponytail: 期望薪资 (三框联动) + 期望城市 (多选 textarea), 跟扁平 profile 字段分开处理.
+  const salary = (profile && profile.expectSalary) || {};
+  hh += '<div class="editor-field"><label>期望薪资 (K/月)</label><div class="expect-salary-row">' +
+    '<input type="number" name="profile.expectSalary.low" value="' + esc(salary.low || '') + '" placeholder="下限" min="0">' +
+    '<span> - </span>' +
+    '<input type="number" name="profile.expectSalary.high" value="' + esc(salary.high || '') + '" placeholder="上限" min="0">' +
+    '<span> × </span>' +
+    '<input type="number" name="profile.expectSalary.months" value="' + esc(salary.months || '') + '" placeholder="月数" min="0">' +
+    '</div></div>';
+  hh += '<div class="editor-field"><label>期望城市 (每行一条)</label><textarea name="profile.expectCities" placeholder="北京&#10;上海">' + esc((profile && Array.isArray(profile.expectCities) ? profile.expectCities.join('\n') : '') || '') + '</textarea></div>';
   return hh;
 }
 
@@ -87,7 +114,20 @@ function collectFormData(opts) {
     if (Array.isArray(s.items)) copy.items = s.items.slice();
     return copy;
   }) : [] };
-  ec.querySelectorAll('[name^="profile."]').forEach(function (el) { nd.profile[el.name.split('.')[1]] = el.value; });
+  ec.querySelectorAll('[name^="profile."]').forEach(function (el) {
+    const parts = el.name.split('.'); parts.shift();
+    if (parts.length === 1) { nd.profile[parts[0]] = el.value; return; }
+    // ponytail: 嵌套路径 (expectSalary.low / expectSalary.high / expectSalary.months).
+    let cursor = nd.profile; for (let i = 0; i < parts.length - 1; i++) { if (!cursor[parts[i]] || typeof cursor[parts[i]] !== 'object') cursor[parts[i]] = {}; cursor = cursor[parts[i]]; }
+    cursor[parts[parts.length - 1]] = el.value;
+  });
+  // ponytail: expectCities (textarea) 走 split('\n').filter(Boolean) 转 string[], checkbox profile 字段无.
+  const ecTextarea = document.querySelector('textarea[name="profile.expectCities"]');
+  if (ecTextarea) nd.profile.expectCities = ecTextarea.value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+  // ponytail: 清空 expectSalary 子字段若三个 input 都空, 删对象避免残留 { low: '', high: '', months: '' }.
+  if (nd.profile.expectSalary && !nd.profile.expectSalary.low && !nd.profile.expectSalary.high && !nd.profile.expectSalary.months) delete nd.profile.expectSalary;
+  // ponytail: expectCities 老数据可能是 string, 走 arr() 拆.
+  if (nd.profile.expectCities && typeof nd.profile.expectCities === 'string') nd.profile.expectCities = arr(nd.profile.expectCities);
   ec.querySelectorAll('[name^="sectionTitle."]').forEach(function (el) { const i = parseInt(el.name.split('.')[1], 10); if (nd.sections[i]) nd.sections[i].title = el.value; });
   ec.querySelectorAll('[name^="sectionSummary."]').forEach(function (el) { const i = parseInt(el.name.split('.')[1], 10); if (nd.sections[i]) {
     // ponytail: 默认占位 items: [""], 空 textarea 经过 filter(Boolean) 会变成 [], 让新建的空
@@ -99,8 +139,25 @@ function collectFormData(opts) {
     else nd.sections[i].items = el.value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
   } });
   ec.querySelectorAll('[name^="sectionText."]').forEach(function (el) { const i = parseInt(el.name.split('.')[1], 10); if (nd.sections[i]) nd.sections[i].content = el.value; });
-  ec.querySelectorAll('[name^="item."]').forEach(function (el) { const ps = el.name.split('.'), si = parseInt(ps[1], 10), ii = parseInt(ps[2], 10), fi = ps[3]; if (!nd.sections[si]) return; if (!nd.sections[si].items) nd.sections[si].items = []; if (!nd.sections[si].items[ii]) nd.sections[si].items[ii] = {}; nd.sections[si].items[ii][fi] = el.value; });
-  (nd.sections || []).forEach(function (s) { if (s.type === 'text' || s.type === 'summary') return; (s.items || []).forEach(function (item) { delete item.challenges; ['highlights', 'tags'].forEach(function (k) { if (item[k] && typeof item[k] === 'string') item[k] = arr(item[k]); }); }); });
+  ec.querySelectorAll('[name^="item."]').forEach(function (el) {
+    const ps = el.name.split('.'), si = parseInt(ps[1], 10), ii = parseInt(ps[2], 10), fi = ps[3];
+    if (!nd.sections[si]) return;
+    if (!nd.sections[si].items) nd.sections[si].items = [];
+    if (!nd.sections[si].items[ii]) nd.sections[si].items[ii] = {};
+    // ponytail: checkbox 转 boolean — el.checked 才是真正状态, el.value 永远是 '1'.
+    // 数组字段 (textarea + a:true) 走 arr() 统一拆分, 防止 collectFormData 把字符串塞给渲染层.
+    const isCheckbox = el.type === 'checkbox';
+    nd.sections[si].items[ii][fi] = isCheckbox ? !!el.checked : el.value;
+  });
+  (nd.sections || []).forEach(function (s) {
+    if (s.type === 'text' || s.type === 'summary') return;
+    (s.items || []).forEach(function (item) {
+      delete item.challenges;
+      ['highlights', 'achievements', 'tags', 'skillTags', 'experience'].forEach(function (k) {
+        if (item[k] && typeof item[k] === 'string') item[k] = arr(item[k]);
+      });
+    });
+  });
   cvData = nd; if (!(opts && opts.skipSave)) saveCvData();
 }
 let liveSyncTimer = null;

@@ -24,12 +24,16 @@ function normalizeSavedData() {
     if (!s.title) s.title = (SECTION_CONFIG[s.type] || {}).label || '模块';
     (s.items || []).forEach(function (it) {
       // ponytail: 2026-08-13 删除 challenges 字段, 老数据迁移时直接 delete 不 normalize.
-      // 保留 highlights+tags 数组化逻辑(它们还活着).
+      // 所有 array-shaped 字段 (highlights / achievements / tags / skillTags / experience) 走 arr() 拆.
       delete it.challenges;
-      ['highlights', 'tags'].forEach(function (k) { if (it[k] !== undefined) it[k] = arr(it[k]); });
+      ['highlights', 'achievements', 'tags', 'skillTags', 'experience'].forEach(function (k) { if (it[k] !== undefined) it[k] = arr(it[k]); });
     });
   });
-  if (cvData.profile && cvData.profile.age && !cvData.profile.birthDate) delete cvData.profile.age;
+  if (cvData.profile) {
+    if (cvData.profile.age && !cvData.profile.birthDate) delete cvData.profile.age;
+    // ponytail: profile.expectCities 老数据可能是 string, 拆. expectSalary 已是 object 不动.
+    if (cvData.profile.expectCities && typeof cvData.profile.expectCities === 'string') cvData.profile.expectCities = arr(cvData.profile.expectCities);
+  }
 }
 function avatarKey(name) { return AVATAR_PREFIX + (name || 'default'); }
 function saveAvatar(name, base64) { try { localStorage.setItem(avatarKey(name), base64); } catch (e) { showToast('头像保存失败，可能超出浏览器存储上限', 'error', 3600); } }

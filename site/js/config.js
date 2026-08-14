@@ -5,23 +5,60 @@
 // ponytail: 抽出 experience 共享字段/渲染器/默认项, 让 experience 和 experience_other 都展它, 只换 label.
 // 同字段同渲染逻辑, 单一数据源, 之后想加更多 alias (如 '其它教育') 加一行就行.
 // 注意 defaultItem 引用是共享的 — getDefaultItem 走 JSON.parse(JSON.stringify(...)) 深拷, 每次调用都拿到新对象, 不会污染源.
-const _EXP_SHARED = { fields: [{ n: 'company', l: '公司' }, { n: 'position', l: '职位' }, { n: 'period', l: '时间' }, { n: 'summary', l: '工作描述', t: 'textarea' }, { n: 'highlights', l: '亮点 (每行一条)', t: 'textarea', a: true }],
-  renderItem: function (i) { const a = cE('article', 'timeline-item'); a.innerHTML = '<div class="item-head"><div><h3>' + esc(i.company) + ' · ' + esc(i.position) + '</h3></div><span class="item-time">' + esc(i.period) + '</span></div>' + (i.summary ? '<p class="summary">' + esc(i.summary) + '</p>' : '') + '<ul>' + lis(i.highlights) + '</ul>'; return a; },
-  mdItem: function (i) { return '**' + (i.period || '') + '** | ' + (i.company || '') + ' | ' + (i.position || '') + '\n\n' + (i.summary || '') + '\n' + mli(i.highlights); },
-  defaultItem: { company: '', position: '', period: '', summary: '', highlights: [] }
+const _EXP_SHARED = {
+  fields: [
+    { n: 'company', l: '公司' },
+    { n: 'position', l: '职位' },
+    { n: 'industry', l: '所属行业' },
+    { n: 'department', l: '部门' },
+    { n: 'period', l: '时间' },
+    { n: 'summary', l: '工作描述', t: 'textarea' },
+    { n: 'highlights', l: '亮点 (每行一条)', t: 'textarea', a: true },
+    { n: 'achievements', l: '工作业绩 (每行一条)', t: 'textarea', a: true },
+    { n: 'skillTags', l: '技能标签 (逗号分隔)', t: 'textarea', a: true },
+    { n: 'isIntern', l: '实习经历', t: 'checkbox' }
+  ],
+  renderItem: function (i) {
+    const a = cE('article', 'timeline-item');
+    let html = '<div class="item-head"><div><h3>' + esc(i.company) + ' · ' + esc(i.position) + '</h3>';
+    if (i.industry || i.department) {
+      html += '<div class="item-meta">';
+      if (i.industry) html += '<span class="item-meta-tag">' + esc(i.industry) + '</span>';
+      if (i.department) html += '<span class="item-meta-tag">' + esc(i.department) + '</span>';
+      html += '</div>';
+    }
+    html += '</div><span class="item-time">' + esc(i.period) + '</span></div>';
+    if (i.summary) html += '<p class="summary">' + esc(i.summary) + '</p>';
+    if (i.highlights && i.highlights.length) html += '<div class="item-section"><h4 class="item-section-label">亮点</h4><ul class="item-section-list">' + lis(i.highlights) + '</ul></div>';
+    if (i.achievements && i.achievements.length) html += '<div class="item-section"><h4 class="item-section-label">工作业绩</h4><ul class="item-section-list">' + lis(i.achievements) + '</ul></div>';
+    if (i.skillTags && i.skillTags.length) html += '<div class="item-section"><h4 class="item-section-label">技能标签</h4><ul class="tag-list">' + i.skillTags.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>';
+    a.innerHTML = html;
+    return a;
+  },
+  mdItem: function (i) {
+    let md = '**' + (i.period || '') + '** | ' + (i.company || '') + ' | ' + (i.position || '');
+    if (i.industry) md += ' | ' + i.industry;
+    if (i.department) md += ' | ' + i.department;
+    md += '\n\n' + (i.summary || '');
+    if (i.highlights && i.highlights.length) md += '\n\n### 亮点\n' + mli(i.highlights);
+    if (i.achievements && i.achievements.length) md += '\n\n### 工作业绩\n' + mli(i.achievements);
+    if (i.skillTags && i.skillTags.length) md += '\n\n### 技能标签\n' + i.skillTags.join('、');
+    return md;
+  },
+  defaultItem: { company: '', position: '', period: '', summary: '', highlights: [], achievements: [], skillTags: [], industry: '', department: '', isIntern: false }
 };
 const SECTION_CONFIG = {
   experience: { label: '工作经历', ..._EXP_SHARED },
   experience_other: { label: '其它经历', ..._EXP_SHARED },
-  education: { label: '教育背景', fields: [{ n: 'school', l: '学校' }, { n: 'major', l: '专业' }, { n: 'degree', l: '学历' }, { n: 'period', l: '时间' }, { n: 'courses', l: '主修课程' }, { n: 'campus', l: '校园经历 (每行一条)', t: 'textarea' }],
-    renderItem: function (i) { const a = cE('article', 'timeline-item'); let html = '<div class="item-head"><div><h3>' + esc(i.school) + (i.major ? ' · ' + esc(i.major) : '') + (i.degree ? ' · ' + esc(i.degree) : '') + '</h3></div><span class="item-time">' + esc(i.period) + '</span></div>'; if (i.courses) html += '<div class="item-section"><h4 class="item-section-label">主修课程</h4><p class="item-section-content">' + esc(i.courses) + '</p></div>'; if (i.campus) { const lines = (i.campus || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean); if (lines.length > 0) html += '<div class="item-section"><h4 class="item-section-label">校园经历</h4><ul class="item-section-list">' + lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></div>'; } a.innerHTML = html; return a; },
-    mdItem: function (i) { let md = '**' + (i.period || '') + '** | ' + (i.school || '') + (i.major ? ' | ' + i.major : '') + (i.degree ? ' | ' + i.degree : ''); if (i.courses) md += '\n\n### 主修课程\n' + i.courses; if (i.campus) { const lines = (i.campus || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean); if (lines.length > 0) md += '\n\n### 校园经历\n' + lines.map(function (l) { return '- ' + l; }).join('\n'); } return md; },
-    defaultItem: { school: '', major: '', degree: '', period: '', courses: '', campus: '' }
+  education: { label: '教育背景', fields: [{ n: 'school', l: '学校' }, { n: 'major', l: '专业' }, { n: 'degree', l: '学历' }, { n: 'degreeType', l: '学制', t: 'select', options: ['全日制', '非全日制', '自考'] }, { n: 'isUnified', l: '是否统招', t: 'checkbox' }, { n: 'period', l: '时间' }, { n: 'courses', l: '主修课程' }, { n: 'campus', l: '校园经历 (每行一条)', t: 'textarea' }, { n: 'experience', l: '在校经历 (每行一条)', t: 'textarea', a: true }, { n: 'thesis', l: '毕设/论文', t: 'textarea' }],
+    renderItem: function (i) { const a = cE('article', 'timeline-item'); let html = '<div class="item-head"><div><h3>' + esc(i.school) + (i.major ? ' · ' + esc(i.major) : '') + (i.degree ? ' · ' + esc(i.degree) + (i.degreeType ? ' (' + esc(i.degreeType) + ')' : '') : '') + (i.isUnified ? ' <span class="item-meta-tag">统招</span>' : '') + '</h3></div><span class="item-time">' + esc(i.period) + '</span></div>'; if (i.courses) html += '<div class="item-section"><h4 class="item-section-label">主修课程</h4><p class="item-section-content">' + esc(i.courses) + '</p></div>'; if (i.campus) { const lines = (i.campus || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean); if (lines.length > 0) html += '<div class="item-section"><h4 class="item-section-label">校园经历</h4><ul class="item-section-list">' + lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></div>'; } if (i.experience && i.experience.length) html += '<div class="item-section"><h4 class="item-section-label">在校经历</h4><ul class="item-section-list">' + lis(i.experience) + '</ul></div>'; if (i.thesis) html += '<div class="item-section"><h4 class="item-section-label">毕设/论文</h4><p class="item-section-content">' + esc(i.thesis) + '</p></div>'; a.innerHTML = html; return a; },
+    mdItem: function (i) { let md = '**' + (i.period || '') + '** | ' + (i.school || '') + (i.major ? ' | ' + i.major : '') + (i.degree ? ' | ' + i.degree + (i.degreeType ? ' (' + i.degreeType + ')' : '') : '') + (i.isUnified ? ' | 统招' : ''); if (i.courses) md += '\n\n### 主修课程\n' + i.courses; if (i.campus) { const lines = (i.campus || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean); if (lines.length > 0) md += '\n\n### 校园经历\n' + lines.map(function (l) { return '- ' + l; }).join('\n'); } if (i.experience && i.experience.length) md += '\n\n### 在校经历\n' + mli(i.experience); if (i.thesis) md += '\n\n### 毕设/论文\n' + i.thesis; return md; },
+    defaultItem: { school: '', major: '', degree: '', degreeType: '', isUnified: false, period: '', courses: '', campus: '', experience: [], thesis: '' }
   },
-  projects: { label: '项目经验', fields: [{ n: 'name', l: '项目名' }, { n: 'period', l: '时间' }, { n: 'tags', l: '技术栈 (逗号分隔)', t: 'textarea', a: true }, { n: 'summary', l: '项目描述', t: 'textarea' }, { n: 'highlights', l: '亮点 (每行一条)', t: 'textarea', a: true }],
-    renderItem: function (i) { const tags = arr(i.tags), th = tags.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join(''); const a = cE('article', 'timeline-item'); let html = '<div class="item-head"><div><h3>' + esc(i.name) + '</h3><ul class="tag-list item-subtitle">' + th + '</ul></div><span class="item-time">' + esc(i.period) + '</span></div>'; if (i.summary) html += '<p class="summary">' + esc(i.summary) + '</p>'; if (i.highlights && i.highlights.length) html += '<div class="item-section"><h4 class="item-section-label">亮点</h4><ul class="item-section-list">' + lis(i.highlights) + '</ul></div>'; a.innerHTML = html; return a; },
-    mdItem: function (i) { const tg = Array.isArray(i.tags) ? i.tags.join('、') : (i.tags || ''); let md = '**' + (i.period || '') + '** | ' + (i.name || '') + (tg ? ' | ' + tg : '') + '\n' + (i.summary || ''); if (i.highlights && i.highlights.length) md += '\n\n### 亮点\n' + mli(i.highlights); return md; },
-    defaultItem: { name: '', period: '', tags: [], summary: '', highlights: [] }
+  projects: { label: '项目经验', fields: [{ n: 'name', l: '项目名' }, { n: 'role', l: '担任角色' }, { n: 'period', l: '时间' }, { n: 'link', l: '项目链接' }, { n: 'tags', l: '技术栈 (逗号分隔)', t: 'textarea', a: true }, { n: 'summary', l: '项目描述', t: 'textarea' }, { n: 'highlights', l: '亮点 (每行一条)', t: 'textarea', a: true }, { n: 'achievements', l: '项目业绩 (每行一条)', t: 'textarea', a: true }],
+    renderItem: function (i) { const tags = arr(i.tags), th = tags.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join(''); const a = cE('article', 'timeline-item'); let html = '<div class="item-head"><div><h3>' + esc(i.name) + (i.role ? ' <span class="item-meta-tag">' + esc(i.role) + '</span>' : '') + '</h3><ul class="tag-list item-subtitle">' + th + '</ul></div><span class="item-time">' + esc(i.period) + '</span></div>'; if (i.summary) html += '<p class="summary">' + esc(i.summary) + '</p>'; if (i.link) html += '<p class="project-link"><a href="' + esc(i.link.startsWith('http') ? i.link : 'https://' + i.link) + '" target="_blank" rel="noopener noreferrer">' + esc(i.link) + ' ↗</a></p>'; if (i.highlights && i.highlights.length) html += '<div class="item-section"><h4 class="item-section-label">亮点</h4><ul class="item-section-list">' + lis(i.highlights) + '</ul></div>'; if (i.achievements && i.achievements.length) html += '<div class="item-section"><h4 class="item-section-label">项目业绩</h4><ul class="item-section-list">' + lis(i.achievements) + '</ul></div>'; a.innerHTML = html; return a; },
+    mdItem: function (i) { const tg = Array.isArray(i.tags) ? i.tags.join('、') : (i.tags || ''); let md = '**' + (i.period || '') + '** | ' + (i.name || '') + (i.role ? ' | ' + i.role : '') + (tg ? ' | ' + tg : ''); if (i.link) md += ' | ' + i.link; md += '\n' + (i.summary || ''); if (i.highlights && i.highlights.length) md += '\n\n### 亮点\n' + mli(i.highlights); if (i.achievements && i.achievements.length) md += '\n\n### 项目业绩\n' + mli(i.achievements); return md; },
+    defaultItem: { name: '', role: '', period: '', link: '', tags: [], summary: '', highlights: [], achievements: [] }
   },
   skills: { label: '专业技能', fields: [{ n: 'name', l: '技能名' }, { n: 'detail', l: '详情', t: 'textarea' }], containerClass: 'skills-grid',
     renderItem: function (i) { const a = cE('article', 'skill-item'); a.innerHTML = '<span class="skill-name">' + esc(i.name) + '</span><span class="skill-detail">' + esc(i.detail) + '</span>'; return a; },

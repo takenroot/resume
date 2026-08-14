@@ -39,6 +39,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 修复编辑器模块标签 (module-type-label) 跟用户改的标题 (sectionTitle 输入框) 视觉错位: 旧 buildEditorSectionForm 里 `module-type-label` 写死 `cfg.label` (来自 sec.type), 与 `sec.title` 完全解耦. 用户改 "项目经验" → "项目集" 后, 标签仍显示 "项目经验" 跟输入框内容不一致, 让用户以为 "标题写错了". 改为 `(sec.title || cfg.label)` — 用户没改时仍显示默认 label, 改过就用用户改的. liveSyncPreview 跑 collectFormData 后再同步刷一遍 label 文字 (不改 DOM 结构, 保留 input focus). Playwright 验证: 改 idx=3 "项目经验"→"项目集" / "项目经验"→"自我评价" / idx=1 "专业技能"→"工作经历" 全部同步.
 - 修复 editorPanel hidden 状态错位: index.html 初始 `<div class="editor-panel" hidden>`, HTML `hidden` 属性会强制 `display: none` 覆盖 CSS `display: flex`; openEditor 只加 `is-open` class, 没取消 hidden, 关闭后 hidden 也保留. 改为去掉 index.html 上的 hidden 初始属性, openEditor / closeEditor 显式设 `ep.hidden = false / true` 跟 class 同步. 顺带修 importData 里 `if (!editorPanel.hidden) buildEditorForm()` 现在能可靠判定编辑器状态, 导入时编辑器开着的会 rebuild.
 - 抽 `moduleLabel(sec)` helper: 之前 buildEditorSectionForm (静态渲染) 跟 liveSyncPreview (实时刷新) 各写一遍 `sec.title || (SECTION_CONFIG[s.type] || {}).label || ''` 表达式, 两处回退逻辑一致但分散. 抽到顶层单一函数, buildEditorForm 走 `esc(moduleLabel(sec))` (HTML 上下文), liveSync 走 `moduleLabel(sec)` (textContent 上下文, 不需要 esc). Playwright 验证: 改 idx=3 "项目经验"→"项目集" 同步, 清空 title 自动回退到 "项目经验", 保存后 localStorage 持久化正常.
+- 实现优化文档 [CV_SCHEMA_FEEDBACK.md](docs/CV_SCHEMA_FEEDBACK.md) 里 P0/P1/P2 全部缺口字段 (P3 暂缓):
+  - **P0 experience.achievements** (string[], textarea 每行一条): 工作业绩独立于工作内容, 解决 Boss/猎聘双 textarea 硬结构. 渲染跟 highlights 同款 subheading 列表 (`工作业绩` 标题). 走 achievements/industry/skillTags 一并加进 _EXP_SHARED.
+  - **P1 profile.expectSalary** ({low, high, months}): 三框联动数字输入 (K/月). 只存不渲染 — 数据用于自动填充引擎去填猎聘. 三框都空时 delete 对象避免残留空 string.
+  - **P1 profile.expectCities** (string[], textarea): 期望城市多选. 老数据 string 自动 arr() 拆分.
+  - **P1 profile.expectIndustry / wechat**: 期望行业 + 微信号, 跟现有字段同一行布局.
+  - **P1 education.degreeType** (select 3 选项): 全日制 / 非全日制 / 自考. 渲染时跟 degree 拼成 `本科 (全日制)`.
+  - **P1 education.isUnified** (checkbox): 统招标记, 渲染时 title 旁加 `<span class="item-meta-tag">统招</span>`.
+  - **P1 experience.isIntern** (checkbox): 实习 checkbox, 用 `el.checked` 转 boolean 而非 `el.value` 字符串.
+  - **P2 education.experience** (string[], textarea): 在校经历, 跟 `campus` 区分 — campus 是职务/活动, experience 是荣誉/奖项. 渲染独立 subheading.
+  - **P2 education.thesis** (textarea): 毕设/论文描述.
+  - **P2 experience.industry / department**: 工作 head 旁边 meta-tag badge.
+  - **P2 experience.skillTags** (string[], textarea 逗号分隔): 每段经历独立技能标签, 渲染独立 subheading (`技能标签`).
+  - **P2 projects.role / link / achievements**: 担任角色 (meta-tag badge), 项目链接 (独立 .project-link 区块带 target=_blank), 项目业绩 (subheading).
+- 编辑器新增 `select` / `checkbox` 字段类型支持: buildItemCard 原本只识别 textarea / 默认 input, 扩展后支持 `f.t === 'select'` (走 f.options) / `f.t === 'checkbox'` (走 el.checked 转 boolean). profile 级字段里 `求职状态` select 路径保留不动 (它已经走独立 buildProfileFields).
+- collectFormData 扩展: profile 路径支持嵌套对象 (`profile.expectSalary.low` 三段路径写入到 nd.profile.expectSalary.low); item 路径 checkbox 走 `el.checked` 而不是 `el.value`; 数组字段 (highlights / achievements / tags / skillTags / experience) collectFormData 末尾统一 arr() 拆 string.
+- normalizeSavedData 同步扩展: 老数据 string-shape achievements/skillTags/experience 字段加载时自动 arr() 拆, 老 expectCities string 同处理. 老数据 (achievements='业绩1\n业绩2') 渲染出 `<li>业绩1</li>` 通过.
+- Playwright 验证: 17 个新字段全在编辑器 + 渲染 subheading 全过 (`工作业绩` / `技能标签` / `在校经历` / `毕设/论文` / `统招` badge / `全日制` meta / `全栈` role badge / `.project-link a[href]`) + 老数据 string→array 兼容 + checkbox isIntern 勾选保存=true.
 
 ### Changed
 
