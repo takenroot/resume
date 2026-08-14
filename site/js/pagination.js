@@ -1,7 +1,8 @@
 /* ===========================================================
    CV 简历网页 — A4 自动分页引擎
    =========================================================== */
-const MOBILE_BREAKPOINT = 767, TABLET_BREAKPOINT = 1024, PAGINATION_OVERFLOW_TOLERANCE = 0;
+// ponytail: 断点跟 CSS @media (max-width: 767px/1024px) 同步, JS 走 window.matchMedia 复用 CSS 媒体查询, 避免双源漂移.
+const PAGINATION_OVERFLOW_TOLERANCE = 0;
 
 function createPage(pn) { const rp = document.getElementById('resumePages'), p = cE('section', 'resume-page'); if (pn > 1) { p.classList.add('resume-page--continuation'); const b = cE('header', 'resume-page-banner'); b.setAttribute('aria-label', '分页信息'); b.innerHTML = '<span></span>'; p.appendChild(b); } const c = cE('div', 'resume-page-content'); p.appendChild(c); rp.appendChild(p); return { page: p, content: c, sections: new Map() }; }
 function cloneSectionShell(ss) { const s = ss.cloneNode(false); const hd = Array.from(ss.children).find(function (c) { return c.classList && c.classList.contains('section-heading'); }); if (hd) s.appendChild(hd.cloneNode(true)); const rl = ss.querySelector('[data-render-list]'); if (rl) s.appendChild(rl.cloneNode(false)); return s; }

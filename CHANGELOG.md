@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- 删顶部时间轴整条链 (`autoTimeline` / `extractStartDate` / `getTimelineLabel` / `timeline-strip` / `.tl-*` CSS / 3 个 timeline pref (`timelineEnabled` / `timelineEduField` / `timelineExpField`) / 编辑器预览块 / HTML `<div class="timeline-strip">` 节点). README 时间轴说明同步移除.
+- 删 `DEFAULT_DATA` 兜底 (data.json 单源); fetch + normalize 失败时回落到空 schema `{ profile: {}, sections: [] }`.
+- 删 `migrateToSections` 老 schema 迁移 (5 天前重构留下的 transform).
+- 删 `normalizeSavedData` 里一次性 rename (`challenges` 字段 / `education.experience→honors` 改名) — 不再保留老数据兼容路径, 老字段直接 delete.
+- 删 `language.listeningSpeaking` 字段 (schema 声明但 renderItem/mdItem 全不读).
+- 删 `THEMES.default` 空 vars 死分支; 启动 fallback 到首个主题.
+- 删 `MOBILE_BREAKPOINT` / `TABLET_BREAKPOINT` JS 常量 (双源); `getLayoutMode` 改用 `window.matchMedia` 复用 CSS 媒体查询.
+- 删 `copyText` 的 `document.execCommand('copy')` textarea fallback (现代浏览器全支持 `navigator.clipboard.writeText`).
+- 删 `docs/个人简历袁文娇(1).doc` + `docs/resume-data*.json` 个人数据文件挪出仓库.
+- 删 `SECTION_TYPES` 死常量 + `prefs.js` 顶层 static-bind (DOM 未就绪就挂监听, 全 miss).
+
+### Changed
+
+- `education.isUnified` 默认从 `'否'` 改为 `'是'` (主流本科生是统招, 每次添加都改的体验问题).
+- select 是/否字段统一在代码里存 boolean: 老 boolean→string `'是'/'否'` 反向成 string→boolean (`yesNoToBool`). `collectFormData` 末尾调 `normalizeYesNoFields(cvData)` 跟 `loadCvData` 走同一份归一化逻辑.
+- `education.campus` / `education.honors` "每行一条"渲染/导出统一走 `lis()` / `mli()` helper (前者原 inline `.map('<li>')`, 后者 `mli(...)`).
+- editor.js click handler 合并: `import-json` / `import-md` 重复分支合一 (`importData` 按文件扩展名分支解析); 重复 `closest('[data-action]')` 合并成单次 query.
+- `importData` 末尾加 `window.scrollTo(0, 0)` (导入后滚动到顶, 之前停在原滚动位置看不到新内容).
+
 ## [1.2.0] - 2026-08-14
 
 > 11 个 commit 自 1.1.0 累积。**核心**: 全字段 schema 升级 (P0/P1/P2 招聘平台字段) + 编辑器 bug 修复 + 文档化 + 时间轴默认关闭。

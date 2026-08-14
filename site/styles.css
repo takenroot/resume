@@ -299,56 +299,6 @@ html.js .resume-document[data-js-ready="false"] {
   -webkit-user-drag: none;
 }
 
-/* ========== 时间线条 ========== */
-
-.timeline-strip {
-  grid-column: 1 / -1;
-  margin-top: 12px;
-  padding: 16px 0 8px;
-  border-top: 1px solid var(--line-soft);
-  display: flex;
-  justify-content: center;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 2px 0;
-  text-align: center;
-  color: var(--text-soft);
-  font-size: 11px;
-  letter-spacing: 0.03em;
-}
-
-.tl-seg {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 3px;
-}
-
-.tl-year {
-  font-style: normal;
-  font-weight: 500;
-  color: #94a3b8;
-}
-
-.tl-item {
-  color: var(--text-soft);
-}
-
-.tl-arrow {
-  margin: 0 5px;
-  color: #cbd5e1;
-  font-size: 10px;
-}
-
-.tl-editor-preview {
-  padding: 6px 0;
-  text-align: center;
-  font-size: 12px;
-}
-
-.timeline-strip:empty {
-  display: none;
-}
-
 /* ========== 模块标题 ========== */
 
 .resume-section {
@@ -1423,13 +1373,6 @@ html.js .resume-document[data-js-ready="false"] {
 }
 
 /* ========== 响应式 ========== */
-
-@media (max-width: 1280px) {
-  .page-shell {
-    padding-left: 20px;
-    padding-right: 96px;
-  }
-}
 
 @media (max-width: 1024px) {
   :root {

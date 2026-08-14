@@ -5,7 +5,7 @@ const MIN_SCALE = 1, MAX_SCALE = 1.3, STEP = 0.1, DEFAULT_SCALE = 1;
 let currentScale = DEFAULT_SCALE, currentLayoutMode = 'desktop';
 
 function clampScale(v) { return Math.min(MAX_SCALE, Math.max(MIN_SCALE, Number(v.toFixed(2)))); }
-function getLayoutMode() { return window.innerWidth <= MOBILE_BREAKPOINT ? 'mobile' : window.innerWidth <= TABLET_BREAKPOINT ? 'tablet' : 'desktop'; }
+function getLayoutMode() { return window.matchMedia('(max-width: 767px)').matches ? 'mobile' : window.matchMedia('(max-width: 1024px)').matches ? 'tablet' : 'desktop'; }
 function getShellContentWidth() { const s = document.querySelector('.page-shell'); if (!s) return window.innerWidth; const st = window.getComputedStyle(s); return s.clientWidth - (parseFloat(st.paddingLeft) || 0) - (parseFloat(st.paddingRight) || 0); }
 function getRenderRoot() { const rd = document.getElementById('resumeDocument'), rp = document.getElementById('resumePages'); if (!rd) return null; if (currentLayoutMode !== 'mobile' && rp && rp.childElementCount > 0) return rp; return document.getElementById('resumeSource') || rd; }
 function getAutoScale(lm) { lm = lm || currentLayoutMode; const rr = getRenderRoot(); if (!rr) return 1; return lm === 'tablet' ? Math.min(1, getShellContentWidth() / rr.offsetWidth) : 1; }

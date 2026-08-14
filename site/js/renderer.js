@@ -15,39 +15,6 @@ function renderSectionContent(listEl, idx) {
   (sec.items || []).forEach(function (item) { listEl.appendChild(cfg.renderItem(item)); });
 }
 
-function extractStartDate(period) {
-  if (!period) return null;
-  const m = period.match(/(\d{4}(?:\.\d{1,2})?)/);
-  return m ? m[1] : null;
-}
-
-function getTimelineLabel(type, item) {
-  if (type === 'education') return item[cvPrefs.timelineEduField] || '';
-  if (type === 'experience') return item[cvPrefs.timelineExpField] || '';
-  return '';
-}
-
-function autoTimeline() {
-  const nodes = [];
-  const st = { education:1, experience:1 };
-  (cvData.sections || []).forEach(function(s) {
-    if (!st[s.type]) return;
-    (s.items || []).forEach(function(item) {
-      const sd = extractStartDate(item.period);
-      if (!sd) return;
-      const lb = getTimelineLabel(s.type, item);
-      if (!lb) return;
-      nodes.push({ d: sd, l: lb });
-    });
-  });
-  if (nodes.length === 0) return '';
-  nodes.sort(function(a, b) { return a.d.localeCompare(b.d); });
-  const segs = nodes.map(function(n) {
-    return '<span class="tl-seg"><em class="tl-year">' + esc(n.d.substring(0,4)) + '</em><span class="tl-item">' + esc(n.l) + '</span></span>';
-  });
-  return segs.join('<span class="tl-arrow"> → </span>');
-}
-
 function renderHeaderRow(p) {
   const row = document.getElementById('headerRow'); if (!row) return;
   // 非空字段按顺序排列: 岗位 / 经验 / 所在地, 最后一个非空字段后面不追加 " | "
@@ -96,7 +63,6 @@ function renderHeaderExtra(p) {
 function renderCv() {
   if (!cvData) return; const d = cvData;
   document.querySelectorAll('[data-render]').forEach(function (el) {
-    if (el.classList.contains('timeline-strip')) return;
     const key = el.dataset.render, ps = key.split('.');
     let v = d[ps[0]];
     for (let i = 1; v != null && i < ps.length; i++) v = v[ps[i]];
@@ -115,23 +81,4 @@ function renderCv() {
   const rs = document.getElementById('resumeSource'); if (!rs) return;
   const hd = rs.querySelector('.resume-header'); rs.replaceChildren(); if (hd) rs.appendChild(hd);
   (d.sections || []).forEach(function (sec, i) { const dom = createSectionDOM(i); const h2 = dom.querySelector('h2'); if (h2) h2.textContent = sec.title || (SECTION_CONFIG[sec.type] || {}).label || ''; rs.appendChild(dom); const le = dom.querySelector('[data-render-list]'); if (le) renderSectionContent(le, i); });
-  const ts = document.querySelector('.timeline-strip');
-  if (ts) {
-    // ponytail: 顶部时间轴 strip 跟 cvPrefs.timelineEnabled 绑定. 默认 false (市场不认可, 用户决定) 但代码逻辑保留, 改 pref 即可开.
-    if (!cvPrefs || cvPrefs.timelineEnabled !== true) {
-      ts.style.display = 'none';
-    } else {
-      let html;
-      if (d.profile && d.profile.timeline) {
-        html = d.profile.timeline;
-        ts.textContent = html;
-        ts.classList.remove('auto');
-      } else {
-        html = autoTimeline();
-        ts.innerHTML = html;
-        ts.classList.add('auto');
-      }
-      ts.style.display = html ? '' : 'none';
-    }
-  }
 }

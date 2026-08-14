@@ -4,8 +4,6 @@
 function buildEditorForm() {
   if (!cvData) return; const ec = document.getElementById('editorContent'); if (!ec) return;
   let hh = buildEditorPrefs() + '<div class="editor-section"><h3>个人信息</h3>' + buildProfileFields(cvData.profile) + '</div>';
-  // ponytail: 顶部时间轴预览受 cvPrefs.timelineEnabled 控制. 关掉时不显示这个预览块 (跟顶部 strip 行为一致).
-  if (cvPrefs && cvPrefs.timelineEnabled === true) hh += '<div class="editor-section"><h3>顶部时间轴预览</h3><div class="tl-editor-preview">' + (autoTimeline() || '<span style="color:var(--text-soft)">（无足够时间数据）</span>') + '</div></div>';
   (cvData.sections || []).forEach(function (sec, idx) { hh += buildEditorSectionForm(sec, idx); });
   hh += '<div class="editor-add-section"><button type="button" class="editor-add-btn" id="addSectionBtn">+ 添加模块</button><div class="add-section-menu" id="addSectionMenu" hidden>' + Object.keys(SECTION_CONFIG).map(function (t) { return '<button type="button" class="dropdown-item" data-add-type="' + t + '">' + (SECTION_CONFIG[t] ? SECTION_CONFIG[t].label : t) + '</button>'; }).join('') + '</div></div>';
   ec.innerHTML = hh;
@@ -68,10 +66,7 @@ function buildEditorPrefs() {
   const to = Object.entries(THEMES).map(function (kv) { return '<option value="' + kv[0] + '"' + (cvPrefs.theme === kv[0] ? ' selected' : '') + '>' + kv[1].name + '</option>'; }).join('');
   const so = Object.entries(FONT_SIZES).map(function (kv) { return '<option value="' + kv[0] + '"' + (cvPrefs.fontSize === kv[0] ? ' selected' : '') + '>' + kv[1].name + '</option>'; }).join('');
   const fo = Object.entries(FONT_FAMILIES).map(function (kv) { return '<option value="' + kv[0] + '"' + (cvPrefs.fontFamily === kv[0] ? ' selected' : '') + '>' + kv[1].name + '</option>'; }).join('');
-  const TLF = { education: [{ v: 'school', l: '学校' }, { v: 'major', l: '专业' }, { v: 'degree', l: '学历' }], experience: [{ v: 'company', l: '公司' }, { v: 'position', l: '职位' }] };
-  const ae = TLF.education.map(function (o) { return '<option value="' + o.v + '"' + (cvPrefs.timelineEduField === o.v ? ' selected' : '') + '>' + o.l + '</option>'; }).join('');
-  const ax = TLF.experience.map(function (o) { return '<option value="' + o.v + '"' + (cvPrefs.timelineExpField === o.v ? ' selected' : '') + '>' + o.l + '</option>'; }).join('');
-  return '<div class="editor-section editor-section-prefs"><h3>页面设置</h3><div class="prefs-row"><div class="editor-field"><label>主题配色</label><select id="prefTheme">' + to + '</select></div><div class="editor-field"><label>字号</label><select id="prefFontSize">' + so + '</select></div><div class="editor-field"><label>字体</label><select id="prefFontFamily">' + fo + '</select></div></div><div class="prefs-row" style="margin-top:12px"><div class="editor-field"><label>时间轴 · 教育取</label><select id="prefTlEdu">' + ae + '</select></div><div class="editor-field"><label>时间轴 · 工作取</label><select id="prefTlExp">' + ax + '</select></div><div class="editor-field"><label class="checkbox-label"><input type="checkbox" id="prefTimelineEnabled"> 显示顶部时间轴</label></div></div><p class="prefs-hint">打印页边距请在浏览器打印对话框里设置（建议选「无」或「最小」，本项目 @page 已固定 0mm）</p></div>';
+  return '<div class="editor-section editor-section-prefs"><h3>页面设置</h3><div class="prefs-row"><div class="editor-field"><label>主题配色</label><select id="prefTheme">' + to + '</select></div><div class="editor-field"><label>字号</label><select id="prefFontSize">' + so + '</select></div><div class="editor-field"><label>字体</label><select id="prefFontFamily">' + fo + '</select></div></div><p class="prefs-hint">打印页边距请在浏览器打印对话框里设置（建议选「无」或「最小」，本项目 @page 已固定 0mm）</p></div>';
 }
 
 function buildProfileFields(profile) {
@@ -164,7 +159,10 @@ function collectFormData(opts) {
       if (s.type === 'education' && item.experience !== undefined) { item.honors = item.experience; delete item.experience; }
     });
   });
-  cvData = nd; if (!(opts && opts.skipSave)) saveCvData();
+  cvData = nd;
+  // ponytail: 统一归一 select 是/否 → boolean, 跟 loadCvData 一致, 避免老 string / 新 boolean 混在 localStorage.
+  normalizeYesNoFields(cvData);
+  if (!(opts && opts.skipSave)) saveCvData();
 }
 let liveSyncTimer = null;
 function liveSyncPreview() {
@@ -212,8 +210,16 @@ function bindEditorEvents() {
   }
   document.addEventListener('click', function (ev) {
     const cb = ev.target.closest('[data-action="toggle-section-collapse"]'); if (cb) { const i = parseInt(cb.dataset.index, 10); const sec = document.querySelector('.editor-section.editor-module[data-section-index="' + i + '"]'); if (sec) sec.classList.toggle('is-collapsed'); return; }
-    const ab = ev.target.closest('[data-action]'); if (ab) { const a = ab.dataset.action; if (a === 'move-section-up' || a === 'move-section-down' || a === 'remove-section') { const i = parseInt(ab.dataset.index, 10); if (a === 'move-section-up') { moveSection(i, -1); return; } if (a === 'move-section-down') { moveSection(i, 1); return; } if (a === 'remove-section') { removeSection(i); return; } } else { const si = parseInt(ab.dataset.sectionIndex, 10), ii = parseInt(ab.dataset.itemIndex, 10); if (a === 'move-item-up') { moveItem(si, ii, -1); return; } if (a === 'move-item-down') { moveItem(si, ii, 1); return; } if (a === 'copy-item') { copyItem(si, ii); return; } } }
-    const ab2 = ev.target.closest('[data-action]'); if (ab2) { const a2 = ab2.dataset.action; if (a2 === 'import-json') { document.getElementById('fileImportInput').click(); return; } if (a2 === 'import-md') { document.getElementById('fileImportInput').click(); return; } if (a2 === 'export-json') { collectFormData(); exportJson(); return; } if (a2 === 'export-md') { collectFormData(); exportMarkdown(); return; } if (a2 === 'print') { exportPdf(); return; } if (a2 === 'export-pdf-image') { collectFormData(); exportPdfImage(); return; } }
+    const ab = ev.target.closest('[data-action]'); if (ab) { const a = ab.dataset.action;
+      // ponytail: import-json / import-md 都触发同一个隐藏的 file input, 走 importData 根据扩展名分支解析.
+      if (a === 'import-json' || a === 'import-md') { document.getElementById('fileImportInput').click(); return; }
+      if (a === 'move-section-up' || a === 'move-section-down' || a === 'remove-section') { const i = parseInt(ab.dataset.index, 10); if (a === 'move-section-up') { moveSection(i, -1); return; } if (a === 'move-section-down') { moveSection(i, 1); return; } if (a === 'remove-section') { removeSection(i); return; } }
+      else if (a === 'move-item-up' || a === 'move-item-down' || a === 'copy-item') { const si = parseInt(ab.dataset.sectionIndex, 10), ii = parseInt(ab.dataset.itemIndex, 10); if (a === 'move-item-up') { moveItem(si, ii, -1); return; } if (a === 'move-item-down') { moveItem(si, ii, 1); return; } if (a === 'copy-item') { copyItem(si, ii); return; } }
+      else if (a === 'export-json') { collectFormData(); exportJson(); return; }
+      else if (a === 'export-md') { collectFormData(); exportMarkdown(); return; }
+      else if (a === 'print') { exportPdf(); return; }
+      else if (a === 'export-pdf-image') { collectFormData(); exportPdfImage(); return; }
+    }
     const aib = ev.target.closest('[data-add-item]'); if (aib) { addItem(parseInt(aib.dataset.addItem, 10)); return; }
     const rib = ev.target.closest('.editor-item-remove'); if (rib) { removeItem(parseInt(rib.dataset.sectionIndex, 10), parseInt(rib.dataset.itemIndex, 10)); return; }
     if (ev.target.closest('#addSectionBtn')) return;
