@@ -66,6 +66,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - expectSalary placeholder 提示单位: "下限 K" / "上限 K" / "月数" (单位 K/月在 label 里, placeholder 跟单位对齐).
 - 抽 `buildEduHead(i)` helper: education item-head 原本 5 个 if 链展开 (school · major · degree · (degreeType) · 统招) 抽到顶层. isUnified 不再挤进 h3, 改走 .item-meta 旁挂 .item-meta-tag 视觉跟 experience.industry/department 对齐. mdItem 同步简化 (主字段走 `if (xxx) md += ' | xxx'`, 跟 if-chain 拆开).
 - 抽 `clearImportDom()` helper: importData 里 15 行 DOM 清空逻辑抽到顶层, 跟 `importData` 主体分离, importData 缩到 24 行, 流水线感更强 (parse → validate → clear → save → render → rebuild).
+- 重命名 `education.experience` (在校经历) → `education.honors` (荣誉奖项): 跟 superset 字段名对齐, 消除"工作经历 section type"和"教育 item 字段"都叫 experience 的歧义. normalizeSavedData + collectFormData 双重兜底 (rename + delete), 老数据下次打开编辑器就自动迁移. 渲染层 label 从 "在校经历" 改成 "荣誉奖项" (语义更准). 老字段 `campus` 保留不变 (校园经历含义已涵盖).
+- 加 `language` section (语言能力): SECTION_CONFIG 新增完整实现 (fields + renderItem + mdItem + defaultItem). 5 字段: name (语种 select 9 选项) / proficiency (熟练程度) / level (等级如 CET-6) / listeningSpeaking (听说, 智联拆分) / readingWriting (读写, 智联拆分). 渲染时 level 跟 name 同行, proficiency/readingWriting 走 .item-meta-tag 旁挂. 命名分歧注释里说明 (猎聘=语言+熟练程度+等级, 智联=语种+听说+读写, 超集取并集). 跟 [cv-autofill schema](cv-autofill/schema/cv-superset.schema.json) languageItem 对齐.
+- profile.currentSalary 加数据结构但隐藏字段: 用户要求存数据 (cv-autofill 引擎读得到) 但 UI 不显示 (薪资敏感). 实现: 不在 editor flds / renderer template / markdown 导出出现, 用户手写 JSON 才能填. 代码注释明确这是 "hidden field" 设计, 等需要时再加 input.
 
 ### Changed
 - Playwright 验证: 17 个新字段全在编辑器 + 渲染 subheading 全过 (`工作业绩` / `技能标签` / `在校经历` / `毕设/论文` / `统招` badge / `全日制` meta / `全栈` role badge / `.project-link a[href]`) + 老数据 string→array 兼容 + checkbox isIntern 勾选保存=true.

@@ -78,6 +78,7 @@ function buildProfileFields(profile) {
   const av = profile && profile.avatar ? profile.avatar : '';
   const localAvatar = av ? av : loadAvatar(name);
   const hasLocalAvatar = !!loadAvatar(name);
+  // ponytail: 隐藏字段 (currentSalary 等) 不在 flds 里出现, 用户手写 JSON 才能填. cv-autofill 引擎读 schema.json 知道存在. 走 data-render 的字段才会显示, 当前都没用, 等需要时再加 input.
   const flds = [{ n: 'name', l: '姓名' }, { n: 'title', l: '岗位' }, { n: 'experience', l: '工作经验' }, { n: '求职状态', l: '求职状态', t: 'select', options: ['随时到岗', '在职-看机会', '在职-暂不考虑', '暂不找工作'] }, { n: '所在地', l: '所在地' }, { n: 'gender', l: '性别' }, { n: 'birthDate', l: '出生日期', t: 'date' }, { n: 'phone', l: '电话' }, { n: 'email', l: '邮箱' }, { n: 'github', l: 'GitHub' }, { n: 'wechat', l: '微信号' }, { n: 'expectIndustry', l: '期望行业' }, { n: 'timeline', l: '顶部时间线', p: '留空则自动从经历中提取' }];
   let hh = '<div class="editor-field editor-field-avatar"><label>头像</label><div class="avatar-upload"><div class="avatar-preview" id="avatarPreview" style="' + (localAvatar ? "background-image: url('" + esc(localAvatar) + "')" : '') + '"></div><div class="avatar-upload-inputs"><input type="file" id="avatarFileInput" accept="image/*">' + (hasLocalAvatar ? '<button type="button" class="editor-btn" id="clearAvatarBtn" style="font-size:12px;padding:4px 8px">清除头像</button>' : '') + '<input type="text" name="profile.avatar" value="' + esc(av) + '" placeholder="留空则使用浏览器本地头像"></div><p style="font-size:11px;color:var(--text-soft);margin:4px 0 0">选择图片后自动转为 base64 存入浏览器本地，导出 JSON/Markdown 时不含头像</p></div></div>';
   hh += flds.map(function (f) { return '<div class="editor-field"><label>' + f.l + '</label>' + renderProfileFieldInput(f, profile) + '</div>'; }).join('');
@@ -158,6 +159,8 @@ function collectFormData(opts) {
     (s.items || []).forEach(function (item) {
       delete item.challenges;
       arrKeys.forEach(function (k) { if (item[k] && typeof item[k] === 'string') item[k] = arr(item[k]); });
+      // ponytail: 同 normalize, 老 education.experience 重命名为 honors.
+      if (s.type === 'education' && item.experience !== undefined) { item.honors = item.experience; delete item.experience; }
     });
   });
   cvData = nd; if (!(opts && opts.skipSave)) saveCvData();

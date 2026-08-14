@@ -61,14 +61,14 @@ const _EXP_SHARED = {
 const SECTION_CONFIG = {
   experience: { label: '工作经历', ..._EXP_SHARED },
   experience_other: { label: '其它经历', ..._EXP_SHARED },
-  education: { label: '教育背景', fields: [{ n: 'school', l: '学校' }, { n: 'major', l: '专业' }, { n: 'degree', l: '学历' }, { n: 'degreeType', l: '学制', t: 'select', options: ['全日制', '非全日制', '自考'] }, { n: 'isUnified', l: '是否统招', t: 'select', options: ['是', '否'] }, { n: 'period', l: '时间' }, { n: 'courses', l: '主修课程' }, { n: 'campus', l: '校园经历 (每行一条)', t: 'textarea' }, { n: 'experience', l: '在校经历 (每行一条)', t: 'textarea', a: true }, { n: 'thesis', l: '毕设/论文', t: 'textarea' }],
+  education: { label: '教育背景', fields: [{ n: 'school', l: '学校' }, { n: 'major', l: '专业' }, { n: 'degree', l: '学历' }, { n: 'degreeType', l: '学制', t: 'select', options: ['全日制', '非全日制', '自考'] }, { n: 'isUnified', l: '是否统招', t: 'select', options: ['是', '否'] }, { n: 'period', l: '时间' }, { n: 'courses', l: '主修课程' }, { n: 'campus', l: '校园经历 (每行一条)', t: 'textarea' }, { n: 'honors', l: '荣誉奖项 (每行一条)', t: 'textarea', a: true }, { n: 'thesis', l: '毕设/论文', t: 'textarea' }],
     // ponytail: head 拼接抽到 buildEduHead (string), isUnified 走 item-meta 旁挂不进 h3, 避免 h3 串太长.
     renderItem: function (i) {
       const a = cE('article', 'timeline-item');
       let html = buildEduHead(i);
       if (i.courses) html += '<div class="item-section"><h4 class="item-section-label">主修课程</h4><p class="item-section-content">' + esc(i.courses) + '</p></div>';
       if (i.campus) { const lines = (i.campus || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean); if (lines.length > 0) html += '<div class="item-section"><h4 class="item-section-label">校园经历</h4><ul class="item-section-list">' + lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></div>'; }
-      if (i.experience && i.experience.length) html += '<div class="item-section"><h4 class="item-section-label">在校经历</h4><ul class="item-section-list">' + lis(i.experience) + '</ul></div>';
+      if (i.honors && i.honors.length) html += '<div class="item-section"><h4 class="item-section-label">荣誉奖项</h4><ul class="item-section-list">' + lis(i.honors) + '</ul></div>';
       if (i.thesis) html += '<div class="item-section"><h4 class="item-section-label">毕设/论文</h4><p class="item-section-content">' + esc(i.thesis) + '</p></div>';
       a.innerHTML = html;
       return a;
@@ -81,11 +81,11 @@ const SECTION_CONFIG = {
       if (i.isUnified === '是') md += ' | 统招';
       if (i.courses) md += '\n\n### 主修课程\n' + i.courses;
       if (i.campus) { const lines = (i.campus || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean); if (lines.length > 0) md += '\n\n### 校园经历\n' + lines.map(function (l) { return '- ' + l; }).join('\n'); }
-      if (i.experience && i.experience.length) md += '\n\n### 在校经历\n' + mli(i.experience);
+      if (i.honors && i.honors.length) md += '\n\n### 荣誉奖项\n' + mli(i.honors);
       if (i.thesis) md += '\n\n### 毕设/论文\n' + i.thesis;
       return md;
     },
-    defaultItem: { school: '', major: '', degree: '', degreeType: '', isUnified: '否', period: '', courses: '', campus: '', experience: [], thesis: '' }
+    defaultItem: { school: '', major: '', degree: '', degreeType: '', isUnified: '否', period: '', courses: '', campus: '', honors: [], thesis: '' }
   },
   projects: { label: '项目经验', fields: [{ n: 'name', l: '项目名' }, { n: 'role', l: '担任角色' }, { n: 'period', l: '时间' }, { n: 'link', l: '项目链接' }, { n: 'tags', l: '技术栈 (逗号分隔)', t: 'textarea', a: true }, { n: 'summary', l: '项目描述', t: 'textarea' }, { n: 'achievements', l: '项目业绩 (每行一条)', t: 'textarea', a: true }],
     renderItem: function (i) { const tags = arr(i.tags), th = tags.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join(''); const a = cE('article', 'timeline-item'); let html = '<div class="item-head"><div><h3>' + esc(i.name) + (i.role ? ' <span class="item-meta-tag">' + esc(i.role) + '</span>' : '') + '</h3><ul class="tag-list item-subtitle">' + th + '</ul></div><span class="item-time">' + esc(i.period) + '</span></div>'; if (i.summary) html += '<p class="summary">' + esc(i.summary) + '</p>';
@@ -102,6 +102,26 @@ const SECTION_CONFIG = {
     renderItem: function (i) { const a = cE('article', 'skill-item'); a.innerHTML = '<span class="skill-name">' + esc(i.name) + '</span><span class="skill-detail">' + esc(i.detail) + '</span>'; return a; },
     mdPrefix: '| 类别 | 详情 |\n| --- | --- |', mdItem: function (i) { return '| **' + (i.name || '') + '** | ' + (i.detail || '') + ' |'; },
     defaultItem: { name: '', detail: '' }
+  },
+  // ponytail: language 字段数据来源见 cv-autofill/schema/cv-superset.schema.json languageItem. 命名分歧:猎聘=语言+熟练程度+等级, 智联=语种+听说+读写. CV 超集取并集, 用户按需填.
+  language: { label: '语言能力', fields: [{ n: 'name', l: '语种', t: 'select', options: ['英语', '汉语', '日语', '法语', '德语', '俄语', '韩语', '西班牙语', '其他'] }, { n: 'proficiency', l: '熟练程度', t: 'select', options: ['一般', '良好', '熟练', '精通'] }, { n: 'level', l: '等级 (如 CET-6)' }, { n: 'listeningSpeaking', l: '听说 (智联拆分)', t: 'select', options: ['一般', '良好', '熟练', '精通'] }, { n: 'readingWriting', l: '读写 (智联拆分)', t: 'select', options: ['一般', '良好', '熟练', '精通'] }],
+    renderItem: function (i) {
+      const a = cE('article', 'timeline-item');
+      const tags = [i.proficiency && '听/说: ' + esc(i.proficiency), i.readingWriting && '读/写: ' + esc(i.readingWriting)].filter(Boolean);
+      let html = '<div class="item-head"><div><h3>' + esc(i.name || '') + (i.level ? ' <span class="item-meta-tag">' + esc(i.level) + '</span>' : '') + '</h3>';
+      if (tags.length) html += '<div class="item-meta">' + tags.map(function (t) { return '<span class="item-meta-tag">' + t + '</span>'; }).join('') + '</div>';
+      html += '</div></div>';
+      a.innerHTML = html;
+      return a;
+    },
+    mdItem: function (i) {
+      let md = '**' + (i.name || '') + '**';
+      if (i.level) md += ' | ' + i.level;
+      if (i.proficiency) md += ' | 听说: ' + i.proficiency;
+      if (i.readingWriting) md += ' | 读写: ' + i.readingWriting;
+      return md;
+    },
+    defaultItem: { name: '', proficiency: '', level: '', listeningSpeaking: '', readingWriting: '' }
   },
   summary: { label: '自我评价', fields: [], contentField: 'items', isArrayContent: true,
     renderContent: function (items) { if (!items || items.length === 0) return; const ul = cE('ul'); items.forEach(function (t) { const li = cE('li'); li.textContent = t; ul.appendChild(li); }); return ul; },
