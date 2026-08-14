@@ -35,13 +35,13 @@ function buildEditorSectionForm(sec, idx) {
 }
 
 // ponytail: 把 buildItemCard 里的 if/else if 链抽成 dispatch, 加新类型 (radio/date 等) 只改这里.
-// 支持的 f.t: 'select' / 'checkbox' / 'textarea' / 默认 input. f.a=true 数组字段自动 join('\n' 或 ', ').
+// 支持的 f.t: 'select' / 'textarea' / 默认 input. f.a=true 数组字段自动 join('\n' 或 ', ').
+// 是/否字段全部用 select (options: ['是', '否']) 替代 checkbox — UI 布局统一, value 是 string.
 function renderItemFieldInput(f, v, name) {
   if (f.t === 'select') {
     const opts = (f.options || []).map(function (o) { return '<option value="' + esc(o) + '"' + (v === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('');
     return '<select name="' + name + '">' + opts + '</select>';
   }
-  if (f.t === 'checkbox') return '<input type="checkbox" name="' + name + '" value="1"' + (v ? ' checked' : '') + '>';
   if (f.t === 'textarea') {
     const dv = f.a ? (Array.isArray(v) ? v.join('\n') : v) : v;
     return '<textarea name="' + name + '">' + esc(dv || '') + '</textarea>';
@@ -80,27 +80,29 @@ function buildProfileFields(profile) {
   const hasLocalAvatar = !!loadAvatar(name);
   const flds = [{ n: 'name', l: '姓名' }, { n: 'title', l: '岗位' }, { n: 'experience', l: '工作经验' }, { n: '求职状态', l: '求职状态', t: 'select', options: ['随时到岗', '在职-看机会', '在职-暂不考虑', '暂不找工作'] }, { n: '所在地', l: '所在地' }, { n: 'gender', l: '性别' }, { n: 'birthDate', l: '出生日期', t: 'date' }, { n: 'phone', l: '电话' }, { n: 'email', l: '邮箱' }, { n: 'github', l: 'GitHub' }, { n: 'wechat', l: '微信号' }, { n: 'expectIndustry', l: '期望行业' }, { n: 'timeline', l: '顶部时间线', p: '留空则自动从经历中提取' }];
   let hh = '<div class="editor-field editor-field-avatar"><label>头像</label><div class="avatar-upload"><div class="avatar-preview" id="avatarPreview" style="' + (localAvatar ? "background-image: url('" + esc(localAvatar) + "')" : '') + '"></div><div class="avatar-upload-inputs"><input type="file" id="avatarFileInput" accept="image/*">' + (hasLocalAvatar ? '<button type="button" class="editor-btn" id="clearAvatarBtn" style="font-size:12px;padding:4px 8px">清除头像</button>' : '') + '<input type="text" name="profile.avatar" value="' + esc(av) + '" placeholder="留空则使用浏览器本地头像"></div><p style="font-size:11px;color:var(--text-soft);margin:4px 0 0">选择图片后自动转为 base64 存入浏览器本地，导出 JSON/Markdown 时不含头像</p></div></div>';
-  hh += flds.map(function (f) {
-    let inputHtml;
-    if (f.t === 'select') {
-      const opts = (f.options || []).map(function (o) { return '<option value="' + esc(o) + '"' + ((profile && profile[f.n]) === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('');
-      inputHtml = '<select name="profile.' + f.n + '">' + opts + '</select>';
-    } else {
-      inputHtml = '<input type="' + (f.t === 'date' ? 'date' : 'text') + '" name="profile.' + f.n + '" value="' + esc(profile && profile[f.n] ? profile[f.n] : '') + '"' + (f.p ? ' placeholder="' + f.p + '"' : '') + '>';
-    }
-    return '<div class="editor-field"><label>' + f.l + '</label>' + inputHtml + '</div>';
-  }).join('');
-  // ponytail: 期望薪资 (三框联动) + 期望城市 (多选 textarea), 跟扁平 profile 字段分开处理.
+  hh += flds.map(function (f) { return '<div class="editor-field"><label>' + f.l + '</label>' + renderProfileFieldInput(f, profile) + '</div>'; }).join('');
+  // ponytail: 期望薪资 (三框联动, 单位 K) + 期望城市 (多选 textarea), 跟扁平 profile 字段分开处理.
   const salary = (profile && profile.expectSalary) || {};
   hh += '<div class="editor-field"><label>期望薪资 (K/月)</label><div class="expect-salary-row">' +
-    '<input type="number" name="profile.expectSalary.low" value="' + esc(salary.low || '') + '" placeholder="下限" min="0">' +
+    '<input type="number" name="profile.expectSalary.low" value="' + esc(salary.low || '') + '" placeholder="下限 K" min="0">' +
     '<span> - </span>' +
-    '<input type="number" name="profile.expectSalary.high" value="' + esc(salary.high || '') + '" placeholder="上限" min="0">' +
+    '<input type="number" name="profile.expectSalary.high" value="' + esc(salary.high || '') + '" placeholder="上限 K" min="0">' +
     '<span> × </span>' +
     '<input type="number" name="profile.expectSalary.months" value="' + esc(salary.months || '') + '" placeholder="月数" min="0">' +
     '</div></div>';
   hh += '<div class="editor-field"><label>期望城市 (每行一条)</label><textarea name="profile.expectCities" placeholder="北京&#10;上海">' + esc((profile && Array.isArray(profile.expectCities) ? profile.expectCities.join('\n') : '') || '') + '</textarea></div>';
   return hh;
+}
+
+// ponytail: profile 字段的 input 拼接抽到顶层, 跟 renderItemFieldInput 对称.
+// 支持的 f.t: 'select' / 'date' / 默认 text. value 走 esc, 走 profile[f.n] 读现值.
+function renderProfileFieldInput(f, profile) {
+  const v = profile && profile[f.n];
+  if (f.t === 'select') {
+    const opts = (f.options || []).map(function (o) { return '<option value="' + esc(o) + '"' + (v === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('');
+    return '<select name="profile.' + f.n + '">' + opts + '</select>';
+  }
+  return '<input type="' + (f.t === 'date' ? 'date' : 'text') + '" name="profile.' + f.n + '" value="' + esc(v || '') + '"' + (f.p ? ' placeholder="' + f.p + '"' : '') + '>';
 }
 
 function collectFormData(opts) {
@@ -147,10 +149,8 @@ function collectFormData(opts) {
     if (!nd.sections[si]) return;
     if (!nd.sections[si].items) nd.sections[si].items = [];
     if (!nd.sections[si].items[ii]) nd.sections[si].items[ii] = {};
-    // ponytail: checkbox 转 boolean — el.checked 才是真正状态, el.value 永远是 '1'.
-    // 数组字段 (textarea + a:true) 走 arr() 统一拆分, 防止 collectFormData 把字符串塞给渲染层.
-    const isCheckbox = el.type === 'checkbox';
-    nd.sections[si].items[ii][fi] = isCheckbox ? !!el.checked : el.value;
+    // ponytail: 统一走 el.value (input/textarea/select/select 是-否). checkbox 全部改 select 是/否 后不再有 el.type 区分.
+    nd.sections[si].items[ii][fi] = el.value;
   });
   (nd.sections || []).forEach(function (s) {
     if (s.type === 'text' || s.type === 'summary') return;

@@ -60,6 +60,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 修 number 0 误删: expectSalary 三个字段 delete 判断从 `!x` 改 `x === ''`, number 0 (合法薪资) 不会被误判空值删除.
 - 抽 `renderItemFieldInput(f, v, name)` helper: buildItemCard 原本 4 个 if/else if 链 (select/checkbox/textarea/input) 抽到顶层, 加新类型只改一处. dispatch 风格而非 dispatcher map (YAGNI, 4 类型够直读).
 - 抽 `arrFieldsOf(cfg)` helper: collectFormData 末尾的数组 normalize 列表和 normalizeSavedData 都从硬编码 `['highlights', 'achievements', 'tags', 'skillTags', 'experience']` 改成从 `cfg.fields.filter(f.a).map(f.n)` 动态读. 加新数组字段只需在 fields 加 `{ a: true }`, 不需要再维护两处 normalize 列表.
+- 删 `projects.highlights` 字段: 用户确认跟项目业绩是同义重复, 编辑器不放, 渲染和 Markdown 导出也不生成对应 block. 老 data 没 highlights 直接跳过, 留 defaults 空数组兜底.
+- 所有 checkbox 改 select 是/否: `education.isUnified` / `experience.isIntern` UI 布局在分屏编辑器里 checkbox 难看 (`.checkbox-label` 没生效, 复选框 + label 拼一起不规整). 改 `t: 'select', options: ['是', '否']`, defaultItem 是 `'否'`. 老数据 boolean (true/false) normalize 时自动转 '是'/'否'. collectFormData 移除 `isCheckbox ? !!el.checked : el.value` 分支, 统一走 `el.value` (select 值就是 string).
+- 抽 `renderProfileFieldInput(f, profile)` helper: buildProfileFields 里 12 个 profile 字段的 input 拼接抽到顶层, 跟 renderItemFieldInput 对称. 支持 'select' / 'date' / 默认 text. 加新 profile 字段不需要再改 buildProfileFields 主体.
+- expectSalary placeholder 提示单位: "下限 K" / "上限 K" / "月数" (单位 K/月在 label 里, placeholder 跟单位对齐).
+- 抽 `buildEduHead(i)` helper: education item-head 原本 5 个 if 链展开 (school · major · degree · (degreeType) · 统招) 抽到顶层. isUnified 不再挤进 h3, 改走 .item-meta 旁挂 .item-meta-tag 视觉跟 experience.industry/department 对齐. mdItem 同步简化 (主字段走 `if (xxx) md += ' | xxx'`, 跟 if-chain 拆开).
+- 抽 `clearImportDom()` helper: importData 里 15 行 DOM 清空逻辑抽到顶层, 跟 `importData` 主体分离, importData 缩到 24 行, 流水线感更强 (parse → validate → clear → save → render → rebuild).
 
 ### Changed
 - Playwright 验证: 17 个新字段全在编辑器 + 渲染 subheading 全过 (`工作业绩` / `技能标签` / `在校经历` / `毕设/论文` / `统招` badge / `全日制` meta / `全栈` role badge / `.project-link a[href]`) + 老数据 string→array 兼容 + checkbox isIntern 勾选保存=true.

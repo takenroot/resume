@@ -21,16 +21,26 @@ function migrateToSections(d) { if (d.sections && Array.isArray(d.sections)) ret
 // 加新数组字段只需在 fields 加 { a: true }, 不需要再改 normalize 列表.
 function arrFieldsOf(cfg) { return (cfg && cfg.fields ? cfg.fields : []).filter(function (f) { return f.a; }).map(function (f) { return f.n; }); }
 
+// ponytail: select 是/否 字段 (options: ['是', '否']) 老数据可能是 boolean, 转成 string.
+function boolToYesNo(v) { if (v === true) return '是'; if (v === false) return '否'; return v; }
+
 function normalizeSavedData() {
   migrateToSections(cvData);
   (cvData.sections || []).forEach(function (s) {
     if (!s.items) s.items = [];
     if (!s.title) s.title = (SECTION_CONFIG[s.type] || {}).label || '模块';
-    const arrKeys = arrFieldsOf(SECTION_CONFIG[s.type]);
+    const cfg = SECTION_CONFIG[s.type] || {};
+    const arrKeys = arrFieldsOf(cfg);
     (s.items || []).forEach(function (it) {
       // ponytail: 2026-08-13 删除 challenges 字段, 老数据迁移时直接 delete.
       delete it.challenges;
       arrKeys.forEach(function (k) { if (it[k] !== undefined) it[k] = arr(it[k]); });
+      // 遍历 fields, 是/否 select 字段走 boolean → string 转换. 老 checkbox 留 boolean 不会跑这条.
+      (cfg.fields || []).forEach(function (f) {
+        if (f.t === 'select' && Array.isArray(f.options) && f.options.length === 2 && f.options[0] === '是' && f.options[1] === '否') {
+          if (it[f.n] !== undefined && typeof it[f.n] === 'boolean') it[f.n] = boolToYesNo(it[f.n]);
+        }
+      });
     });
   });
   if (cvData.profile) {
@@ -55,6 +65,25 @@ function resetCvData() { localStorage.removeItem(STORAGE_KEY); location.reload()
 function loadCvData() { return new Promise(function (rs) { const st = localStorage.getItem(STORAGE_KEY); if (st) { try { cvData = JSON.parse(st); normalizeSavedData(); rs(); return; } catch (e) {} } fetch('./data.json').then(function (r) { return r.json(); }).then(function (d) { cvData = d; normalizeSavedData(); rs(); }).catch(function () { cvData = JSON.parse(JSON.stringify(DEFAULT_DATA)); normalizeSavedData(); rs(); }); }); }
 function exportJson() { const exportData = JSON.parse(JSON.stringify(cvData)); exportData.profile.avatar = ''; const b = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' }), u = URL.createObjectURL(b), a = document.createElement('a'); a.href = u; a.download = 'resume-data.json'; a.click(); URL.revokeObjectURL(u); }
 function exportMarkdown() { const md = buildMarkdown(cvData), b = new Blob([md], { type: 'text/markdown;charset=utf-8' }), u = URL.createObjectURL(b), a = document.createElement('a'); a.href = u; a.download = 'resume.md'; a.click(); URL.revokeObjectURL(u); showToast('Markdown 已导出', 'success'); }
+
+// ponytail: 导入前清空所有 data-render 元素的旧值, 让 renderCv 写入新值不被残留 textContent 盖过.
+// INPUT/TEXTAREA/BUTTON/A 跳过 (表单有用户输入, button/a 有 copy/href 副作用).
+function clearImportDom() {
+  document.querySelectorAll('[data-render]').forEach(function (el) {
+    if (el.classList && el.classList.contains('timeline-strip')) return;
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'BUTTON' || el.tagName === 'A') return;
+    el.textContent = '';
+    el.classList.remove('is-empty');
+  });
+  const rs = document.getElementById('resumeSource');
+  if (rs) {
+    const hd = rs.querySelector('.resume-header');
+    rs.replaceChildren();
+    if (hd) rs.appendChild(hd);
+  }
+  const hr = document.getElementById('headerRow'); if (hr) hr.replaceChildren();
+}
+
 function importData(file) {
   const r = new FileReader();
   r.onload = function (e) {
@@ -66,22 +95,7 @@ function importData(file) {
       cvData = d;
       normalizeSavedData();
       if (cvData.profile) cvData.profile.avatar = '';
-      // ponytail: 导入前清空所有 data-render 元素的旧值. renderCv 里 v 为空时只 add is-empty 类不写 textContent,
-      // 若旧 DOM 上次渲染过非空值,这些残留 textContent 会盖过新数据 (姓名/电话/邮箱导入后不更新).
-      // .resume-pages 必须整块 replaceChildren — 新旧 sections 数量/顺序不一样时残留更明显.
-      document.querySelectorAll('[data-render]').forEach(function (el) {
-        if (el.classList && el.classList.contains('timeline-strip')) return;
-        if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'BUTTON' || el.tagName === 'A') return;
-        el.textContent = '';
-        el.classList.remove('is-empty');
-      });
-      const rs = document.getElementById('resumeSource');
-      if (rs) {
-        const hd = rs.querySelector('.resume-header');
-        rs.replaceChildren();
-        if (hd) rs.appendChild(hd);
-      }
-      const hr = document.getElementById('headerRow'); if (hr) hr.replaceChildren();
+      clearImportDom();
       saveCvData();
       renderCv();
       syncResumeLayout();
