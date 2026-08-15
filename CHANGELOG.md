@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 本地错误队列 (telemetry): `window.onerror` / `unhandledrejection` / 导入异常写 localStorage `cv_errors` (留最近 20 条, 不外发), 编辑器底部加「复制错误」按钮一键拷走 UA + URL + 错误栈.
 - 「重置默认」按钮接上 handler (原来是死按钮, 无 JS 绑定): 点击 confirm 后备份当前数据再 `resetCvData()`.
 - `docs/cv-schema.json`: cv-autofill `schema/cv-superset.schema.json` 的副本, README 所称 "CV 为 canonical 源" 现在有仓库内凭证.
+- 字段治理 (CROSS_REPO_PLAN 四步全落地): vendor `site/fields.json` (cv-autofill 生成的字段全集只读副本, 60 字段, 只能整体替换升级); 对账测试 `test/fields-sync.mjs` (config key ⊆ fields.json + `CV_OWN` 显式白名单 + camelCase 命名机检, 197 checks, 信息性输出上游 proposed 未吸收清单); 仲裁规则写进 SCHEMA_NAMING/README (字段存不存在与英文 key → fields.json; 中文 label 与渲染 → CV 自己定); 数据版本戳 `schemaVersion` (saveCvData 落盘盖章, 导出/备份自带, 缺失时 warning 提示不拦截).
 
 ### Fixed
 
@@ -30,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- 删 `docs/cv-schema.json` (cv-autofill 超集 schema 副本): 被 `site/fields.json` 取代 (生成物, 带 version 戳, 有对账测试守着), schema 副本无测试无更新机制, 纯噪音源.
 - 删 `docs/CV_SCHEMA_FEEDBACK.md` (cv-autofill 需求文档): 全部 P0/P1/P2 建议已落地 (achievements/isIntern/industry/department/skillTags/degreeType/isUnified/overseasEdu/thesis/role/link/expectJobs/firstWorkDate/wechat/expectIndustry + validateSchema 构建时校验), 需求状态由本文件记录, 原文档删除减少噪音源. 平台字段映射的活文档 = `docs/SCHEMA_NAMING.md` (已全表刷新).
 - 删 `profile.expectSalary` / `profile.expectCities` 独立字段 (跟 `expectJobs[0].salary/cities` 重复, 编辑器要填两遍): 编辑器输入块删除, 头部标签行改从 `expectJobs[0]` 派生. cv-autofill superset schema 同步标 `x-status: merged`.
 - 删顶部时间轴整条链 (`autoTimeline` / `extractStartDate` / `getTimelineLabel` / `timeline-strip` / `.tl-*` CSS / 3 个 timeline pref (`timelineEnabled` / `timelineEduField` / `timelineExpField`) / 编辑器预览块 / HTML `<div class="timeline-strip">` 节点). README 时间轴说明同步移除.
