@@ -9,7 +9,7 @@ This file provides context for AI assistants working on this project.
 No build step — edit source files directly, reload browser.
 
 - **Dev server:** `cd site && python3 -m http.server 8000` (or `bash start.sh`)
-- **Self-checks:** `node test/validate-schema.mjs` / `collect-form.mjs` / `render-tags.mjs` / `markdown-profile.mjs` (frameworkless, 直接跑; 改 config/data/editor/markdown 后必跑)
+- **Self-checks:** `node test/validate-schema.mjs` / `collect-form.mjs` / `render-tags.mjs` / `markdown-profile.mjs` / `fields-sync.mjs` (frameworkless, 直接跑; 改 config/data/editor/markdown 后必跑; 改字段后必跑 fields-sync)
 - **Syntax:** `node --check site/js/*.js`
 
 ## Project Structure
@@ -21,6 +21,7 @@ No build step — edit source files directly, reload browser.
 | `site/styles.css` | All styles (layout, editor, toolbar, print @media) |
 | `site/js/` | Modular JS — app.js (entry), editor.js, renderer.js, pagination.js, zoom.js, config.js, utils.js, markdown.js, data.js, prefs.js |
 | `site/data.json` | Default resume data (tracked seed file, 不是个人数据) |
+| `site/fields.json` | 字段全集, vendor 自 cv-autofill — 只读, 只能整体替换升级, 分歧由 test/fields-sync.mjs 抓住 |
 | `test/` | Frameworkless node self-checks (*.mjs) |
 
 ## PDF / PNG Export

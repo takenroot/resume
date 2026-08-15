@@ -38,10 +38,10 @@ cv/
 │   │   ├── renderer.js             # 渲染引擎
 │   │   ├── utils.js                # 工具函数
 │   │   └── zoom.js                 # 缩放控制
+│   ├── fields.json                 # 字段全集 (vendor 自 cv-autofill, 只读, 整体替换升级)
 │   └── assets/                     # 用户上传的资源文件（头像现优先存浏览器 localStorage）
 ├── docs/
 │   ├── SCHEMA_NAMING.md            # CV 字段 ↔ 平台输入框 命名对照表
-│   ├── cv-schema.json              # cv-autofill 超集 schema 副本
 │   └── REFACTOR_PLAN.md            # 重构路线图 (已执行部分标 ✅)
 ├── test/                           # 无框架 node 自检 (*.mjs, 直接 node 跑)
 ├── start.sh / start.bat            # 本地启动脚本 (自动探测可用端口)
@@ -165,10 +165,9 @@ python -m http.server 8000
 
 ## 跨项目数据交换
 
-CV 项目与 [cv-autofill](https://github.com/takenroot/cv-autofill) 项目协作。字段命名以 CV 项目为 canonical 源。详见:
+CV 项目与 [cv-autofill](https://github.com/takenroot/cv-autofill) 项目协作。仲裁规则: 字段存不存在 / 英文 key 叫什么 → 以 [site/fields.json](site/fields.json) 为准 (vendor 自 cv-autofill, 只读, 只能整体替换升级); 中文 label / 渲不渲染 → CV 自己定。分歧由 `node test/fields-sync.mjs` 当场抓住。详见:
 
 - [docs/SCHEMA_NAMING.md](docs/SCHEMA_NAMING.md) — CV 字段 ↔ 平台输入框 命名对照表 + 自动填充映射建议
-- [docs/cv-schema.json](docs/cv-schema.json) — cv-autofill 超集 schema 的仓库内副本 (三平台字段并集, 含 x-platforms / x-tier / x-status 标注)
 
 ## 自定义样式
 

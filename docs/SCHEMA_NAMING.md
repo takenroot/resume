@@ -2,7 +2,7 @@
 
 > 用途: 给"自动填充引擎"(cv-autofill) 做字段映射时查这表, 避免漏字段或张冠李戴
 > 命名规则 (2026-08 确立): schema key 一律英文 camelCase, 中文只属于平台 label / UI 展示层
-> 字段机器可读版见 [cv-schema.json](cv-schema.json) (cv-autofill 超集 schema 副本, 含 x-platforms / x-tier / x-status)
+> **仲裁规则**: 字段存不存在 / 英文 key 叫什么 → 查 [../site/fields.json](../site/fields.json) (vendor 自 cv-autofill, 只读, 整体替换升级); 中文 label / 渲不渲染 / 编辑器怎么摆 → CV 自己定。分歧由 `node test/fields-sync.mjs` 当场抓住。
 
 ---
 
