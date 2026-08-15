@@ -48,7 +48,7 @@ check(typeof fj.version === 'string' && fj.version.length > 0, 'fields.json 缺 
 
 if (fails) { console.error(fails + '/' + checks + ' FAILED'); process.exit(1); }
 
-// 信息性输出: 上游有、CV 未吸收的字段 — "要不要吸收新字段"的决策入口
-const proposed = Object.keys(fj.fields).filter(function (k) { return fj.fields[k].status === 'proposed' && !keys.has(k); });
+// 信息性输出: fields.json 里 config 未用的字段 — "要不要吸收新字段"的决策入口
+const unused = Object.keys(fj.fields).filter(function (k) { return !keys.has(k); });
 console.log('fields-sync OK (' + checks + ' checks, ' + keys.size + ' config keys, fields.json v' + fj.version + ')');
-if (proposed.length) console.log('info: 上游 proposed 未吸收 ' + proposed.length + ' 个: ' + proposed.join(', '));
+if (unused.length) console.log('info: 上游有、config 未用 ' + unused.length + ' 个: ' + unused.join(', '));

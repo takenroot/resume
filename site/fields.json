@@ -5,8 +5,7 @@
       "platforms": [
         "liepin"
       ],
-      "tier": "longtail",
-      "status": "current"
+      "tier": "longtail"
     },
     "certificate.name": {
       "platforms": [
@@ -14,24 +13,21 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "certificate.period": {
       "platforms": [
         "boss",
         "liepin"
       ],
-      "tier": "longtail",
-      "status": "current"
+      "tier": "longtail"
     },
     "education.campus": {
       "platforms": [
         "boss",
         "liepin"
       ],
-      "tier": "common",
-      "status": "current"
+      "tier": "common"
     },
     "education.courses": {
       "platforms": [
@@ -39,8 +35,7 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "longtail",
-      "status": "current"
+      "tier": "longtail"
     },
     "education.degree": {
       "platforms": [
@@ -48,22 +43,19 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "education.degreeType": {
       "platforms": [
         "boss"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     },
     "education.isUnified": {
       "platforms": [
         "liepin"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     },
     "education.major": {
       "platforms": [
@@ -71,15 +63,13 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "education.overseasEdu": {
       "platforms": [
         "zhaopin"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     },
     "education.period": {
       "platforms": [
@@ -87,8 +77,7 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "education.school": {
       "platforms": [
@@ -96,30 +85,26 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "education.thesis": {
       "platforms": [
         "boss"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     },
     "education.thesisTitle": {
       "platforms": [
         "boss"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     },
     "experience.achievements": {
       "platforms": [
         "boss",
         "liepin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "experience.company": {
       "platforms": [
@@ -127,38 +112,33 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "experience.currentSalary": {
       "platforms": [
         "liepin",
         "zhaopin"
       ],
-      "tier": "common",
-      "status": "proposed"
+      "tier": "common"
     },
     "experience.department": {
       "platforms": [
         "boss"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     },
     "experience.industry": {
       "platforms": [
         "boss"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     },
     "experience.isIntern": {
       "platforms": [
         "liepin",
         "zhaopin"
       ],
-      "tier": "common",
-      "status": "proposed"
+      "tier": "common"
     },
     "experience.period": {
       "platforms": [
@@ -166,8 +146,7 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "experience.position": {
       "platforms": [
@@ -175,15 +154,13 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "experience.skillTags": {
       "platforms": [
         "boss"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     },
     "experience.summary": {
       "platforms": [
@@ -191,22 +168,19 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "language.level": {
       "platforms": [
         "liepin"
       ],
-      "tier": "common",
-      "status": "proposed"
+      "tier": "common"
     },
     "language.listeningSpeaking": {
       "platforms": [
         "zhaopin"
       ],
-      "tier": "common",
-      "status": "proposed"
+      "tier": "common"
     },
     "language.name": {
       "platforms": [
@@ -214,22 +188,19 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "common",
-      "status": "proposed"
+      "tier": "common"
     },
     "language.proficiency": {
       "platforms": [
         "liepin"
       ],
-      "tier": "common",
-      "status": "proposed"
+      "tier": "common"
     },
     "language.readingWriting": {
       "platforms": [
         "zhaopin"
       ],
-      "tier": "common",
-      "status": "proposed"
+      "tier": "common"
     },
     "profile.avatar": {
       "platforms": [
@@ -237,24 +208,21 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "profile.birthDate": {
       "platforms": [
         "boss",
         "liepin"
       ],
-      "tier": "longtail",
-      "status": "current"
+      "tier": "longtail"
     },
     "profile.currentSalary": {
       "platforms": [
         "liepin",
         "zhaopin"
       ],
-      "tier": "common",
-      "status": "proposed"
+      "tier": "common"
     },
     "profile.email": {
       "platforms": [
@@ -262,15 +230,21 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
+    },
+    "profile.expectCities": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "common"
     },
     "profile.expectIndustry": {
       "platforms": [
         "liepin"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     },
     "profile.expectJobs": {
       "platforms": [
@@ -278,15 +252,20 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "common",
-      "status": "proposed"
+      "tier": "common"
     },
     "profile.expectPreference": {
       "platforms": [
         "zhaopin"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
+    },
+    "profile.expectSalary": {
+      "platforms": [
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "common"
     },
     "profile.experience": {
       "platforms": [
@@ -294,15 +273,13 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "profile.firstWorkDate": {
       "platforms": [
         "zhaopin"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     },
     "profile.gender": {
       "platforms": [
@@ -310,24 +287,21 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "longtail",
-      "status": "current"
+      "tier": "longtail"
     },
     "profile.github": {
       "platforms": [
         "boss",
         "liepin"
       ],
-      "tier": "longtail",
-      "status": "current"
+      "tier": "longtail"
     },
     "profile.jobStatus": {
       "platforms": [
         "boss",
         "zhaopin"
       ],
-      "tier": "common",
-      "status": "current"
+      "tier": "common"
     },
     "profile.location": {
       "platforms": [
@@ -335,8 +309,7 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "profile.name": {
       "platforms": [
@@ -344,8 +317,7 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "profile.phone": {
       "platforms": [
@@ -353,15 +325,13 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "profile.politicalStatus": {
       "platforms": [
         "liepin"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     },
     "profile.title": {
       "platforms": [
@@ -369,15 +339,13 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "profile.wechat": {
       "platforms": [
         "liepin"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     },
     "projects.achievements": {
       "platforms": [
@@ -385,15 +353,13 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "common",
-      "status": "current"
+      "tier": "common"
     },
     "projects.link": {
       "platforms": [
         "boss"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     },
     "projects.name": {
       "platforms": [
@@ -401,8 +367,7 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "projects.period": {
       "platforms": [
@@ -410,15 +375,13 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "projects.role": {
       "platforms": [
         "boss"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     },
     "projects.summary": {
       "platforms": [
@@ -426,8 +389,7 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "projects.tags": {
       "platforms": [
@@ -435,8 +397,7 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "longtail",
-      "status": "current"
+      "tier": "longtail"
     },
     "skills.detail": {
       "platforms": [
@@ -444,8 +405,7 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "longtail",
-      "status": "current"
+      "tier": "longtail"
     },
     "skills.name": {
       "platforms": [
@@ -453,8 +413,7 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "summary.items": {
       "platforms": [
@@ -462,29 +421,25 @@
         "liepin",
         "zhaopin"
       ],
-      "tier": "core",
-      "status": "current"
+      "tier": "core"
     },
     "training.course": {
       "platforms": [
         "zhaopin"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     },
     "training.institution": {
       "platforms": [
         "zhaopin"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     },
     "training.period": {
       "platforms": [
         "zhaopin"
       ],
-      "tier": "longtail",
-      "status": "proposed"
+      "tier": "longtail"
     }
   }
 }
