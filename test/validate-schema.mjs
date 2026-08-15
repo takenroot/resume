@@ -33,10 +33,12 @@ assert(has(validateSchema({ profile: { expectJobs: {} }, sections: [] }), 'expec
 assert(validateSchema({ profile: { expectJobs: [{ title: 'x', salary: { low: 7 }, cities: ['北京'] }] }, sections: [] }).length === 0, '合法复合字段通过');
 
 // collectWarnings: period 格式 warning (不拦截, 只提示)
-assert(collectWarnings({ profile: {}, sections: [] }).length === 0, '空壳无 warning');
-assert(collectWarnings({ profile: {}, sections: [{ type: 'experience', items: [{ period: '2022.01 - 至今' }, { period: '2015.09 - 2019.06' }] }] }).length === 0, '标准格式无 warning');
-const w = collectWarnings({ profile: {}, sections: [{ type: 'experience', items: [{ period: '2022年1月至今' }] }] });
+const SHELL = { schemaVersion: '2026-08-15', profile: {}, sections: [] };
+assert(collectWarnings(SHELL).length === 0, '空壳无 warning');
+assert(has(collectWarnings({ profile: {}, sections: [] }), 'schemaVersion'), '缺 schemaVersion 出 warning');
+assert(collectWarnings({ schemaVersion: 'x', profile: {}, sections: [{ type: 'experience', items: [{ period: '2022.01 - 至今' }, { period: '2015.09 - 2019.06' }] }] }).length === 0, '标准格式无 warning');
+const w = collectWarnings({ schemaVersion: 'x', profile: {}, sections: [{ type: 'experience', items: [{ period: '2022年1月至今' }] }] });
 assert(w.length === 1 && has(w, 'period'), '「2022年1月至今」出 warning');
-assert(collectWarnings({ profile: {}, sections: [{ type: 'education', items: [{ period: '' }] }] }).length === 0, '空 period 不出 warning');
+assert(collectWarnings({ schemaVersion: 'x', profile: {}, sections: [{ type: 'education', items: [{ period: '' }] }] }).length === 0, '空 period 不出 warning');
 
-console.log('validateSchema self-check OK (21 assertions)');
+console.log('validateSchema self-check OK (22 assertions)');

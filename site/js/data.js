@@ -2,6 +2,8 @@
    CV 简历网页 — 数据加载 / 持久化 / 导入导出
    =========================================================== */
 const STORAGE_KEY = 'cv_data', AVATAR_PREFIX = '__cv_avatar_', BACKUP_KEY = 'cv_backup';
+// ponytail: 数据版本戳 — 跟 site/fields.json 的 version 对齐人工维护. adapter 未来可按版本响亮报错, 而不是静默丢字段.
+const SCHEMA_VERSION = '2026-08-15';
 let cvData = null;
 
 // ponytail: 从 cfg.fields 读所有 a:true (数组字段) 列表, 统一走 arr() 拆.
@@ -69,6 +71,7 @@ function validateSchema(d) {
 const PERIOD_RE = /^\d{4}\.\d{2}\s*-\s*(\d{4}\.\d{2}|至今)$/;
 function collectWarnings(d) {
   const warns = [];
+  if (d && !d.schemaVersion) warns.push('数据缺少 schemaVersion (当前 ' + SCHEMA_VERSION + '), 未来字段改名时无法按版本提示');
   ((d && d.sections) || []).forEach(function (s, i) {
     ((s && s.items) || []).forEach(function (it, j) {
       if (it && typeof it === 'object' && typeof it.period === 'string' && it.period.trim() && !PERIOD_RE.test(it.period.trim())) warns.push('sections[' + i + '].items[' + j + '].period「' + it.period + '」建议用 YYYY.MM - YYYY.MM 格式');
@@ -102,7 +105,7 @@ function resolveAvatarUrl() {
   const local = loadAvatar(p.name);
   return local || '';
 }
-function saveCvData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(cvData)); }
+function saveCvData() { cvData.schemaVersion = SCHEMA_VERSION; localStorage.setItem(STORAGE_KEY, JSON.stringify(cvData)); }
 // ponytail: 单备份槽位 — 导入前备份 + 每 5 分钟自动快照共用. reason 记来源便于排查.
 function backupCvData(reason) { if (!cvData) return; try { localStorage.setItem(BACKUP_KEY, JSON.stringify({ ts: new Date().toISOString(), reason: reason || 'auto', data: cvData })); } catch (e) {} }
 function loadBackup() { try { const s = localStorage.getItem(BACKUP_KEY); return s ? JSON.parse(s) : null; } catch (e) { return null; } }
