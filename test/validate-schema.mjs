@@ -5,8 +5,9 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'site', 'js');
-const src = readFileSync(join(root, 'config.js'), 'utf8') + '\n' + readFileSync(join(root, 'data.js'), 'utf8');
+const src = readFileSync(join(root, 'utils.js'), 'utf8') + '\n' + readFileSync(join(root, 'config.js'), 'utf8') + '\n' + readFileSync(join(root, 'data.js'), 'utf8');
 const validateSchema = new Function(src + '; return validateSchema;')();
+const collectWarnings = new Function(src + '; return collectWarnings;')();
 
 function assert(cond, msg) { if (!cond) { console.error('FAIL: ' + msg); process.exit(1); } }
 function has(errs, kw) { return errs.some(function (e) { return e.indexOf(kw) >= 0; }); }
@@ -27,4 +28,15 @@ assert(has(validateSchema({ profile: {}, sections: [{ type: 'summary', items: [{
 assert(has(validateSchema({ profile: {}, sections: [{ type: 'text', content: 5 }] }), 'content'), 'text content 非字符串拒收');
 assert(validateSchema({ profile: {}, sections: [{ type: 'text', content: 'hi' }] }).length === 0, 'text content 字符串通过');
 
-console.log('validateSchema self-check OK (13 assertions)');
+// profile 声明表反查: 复合字段形状 (expectSalary/expectCities 已删, 唯一复合 = expectJobs)
+assert(has(validateSchema({ profile: { expectJobs: {} }, sections: [] }), 'expectJobs'), 'expectJobs 对象拒收 (wrap1 要数组)');
+assert(validateSchema({ profile: { expectJobs: [{ title: 'x', salary: { low: 7 }, cities: ['北京'] }] }, sections: [] }).length === 0, '合法复合字段通过');
+
+// collectWarnings: period 格式 warning (不拦截, 只提示)
+assert(collectWarnings({ profile: {}, sections: [] }).length === 0, '空壳无 warning');
+assert(collectWarnings({ profile: {}, sections: [{ type: 'experience', items: [{ period: '2022.01 - 至今' }, { period: '2015.09 - 2019.06' }] }] }).length === 0, '标准格式无 warning');
+const w = collectWarnings({ profile: {}, sections: [{ type: 'experience', items: [{ period: '2022年1月至今' }] }] });
+assert(w.length === 1 && has(w, 'period'), '「2022年1月至今」出 warning');
+assert(collectWarnings({ profile: {}, sections: [{ type: 'education', items: [{ period: '' }] }] }).length === 0, '空 period 不出 warning');
+
+console.log('validateSchema self-check OK (21 assertions)');

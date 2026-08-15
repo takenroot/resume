@@ -8,8 +8,8 @@ let cvData = null;
 // 加新数组字段只需在 fields 加 { a: true }, 不需要再改 normalize 列表.
 function arrFieldsOf(cfg) { return (cfg && cfg.fields ? cfg.fields : []).filter(function (f) { return f.a; }).map(function (f) { return f.n; }); }
 
-// ponytail: select 是/否 字段统一在代码里存 boolean. 老数据可能存 string '是'/'否' 或 boolean, 都归一为 boolean.
-function yesNoToBool(v) { if (typeof v === 'boolean') return v; if (v === '是' || v === 'yes' || v === 'true') return true; if (v === '否' || v === 'no' || v === 'false') return false; return v; }
+// ponytail: select 是/否 字段统一在代码里存 boolean. 表单 select 提交的是 string '是'/'否', 收集时归一为 boolean (不是老数据兼容).
+function yesNoToBool(v) { if (typeof v === 'boolean') return v; if (v === '是') return true; if (v === '否') return false; return v; }
 
 function normalizeYesNoFields(d) {
   (d.sections || []).forEach(function (s) {
@@ -30,6 +30,15 @@ function validateSchema(d) {
   const errs = [];
   if (!d || typeof d !== 'object' || Array.isArray(d)) return ['数据不是对象'];
   if (!d.profile || typeof d.profile !== 'object' || Array.isArray(d.profile)) errs.push('缺少 profile 对象');
+  else {
+    // ponytail: profile 校验也从声明表反查 — a:true 字段应为数组, 复合字段按 wrap1 应为数组/对象.
+    PROFILE_FIELDS.forEach(function (f) { const v = d.profile[f.n]; if (f.a && v !== undefined && !Array.isArray(v) && typeof v !== 'string') errs.push('profile.' + f.n + ' 应为数组'); });
+    Object.keys(PROFILE_COMPOSITES).forEach(function (k) {
+      const v = d.profile[k]; if (v === undefined) return;
+      const bad = PROFILE_COMPOSITES[k].wrap1 ? !Array.isArray(v) : (typeof v !== 'object' || v === null || Array.isArray(v));
+      if (bad) errs.push('profile.' + k + (PROFILE_COMPOSITES[k].wrap1 ? ' 应为数组' : ' 应为对象'));
+    });
+  }
   if (!Array.isArray(d.sections)) { errs.push('缺少 sections 数组'); return errs; }
   d.sections.forEach(function (s, i) {
     const w = 'sections[' + i + ']';
@@ -55,6 +64,20 @@ function validateSchema(d) {
   return errs;
 }
 
+// ponytail: warning 级校验 — 不拦截导入/加载, 只 toast 提示. 目前只查 period 时间格式
+// (README 约定 YYYY.MM - YYYY.MM / 至今, 招聘平台智能解析依赖此格式).
+const PERIOD_RE = /^\d{4}\.\d{2}\s*-\s*(\d{4}\.\d{2}|至今)$/;
+function collectWarnings(d) {
+  const warns = [];
+  ((d && d.sections) || []).forEach(function (s, i) {
+    ((s && s.items) || []).forEach(function (it, j) {
+      if (it && typeof it === 'object' && typeof it.period === 'string' && it.period.trim() && !PERIOD_RE.test(it.period.trim())) warns.push('sections[' + i + '].items[' + j + '].period「' + it.period + '」建议用 YYYY.MM - YYYY.MM 格式');
+    });
+  });
+  return warns;
+}
+function toastSchemaWarnings(d) { const w = collectWarnings(d); if (w.length) showToast(w.slice(0, 3).join('；') + (w.length > 3 ? '（共 ' + w.length + ' 处）' : ''), 'info', 6000); }
+
 function normalizeSavedData() {
   (cvData.sections || []).forEach(function (s) {
     if (!s.items) s.items = [];
@@ -62,15 +85,10 @@ function normalizeSavedData() {
     const cfg = SECTION_CONFIG[s.type] || {};
     const arrKeys = arrFieldsOf(cfg);
     (s.items || []).forEach(function (it) {
-      delete it.challenges;
       arrKeys.forEach(function (k) { if (it[k] !== undefined) it[k] = arr(it[k]); });
     });
   });
-  if (cvData.profile) {
-    // ponytail: profile.expectCities 老数据可能是 string, 拆. expectSalary 已是 object 不动. age 字段独立保留 (不通过 birthDate 派生).
-    if (cvData.profile.expectCities && typeof cvData.profile.expectCities === 'string') cvData.profile.expectCities = arr(cvData.profile.expectCities);
-    if (Array.isArray(cvData.profile.expectJobs)) cvData.profile.expectJobs.forEach(function (j) { if (j && typeof j.cities === 'string') j.cities = arr(j.cities); });
-  }
+  // ponytail: 2026-08 起不做老数据迁移 (项目开发期, 老 localStorage 直接重置默认重来). profile 无需归一.
   normalizeYesNoFields(cvData);
 }
 function avatarKey(name) { return AVATAR_PREFIX + (name || 'default'); }
@@ -131,6 +149,7 @@ function applyImportedData(d) {
   updateStageSize();
   window.scrollTo(0, 0);
   if (!document.getElementById('editorPanel').hidden) buildEditorForm();
+  toastSchemaWarnings(d);
 }
 
 function importData(file) {

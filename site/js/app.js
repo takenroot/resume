@@ -72,4 +72,4 @@ function startAutoSnapshot() {
 function init() { loadPrefs(); applyPrefs(); const rd = document.getElementById('resumeDocument'); if (rd) { handleViewportChange(); window.addEventListener('resize', debounce(handleViewportChange, 100)); window.addEventListener('load', handleViewportChange); } const tb = document.querySelector('.floating-toolbar'); if (tb) updateScale(DEFAULT_SCALE); bindCopyActions(); bindToolbarActions(); bindEditorEvents(); if (new URLSearchParams(location.search).get('edit') === '1') openEditor(); }
 
 /* ---- 启动 ---- */
-loadCvData().then(function () { loadPrefs(); renderCv(); init(); startAutoSnapshot(); });
+loadCvData().then(function () { loadPrefs(); renderCv(); init(); startAutoSnapshot(); toastSchemaWarnings(cvData); });

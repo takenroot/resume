@@ -53,6 +53,25 @@ const _EXP_SHARED = {
   },
   defaultItem: { company: '', position: '', period: '', summary: '', achievements: [], skillTags: [], industry: '', department: '', isIntern: '否' }
 };
+// ponytail: profile 字段单一数据源 — buildProfileFields 渲染 / collectFormData 收集 / validateSchema 校验三方共用.
+// f.a=true: lines-array (textarea 每行一条 → string[]). 未在此声明的 profile.* 输入一律不进数据 (白名单).
+const PROFILE_FIELDS = [
+  { n: 'avatar', custom: true },
+  { n: 'name', l: '姓名' }, { n: 'title', l: '岗位' }, { n: 'experience', l: '工作经验' },
+  { n: 'firstWorkDate', l: '首次参加工作时间', t: 'date' },
+  { n: 'jobStatus', l: '求职状态', t: 'select', options: ['随时到岗', '在职-看机会', '在职-暂不考虑', '暂不找工作'] },
+  { n: 'location', l: '所在地' }, { n: 'gender', l: '性别' }, { n: 'birthDate', l: '出生日期', t: 'date' },
+  { n: 'phone', l: '电话' }, { n: 'email', l: '邮箱' }, { n: 'github', l: 'GitHub' }, { n: 'wechat', l: '微信号' },
+  { n: 'expectIndustry', l: '期望行业' }, { n: 'timeline', l: '顶部时间线 (预留, 预览不渲染)' }
+];
+
+// ponytail: 复合字段声明表 — input name 用 "复合名.后缀" (不带 profile. 前缀, 通用循环不碰).
+// 每条 [input 后缀, 类型?, 目标路径?]: 类型 'n'=number / 'lines'=每行一条数组; 目标路径默认=后缀, 可写 'salary.low' 嵌套.
+// 全空收集返回 undefined (调用端 delete); wrap1 包成单元素数组 (expectJobs 的 schema 形). 加新复合字段 = 这里加一行.
+const PROFILE_COMPOSITES = {
+  expectJobs: { wrap1: true, fields: [['title'], ['jobType'], ['cities', 'lines'], ['salaryLow', 'n', 'salary.low'], ['salaryHigh', 'n', 'salary.high']] }
+};
+
 const SECTION_CONFIG = {
   experience: { label: '工作经历', ..._EXP_SHARED },
   experience_other: { label: '其它经历', ..._EXP_SHARED },

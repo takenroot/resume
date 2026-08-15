@@ -34,15 +34,16 @@ cv/
 │   │   ├── editor.js               # 编辑器 (buildEditorForm / collectFormData)
 │   │   ├── markdown.js             # Markdown 导入/导出
 │   │   ├── pagination.js           # 自动分页布局
-│   │   ├── prefs.js                # 页面偏好 (theme / fontSize / fontFamily / timelineEnabled)
+│   │   ├── prefs.js                # 页面偏好 (theme / fontSize / fontFamily)
 │   │   ├── renderer.js             # 渲染引擎
 │   │   ├── utils.js                # 工具函数
 │   │   └── zoom.js                 # 缩放控制
 │   └── assets/                     # 用户上传的资源文件（头像现优先存浏览器 localStorage）
 ├── docs/
-│   ├── CV_SCHEMA_FEEDBACK.md       # 招聘平台字段反馈 (Boss / 猎聘 / 智联)
 │   ├── SCHEMA_NAMING.md            # CV 字段 ↔ 平台输入框 命名对照表
-│   └── resume-data.json            # 用户真实简历数据 (untracked, 个人数据不提交)
+│   ├── cv-schema.json              # cv-autofill 超集 schema 副本
+│   └── REFACTOR_PLAN.md            # 重构路线图 (已执行部分标 ✅)
+├── test/                           # 无框架 node 自检 (*.mjs, 直接 node 跑)
 ├── start.sh / start.bat            # 本地启动脚本 (自动探测可用端口)
 └── README.md
 ```
@@ -107,18 +108,16 @@ python -m http.server 8000
 | `name` | string | text |
 | `title` | string | text |
 | `experience` | string | text (工作年限如 "5年") |
-| `求职状态` | string | select 4 选项 |
-| `所在地` | string | text |
+| `jobStatus` | string | select 4 选项 (求职状态) |
+| `location` | string | text (所在地) |
 | `gender` | string | text (表单保留, 预览不渲染) |
 | `birthDate` | string (YYYY-MM-DD) | date |
 | `phone` / `email` / `github` | string | text/email/url |
 | `wechat` | string | text |
 | `expectIndustry` | string | text |
-| `timeline` | string | text (顶部时间轴自定义文本, 留空则 auto) |
+| `timeline` | string | text (预留字段, 预览不渲染) |
 | `avatar` | base64 | file (存 localStorage, 导出 JSON 不含) |
-| `expectSalary` | `{low, high, months}` number | 3 个 number input (默认隐藏字段) |
-| `expectCities` | string[] | textarea 每行一条 (默认隐藏字段) |
-| `expectJobs` | `[{title, jobType, salary:{low,high}, cities[]}]` 单条目 | 复合表单: 职位名 + 工作性质 select + 薪资两框 + 城市 textarea (默认隐藏字段) |
+| `expectJobs` | `[{title, jobType, salary:{low,high}, cities[]}]` 单条目 | 复合表单: 职位名 + 工作性质 select + 薪资两框 + 城市 textarea (填写后薪资/城市渲染在头部标签行) |
 | `firstWorkDate` | string (YYYY-MM-DD) | date (首次参加工作时间, 预览不渲染) |
 | `currentSalary` | `{salary, months, secret}` | 隐藏字段, 见下方说明 |
 
@@ -128,20 +127,17 @@ python -m http.server 8000
 - **education**: school, major, degree, degreeType, isUnified, overseasEdu, period, courses, campus, honors, thesis
 - **projects**: name, role, period, link, tags, summary, achievements
 
-### 隐藏字段 (UI 默认不渲染, 数据存)
+### 隐藏字段 (UI 不渲染, 数据存)
 
-以下字段存进 `data.json` 但不显示在简历预览上 (默认状态):
-
-- `profile.expectSalary` — 期望薪资
-- `profile.expectCities` — 期望城市
 - `profile.currentSalary` — 当前薪资 (敏感, 永久隐藏, 只能手写 JSON 才能填)
+- `profile.timeline` — 预留字段, 编辑器可填但预览不渲染
 
-打开方法: 编辑器填写对应字段值后, 在编辑器的页面设置里勾选"显示顶部时间轴"等配置后预览会出现; 或直接编辑导出的 JSON 文件手写 `currentSalary` 字段后重新导入。
+> 注意: `expectJobs[0]` 的薪资/城市、`expectIndustry`、`wechat` 填写后**会**渲染在简历头部 (`header-extra` 标签行), 不是隐藏字段。2026-08 起 `expectSalary` / `expectCities` 独立字段已删除, 头部展示从 `expectJobs[0]` 派生 (项目开发期不做老数据迁移, 老 localStorage 请「重置默认」重填)。
 
 ### 模块类型选择策略
 
 - `工作经历` vs `其它经历`: 同 schema 不同 label。其它经历用于与工作经历性质不同但字段相同的经历 (部队经历、临时兼职、项目承包等)。
-- `其它经历` **不会**进入顶部时间轴 (autoTimeline 只看 `education` / `experience` 两类)。
+- `其它经历` 与 `工作经历` 渲染完全一致，仅模块标题不同，便于 HR/平台区分经历性质。
 
 ## 编辑简历
 
@@ -154,7 +150,7 @@ python -m http.server 8000
 - 新增/删除/排序/折叠模块
   - 每个模块右上角有 `▾` / `↑` / `↓` / `×` 按钮：折叠 / 上移 / 下移 / 删除
   - 每个条目（如一段工作经历）右上角也有 `↑` / `↓` / `⧉` / `×` 按钮：上移 / 下移 / 复制 / 删除
-- 调整页面偏好（主题配色、字号、字体、时间轴字段选择）
+- 调整页面偏好（主题配色、字号、字体）
 - **实时联动**: 任意表单改动 → 50ms debounce → 重渲染预览, 不需要点保存
 - **聚焦联动**: 表单 input 获得焦点时, 简历预览自动滚动并高亮对应字段
 
@@ -171,7 +167,6 @@ python -m http.server 8000
 
 CV 项目与 [cv-autofill](https://github.com/takenroot/cv-autofill) 项目协作。字段命名以 CV 项目为 canonical 源。详见:
 
-- [docs/CV_SCHEMA_FEEDBACK.md](docs/CV_SCHEMA_FEEDBACK.md) — 招聘平台字段反馈
 - [docs/SCHEMA_NAMING.md](docs/SCHEMA_NAMING.md) — CV 字段 ↔ 平台输入框 命名对照表 + 自动填充映射建议
 - [docs/cv-schema.json](docs/cv-schema.json) — cv-autofill 超集 schema 的仓库内副本 (三平台字段并集, 含 x-platforms / x-tier / x-status 标注)
 

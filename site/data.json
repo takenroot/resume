@@ -4,7 +4,7 @@
     "title": "全栈开发工程师",
     "phone": "138-0000-0000",
     "email": "example@qq.com",
-    "所在地": "北京市",
+    "location": "北京市",
     "experience": "5年",
     "gender": "男",
     "birthDate": "1998-01-15",
@@ -32,7 +32,7 @@
           "company": "某科技有限公司",
           "position": "高级前端工程师",
           "period": "2022.01 - 至今",
-          "highlights": ["负责前端架构设计与性能优化", "主导前端团队技术选型"]
+          "achievements": ["负责前端架构设计与性能优化", "主导前端团队技术选型"]
         }
       ]
     },

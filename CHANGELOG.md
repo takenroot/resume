@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `profile.firstWorkDate` 新字段: 编辑器 date input (首次参加工作时间, 招聘平台字段), 预览不渲染.
 - `profile.expectJobs` 单条目新 schema: `[{title, jobType, salary:{low,high}, cities[]}]`, 编辑器拍平成一行复合表单 (职位名/工作性质/薪资下限-上限) + 城市 textarea, collectFormData 独立收集重组 (全空 delete).
 - 数据 schema 运行时校验: 新增 `validateSchema(d)` 走 `SECTION_CONFIG` 反查字段类型 (未知 type / items 非数组 / `a:true` 字段类型错 / select 非法选项), 导入前拦截, 错误 toast 列出前 3 条. 自检脚本 `test/validate-schema.mjs` (13 assertions, node 直接跑).
+- period 时间格式 warning 级校验: `collectWarnings()` 查 `period` 不符合 `YYYY.MM - YYYY.MM / 至今` 约定 (README 格式, 招聘平台智能解析依赖), 不拦截导入, 加载/导入后 toast 提示最多 3 条.
 - 导入覆盖确认 + 自动备份: `importData` 导入前弹 confirm, 当前数据备份到 localStorage `cv_backup` 槽位 (`{ts, reason, data}`).
 - 每 5 分钟自动快照到 `cv_backup` (数据没变跳过), 编辑器底部加「恢复备份」按钮 (恢复前当前数据会先备份为 `pre-restore`).
 - 本地错误队列 (telemetry): `window.onerror` / `unhandledrejection` / 导入异常写 localStorage `cv_errors` (留最近 20 条, 不外发), 编辑器底部加「复制错误」按钮一键拷走 UA + URL + 错误栈.
@@ -22,11 +23,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- 修 Markdown 个人信息导入不渲染: `FIELD_ALIAS` 定义了但 `parseMarkdown` 从没用过 (死代码), 中文 label (`姓名`/`所在地` 等) 直接存成 profile key → 渲染层按英文 key 读全 miss. parse 现在过 alias 映射. 回归自检 `test/markdown-profile.mjs` (5 assertions).
+- 修 data.json 种子数据残留已删字段: experience item 还写着 `highlights` (schema 早已改名 `achievements`).
 - 修 avatar 选同一文件不触发 change: 头像 input 选完即清 `value`, 换头像不用再切别的文件.
 - 修 B 阶段 boolean 化引入的两处失配: `buildEduHead` / education `mdItem` 判 `isUnified === '是'` 但存储已是 boolean → 「统招」tag 永不渲染; 编辑器是/否 select 跟 boolean 值比较永不命中 → 「否」条目重建表单后视觉回退显示「是」. 新增 `isYes()` helper 统一渲染层判断, `renderItemFieldInput` select 比较前把 boolean 映射回 '是'/'否'. 回归自检 `test/render-tags.mjs` (6 assertions).
 
 ### Removed
 
+- 删 `docs/CV_SCHEMA_FEEDBACK.md` (cv-autofill 需求文档): 全部 P0/P1/P2 建议已落地 (achievements/isIntern/industry/department/skillTags/degreeType/isUnified/overseasEdu/thesis/role/link/expectJobs/firstWorkDate/wechat/expectIndustry + validateSchema 构建时校验), 需求状态由本文件记录, 原文档删除减少噪音源. 平台字段映射的活文档 = `docs/SCHEMA_NAMING.md` (已全表刷新).
+- 删 `profile.expectSalary` / `profile.expectCities` 独立字段 (跟 `expectJobs[0].salary/cities` 重复, 编辑器要填两遍): 编辑器输入块删除, 头部标签行改从 `expectJobs[0]` 派生. cv-autofill superset schema 同步标 `x-status: merged`.
 - 删顶部时间轴整条链 (`autoTimeline` / `extractStartDate` / `getTimelineLabel` / `timeline-strip` / `.tl-*` CSS / 3 个 timeline pref (`timelineEnabled` / `timelineEduField` / `timelineExpField`) / 编辑器预览块 / HTML `<div class="timeline-strip">` 节点). README 时间轴说明同步移除.
 - 删 `DEFAULT_DATA` 兜底 (data.json 单源); fetch + normalize 失败时回落到空 schema `{ profile: {}, sections: [] }`.
 - 删 `migrateToSections` 老 schema 迁移 (5 天前重构留下的 transform).
@@ -41,6 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **profile 中文字段全量英文化** (跟 cv-autofill 定规则: schema key 只用英文 camelCase, 中文留给 UI label): `所在地`→`location`, `求职状态`→`jobStatus`. README / SCHEMA_NAMING.md 对照表同步.
+- **全面停止老数据迁移** (项目开发期无正式版本, 老 localStorage 一律「重置默认」重填): 删 所在地/求职状态 rename 块、expectSalary/expectCities→expectJobs 迁移、`delete challenges` 两处、education.experience→honors rename、expectJobs.cities string 拆行; `isYes()` 去掉 `'是'` 字符串分支只认 boolean; `yesNoToBool` 去掉 yes/true/no/false 英文分支 (保留 '是'/'否' — 那是表单 select 的当前提交格式, 不是兼容). cv-autofill adapter 双读逻辑也失去存在意义.
+- **collectFormData 声明式白名单重构**: 新增 `PROFILE_FIELDS` / `PROFILE_COMPOSITES` 声明表 (config.js), profile 渲染 (`buildProfileFields`) / 收集 (`collectFormData`) / 校验 (`validateSchema`) 三处共用同一份声明 — 未声明的 `profile.*` input 物理上进不了数据; 复合字段 input 命名去掉 `profile.` 前缀 (`expectSalary.low` 等), 通用循环不再碰, 新增 `collectComposite()` 通用收集器 (空叶子跳过, 全空返回 undefined 删 key). 删老的路径游走 / expectCities 专查 / expectSalary delete / expectJobs 特判四段特设代码. 自检 `test/collect-form.mjs` (8 scenarios).
 - 导出菜单重设计 (图片就是图片, PDF 就是 PDF): 砍「截图嵌 PDF」(`exportPdfImage` + `captureSequential` + jsPDF CDN, -1 依赖), 截图导出改 `exportPng()` 每页一张 PNG (多页 `_p1`/`_p2` 后缀, 不拼长图); PDF 只走浏览器打印. 导出 dropdown 收编全部 4 项 (JSON / Markdown / PNG / PDF 打印), 编辑器底部独立「导出 PDF」按钮撤掉.
 - `education.isUnified` 默认从 `'否'` 改为 `'是'` (主流本科生是统招, 每次添加都改的体验问题).
 - select 是/否字段统一在代码里存 boolean: 老 boolean→string `'是'/'否'` 反向成 string→boolean (`yesNoToBool`). `collectFormData` 末尾调 `normalizeYesNoFields(cvData)` 跟 `loadCvData` 走同一份归一化逻辑.

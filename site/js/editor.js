@@ -76,44 +76,57 @@ function buildProfileFields(profile) {
   const av = profile && profile.avatar ? profile.avatar : '';
   const localAvatar = av ? av : loadAvatar(name);
   const hasLocalAvatar = !!loadAvatar(name);
-  // ponytail: 隐藏字段 (currentSalary 等) 不在 flds 里出现, 用户手写 JSON 才能填. cv-autofill 引擎读 schema.json 知道存在. 走 data-render 的字段才会显示, 当前都没用, 等需要时再加 input.
-  const flds = [{ n: 'name', l: '姓名' }, { n: 'title', l: '岗位' }, { n: 'experience', l: '工作经验' }, { n: 'firstWorkDate', l: '首次参加工作时间', t: 'date' }, { n: '求职状态', l: '求职状态', t: 'select', options: ['随时到岗', '在职-看机会', '在职-暂不考虑', '暂不找工作'] }, { n: '所在地', l: '所在地' }, { n: 'gender', l: '性别' }, { n: 'birthDate', l: '出生日期', t: 'date' }, { n: 'phone', l: '电话' }, { n: 'email', l: '邮箱' }, { n: 'github', l: 'GitHub' }, { n: 'wechat', l: '微信号' }, { n: 'expectIndustry', l: '期望行业' }, { n: 'timeline', l: '顶部时间线', p: '留空则自动从经历中提取' }];
+  // ponytail: 隐藏字段 (currentSalary 等) 不在 PROFILE_FIELDS 里出现, 用户手写 JSON 才能填. cv-autofill 引擎读 schema.json 知道存在.
   let hh = '<div class="editor-field editor-field-avatar"><label>头像</label><div class="avatar-upload"><div class="avatar-preview" id="avatarPreview" style="' + (localAvatar ? "background-image: url('" + esc(localAvatar) + "')" : '') + '"></div><div class="avatar-upload-inputs"><input type="file" id="avatarFileInput" accept="image/*">' + (hasLocalAvatar ? '<button type="button" class="editor-btn" id="clearAvatarBtn" style="font-size:12px;padding:4px 8px">清除头像</button>' : '') + '<input type="text" name="profile.avatar" value="' + esc(av) + '" placeholder="留空则使用浏览器本地头像"></div><p style="font-size:11px;color:var(--text-soft);margin:4px 0 0">选择图片后自动转为 base64 存入浏览器本地，导出 JSON/Markdown 时不含头像</p></div></div>';
-  hh += flds.map(function (f) { return '<div class="editor-field"><label>' + f.l + '</label>' + renderProfileFieldInput(f, profile) + '</div>'; }).join('');
-  // ponytail: 期望薪资 (三框联动, 单位 K) + 期望城市 (多选 textarea), 跟扁平 profile 字段分开处理.
-  const salary = (profile && profile.expectSalary) || {};
-  hh += '<div class="editor-field"><label>期望薪资 (K/月)</label><div class="expect-salary-row">' +
-    '<input type="number" name="profile.expectSalary.low" value="' + esc(salary.low || '') + '" placeholder="下限 K" min="0">' +
-    '<span> - </span>' +
-    '<input type="number" name="profile.expectSalary.high" value="' + esc(salary.high || '') + '" placeholder="上限 K" min="0">' +
-    '<span> × </span>' +
-    '<input type="number" name="profile.expectSalary.months" value="' + esc(salary.months || '') + '" placeholder="月数" min="0">' +
-    '</div></div>';
-  hh += '<div class="editor-field"><label>期望城市 (每行一条)</label><textarea name="profile.expectCities" placeholder="北京&#10;上海">' + esc((profile && Array.isArray(profile.expectCities) ? profile.expectCities.join('\n') : '') || '') + '</textarea></div>';
-  // ponytail: expectJobs 单条目 (猎聘/智联期望职位), schema 是单元素数组 [{title, jobType, salary:{low,high}, cities[]}],
-  // 编辑器拍平成一行表单, collectFormData 里重组成数组形. name 用 profile.expectJobs.* 会被通用循环拼成 object, 靠收集端纠正.
+  hh += PROFILE_FIELDS.filter(function (f) { return !f.custom; }).map(function (f) { return '<div class="editor-field"><label>' + f.l + '</label>' + renderProfileFieldInput(f, profile) + '</div>'; }).join('');
+  // ponytail: expectJobs 单条目 (猎聘/智联期望职位), schema 是单元素数组 [{title, jobType, salary:{low,high}, cities[]}], 编辑器拍平.
+  // 2026-08: expectSalary/expectCities 独立字段已删, 头部展示从 expectJobs[0] 派生 (renderer.js renderHeaderExtra).
   const ej = (profile && Array.isArray(profile.expectJobs) && profile.expectJobs[0]) || {};
   const ejs = ej.salary || {};
   hh += '<div class="editor-field"><label>期望职位</label><div class="expect-salary-row">' +
-    '<input type="text" name="profile.expectJobs.title" value="' + esc(ej.title || '') + '" placeholder="职位名">' +
-    '<select name="profile.expectJobs.jobType">' + ['', '全职', '兼职', '实习'].map(function (o) { return '<option value="' + o + '"' + ((ej.jobType || '') === o ? ' selected' : '') + '>' + (o || '工作性质') + '</option>'; }).join('') + '</select>' +
-    '<input type="number" name="profile.expectJobs.salaryLow" value="' + esc(ejs.low !== undefined ? ejs.low : '') + '" placeholder="薪资下限 K" min="0">' +
+    '<input type="text" name="expectJobs.title" value="' + esc(ej.title || '') + '" placeholder="职位名">' +
+    '<select name="expectJobs.jobType">' + ['', '全职', '兼职', '实习'].map(function (o) { return '<option value="' + o + '"' + ((ej.jobType || '') === o ? ' selected' : '') + '>' + (o || '工作性质') + '</option>'; }).join('') + '</select>' +
+    '<input type="number" name="expectJobs.salaryLow" value="' + esc(ejs.low !== undefined ? ejs.low : '') + '" placeholder="薪资下限 K" min="0">' +
     '<span> - </span>' +
-    '<input type="number" name="profile.expectJobs.salaryHigh" value="' + esc(ejs.high !== undefined ? ejs.high : '') + '" placeholder="上限 K" min="0">' +
+    '<input type="number" name="expectJobs.salaryHigh" value="' + esc(ejs.high !== undefined ? ejs.high : '') + '" placeholder="上限 K" min="0">' +
     '</div></div>';
-  hh += '<div class="editor-field"><label>期望职位城市 (每行一条, 留空同期望城市)</label><textarea name="profile.expectJobs.cities">' + esc((Array.isArray(ej.cities) ? ej.cities.join('\n') : '') || '') + '</textarea></div>';
+  hh += '<div class="editor-field"><label>期望城市 (每行一条)</label><textarea name="expectJobs.cities">' + esc((Array.isArray(ej.cities) ? ej.cities.join('\n') : '') || '') + '</textarea></div>';
   return hh;
 }
 
 // ponytail: profile 字段的 input 拼接抽到顶层, 跟 renderItemFieldInput 对称.
-// 支持的 f.t: 'select' / 'date' / 默认 text. value 走 esc, 走 profile[f.n] 读现值.
+// 支持的 f.t: 'select' / 'date' / 'textarea' (f.a 数组 join('\n')) / 默认 text. value 走 esc, 走 profile[f.n] 读现值.
 function renderProfileFieldInput(f, profile) {
   const v = profile && profile[f.n];
   if (f.t === 'select') {
     const opts = (f.options || []).map(function (o) { return '<option value="' + esc(o) + '"' + (v === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('');
     return '<select name="profile.' + f.n + '">' + opts + '</select>';
   }
+  if (f.t === 'textarea') {
+    const dv = f.a && Array.isArray(v) ? v.join('\n') : v;
+    return '<textarea name="profile.' + f.n + '"' + (f.p ? ' placeholder="' + f.p + '"' : '') + '>' + esc(dv || '') + '</textarea>';
+  }
   return '<input type="' + (f.t === 'date' ? 'date' : 'text') + '" name="profile.' + f.n + '" value="' + esc(v || '') + '"' + (f.p ? ' placeholder="' + f.p + '"' : '') + '>';
+}
+
+// ponytail: 复合字段通用收集器 — 按 PROFILE_COMPOSITES 声明读 input (名字 = "复合名.后缀"),
+// 类型 n=number / lines=每行一条数组, 可选目标路径 ('salary.low'). 空值叶子不落盘 (''/空数组直接跳过),
+// 全空返回 undefined (调用端 delete). number 0 是合法薪资, 不当空值.
+function collectComposite(name, spec, root) {
+  const out = {}; let any = false;
+  spec.fields.forEach(function (fd) {
+    const el = root.querySelector('[name="' + name + '.' + fd[0] + '"]'); if (!el) return;
+    let v = el.value;
+    if (fd[1] === 'n') { if (v === '') return; v = Number(v); }
+    else if (fd[1] === 'lines') { v = arr(v); if (v.length === 0) return; }
+    if (v === '' || v === undefined) return;
+    const path = (fd[2] || fd[0]).split('.');
+    let cur = out; for (let i = 0; i < path.length - 1; i++) { cur[path[i]] = cur[path[i]] || {}; cur = cur[path[i]]; }
+    cur[path[path.length - 1]] = v;
+    any = true;
+  });
+  if (!any) return undefined;
+  return spec.wrap1 ? [out] : out;
 }
 
 function collectFormData(opts) {
@@ -126,37 +139,18 @@ function collectFormData(opts) {
     if (Array.isArray(s.items)) copy.items = s.items.slice();
     return copy;
   }) : [] };
+  const pSpecs = {}; PROFILE_FIELDS.forEach(function (f) { pSpecs[f.n] = f; });
   ec.querySelectorAll('[name^="profile."]').forEach(function (el) {
-    const parts = el.name.split('.'); parts.shift();
-    // ponytail: expectJobs 是数组形 schema ([{...}] 单条目), 嵌套 walk 会把属性写到老数组对象上, 跳过走下方独立收集.
-    if (parts[0] === 'expectJobs') return;
-    // ponytail: number input 走 Number() 转 number 类型 (跟文档契约 { low: 7, high: 10, months: 12 } 一致),
-    // 空字符串保留空字符串让 delete expectSalary 逻辑判断.
-    const v = el.type === 'number' ? (el.value === '' ? '' : Number(el.value)) : el.value;
-    if (parts.length === 1) { nd.profile[parts[0]] = v; return; }
-    // 嵌套路径 (expectSalary.low / expectSalary.high / expectSalary.months).
-    let cursor = nd.profile; for (let i = 0; i < parts.length - 1; i++) { if (!cursor[parts[i]] || typeof cursor[parts[i]] !== 'object') cursor[parts[i]] = {}; cursor = cursor[parts[i]]; }
-    cursor[parts[parts.length - 1]] = v;
+    const key = el.name.slice('profile.'.length);
+    const spec = pSpecs[key];
+    // ponytail: 白名单 — 未声明的 profile.* 输入不进数据. 复合字段 input 用 "复合名.后缀" (不带 profile. 前缀), 物理隔开.
+    if (!spec) return;
+    nd.profile[key] = spec.a ? arr(el.value) : el.value;
   });
-  // ponytail: expectCities (textarea) 走 split('\n').filter(Boolean) 转 string[], checkbox profile 字段无.
-  const ecTextarea = document.querySelector('textarea[name="profile.expectCities"]');
-  if (ecTextarea) nd.profile.expectCities = ecTextarea.value.split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
-  // ponytail: expectSalary 三个字段 (low/high/months) 任意一个非空就保留对象, 都空时 delete.
-  // 用 === '' / === undefined 判断而非 !, 因为 number 0 是合法薪资 (0K 起步) 不能误删, '' 是 number input 清空后的 string.
-  if (nd.profile.expectSalary && nd.profile.expectSalary.low === '' && nd.profile.expectSalary.high === '' && nd.profile.expectSalary.months === '') delete nd.profile.expectSalary;
-  // ponytail: expectCities 老数据可能是 string, 走 arr() 拆.
-  if (nd.profile.expectCities && typeof nd.profile.expectCities === 'string') nd.profile.expectCities = arr(nd.profile.expectCities);
-  // ponytail: expectJobs 单条目独立收集 (通用循环已跳过) — 拍平字段重组成 schema 数组形 [{title, jobType, salary, cities}].
-  // 全空时 delete, 跟 expectSalary 同策略. number 0 是合法薪资不误删.
-  const ejEls = {};
-  ec.querySelectorAll('[name^="profile.expectJobs."]').forEach(function (el) { ejEls[el.name.split('.')[2]] = el.type === 'number' ? (el.value === '' ? '' : Number(el.value)) : el.value; });
-  if (Object.keys(ejEls).length) {
-    const job = { title: ejEls.title || '', jobType: ejEls.jobType || '', cities: arr(ejEls.cities) };
-    if (ejEls.salaryLow !== '' && ejEls.salaryLow !== undefined) { job.salary = job.salary || {}; job.salary.low = ejEls.salaryLow; }
-    if (ejEls.salaryHigh !== '' && ejEls.salaryHigh !== undefined) { job.salary = job.salary || {}; job.salary.high = ejEls.salaryHigh; }
-    if (job.title || job.jobType || job.cities.length || job.salary) nd.profile.expectJobs = [job];
-    else delete nd.profile.expectJobs;
-  }
+  Object.keys(PROFILE_COMPOSITES).forEach(function (cn) {
+    const out = collectComposite(cn, PROFILE_COMPOSITES[cn], ec);
+    if (out === undefined) delete nd.profile[cn]; else nd.profile[cn] = out;
+  });
   ec.querySelectorAll('[name^="sectionTitle."]').forEach(function (el) { const i = parseInt(el.name.split('.')[1], 10); if (nd.sections[i]) nd.sections[i].title = el.value; });
   ec.querySelectorAll('[name^="sectionSummary."]').forEach(function (el) { const i = parseInt(el.name.split('.')[1], 10); if (nd.sections[i]) {
     // ponytail: 默认占位 items: [""], 空 textarea 经过 filter(Boolean) 会变成 [], 让新建的空
@@ -177,13 +171,12 @@ function collectFormData(opts) {
     nd.sections[si].items[ii][fi] = el.value;
   });
   (nd.sections || []).forEach(function (s) {
-    if (s.type === 'text' || s.type === 'summary') return;
-    const arrKeys = arrFieldsOf(SECTION_CONFIG[s.type]);
+    const cfg = SECTION_CONFIG[s.type];
+    // ponytail: contentField 模块 (summary/text) 无 item 对象, 跳过数组字段归一.
+    if (!cfg || cfg.contentField) return;
+    const arrKeys = arrFieldsOf(cfg);
     (s.items || []).forEach(function (item) {
-      delete item.challenges;
       arrKeys.forEach(function (k) { if (item[k] && typeof item[k] === 'string') item[k] = arr(item[k]); });
-      // ponytail: 同 normalize, 老 education.experience 重命名为 honors.
-      if (s.type === 'education' && item.experience !== undefined) { item.honors = item.experience; delete item.experience; }
     });
   });
   cvData = nd;

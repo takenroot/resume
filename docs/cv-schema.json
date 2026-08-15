@@ -24,8 +24,8 @@
         "timeline": { "type": "string", "x-platforms": [], "x-status": "current", "comment": "CV 自有字段,平台无" },
         "expectSalary": {
           "type": "object",
-          "x-platforms": ["liepin", "zhaopin"], "x-tier": "common", "x-status": "proposed",
-          "comment": "三框联动,单位 K",
+          "x-platforms": ["liepin", "zhaopin"], "x-tier": "common", "x-status": "merged",
+          "comment": "三框联动,单位 K。2026-08 CV 侧已删, 并入 expectJobs[].salary (months 无去向)",
           "properties": {
             "low": { "type": "number" },
             "high": { "type": "number" },
@@ -33,7 +33,7 @@
           },
           "required": ["low", "high", "months"]
         },
-        "expectCities": { "type": "array", "items": { "type": "string" }, "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "common", "x-status": "proposed" },
+        "expectCities": { "type": "array", "items": { "type": "string" }, "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "common", "x-status": "merged", "comment": "2026-08 CV 侧已删, 并入 expectJobs[].cities" },
         "expectIndustry": { "type": "string", "x-platforms": ["liepin"], "x-tier": "longtail", "x-status": "proposed" },
         "expectJobs": {
           "type": "array",
@@ -87,8 +87,7 @@
         "position": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current" },
         "period": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current", "comment": "字符串 '2023.09 - 2025.07'/'至今',引擎 splitPeriod 拆双框" },
         "summary": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current", "comment": "平台别名:工作内容/职责描述/工作简介" },
-        "highlights": { "type": "array", "items": { "type": "string" }, "x-platforms": ["boss", "liepin"], "x-tier": "core", "x-status": "current", "comment": "⚠️ 现承担'工作内容补充+工作业绩'两个角色,achievements 落地后各司其职" },
-        "achievements": { "type": "array", "items": { "type": "string" }, "x-platforms": ["boss", "liepin"], "x-tier": "common", "x-status": "proposed", "comment": "P0:工作业绩独立框" },
+        "achievements": { "type": "array", "items": { "type": "string" }, "x-platforms": ["boss", "liepin"], "x-tier": "core", "x-status": "current", "comment": "原 highlights + P0 工作业绩独立框, 2026-08 合并为 canonical (adapter 双读老 key)" },
         "industry": { "type": "string", "x-platforms": ["boss"], "x-tier": "longtail", "x-status": "proposed" },
         "department": { "type": "string", "x-platforms": ["boss"], "x-tier": "longtail", "x-status": "proposed" },
         "isIntern": { "type": "boolean", "x-platforms": ["liepin", "zhaopin"], "x-tier": "common", "x-status": "proposed", "comment": "误勾比不填更糟,引擎只读不猜" },
@@ -122,7 +121,7 @@
         "period": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current" },
         "tags": { "type": "array", "items": { "type": "string" }, "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "longtail", "x-status": "current", "comment": "⚠️ 平台叫 技术栈/技能标签,从不叫 tags" },
         "summary": { "type": "string", "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "core", "x-status": "current" },
-        "highlights": { "type": "array", "items": { "type": "string" }, "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "common", "x-status": "current" },
+        "achievements": { "type": "array", "items": { "type": "string" }, "x-platforms": ["boss", "liepin", "zhaopin"], "x-tier": "common", "x-status": "current", "comment": "原 highlights, 2026-08 对齐改名" },
         "role": { "type": "string", "x-platforms": ["boss"], "x-tier": "longtail", "x-status": "proposed" },
         "link": { "type": "string", "x-platforms": ["boss"], "x-tier": "longtail", "x-status": "proposed" },
         "achievements": { "type": "array", "items": { "type": "string" }, "x-platforms": ["boss"], "x-tier": "longtail", "x-status": "proposed" }
