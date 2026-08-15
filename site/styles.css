@@ -26,7 +26,8 @@
   --header-gap: 20px;
   --meta-column-gap: 34px;
   --avatar-width: 112px;
-  --avatar-height: 112px;
+  /* ponytail: 一寸照 25×35mm = 5:7, 高度跟宽度走, 各断点只改宽度 */
+  --avatar-height: calc(var(--avatar-width) * 1.4);
   --avatar-offset-top: -4px;
   --mobile-header-aside-width: 78px;
   --space-section-top: 12px;
@@ -1007,7 +1008,7 @@ html.js .resume-document[data-js-ready="false"] {
 
 .editor-field-avatar .avatar-preview {
   width: 80px;
-  height: 80px;
+  height: 112px;
   border-radius: 6px;
   background-size: cover;
   background-position: center top;
@@ -1391,7 +1392,6 @@ html.js .resume-document[data-js-ready="false"] {
     --header-gap: 18px;
     --meta-column-gap: 20px;
     --avatar-width: 96px;
-    --avatar-height: 96px;
   }
 
   .page-shell {
@@ -1416,7 +1416,6 @@ html.js .resume-document[data-js-ready="false"] {
     --radius: 12px;
     --meta-column-gap: 10px;
     --avatar-width: 60px;
-    --avatar-height: 60px;
     --avatar-offset-top: 0;
     --space-heading-gap: 8px;
     --space-heading-bottom: 7px;
