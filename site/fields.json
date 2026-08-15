@@ -1,0 +1,490 @@
+{
+  "version": "2026-08-15",
+  "fields": {
+    "certificate.issuer": {
+      "platforms": [
+        "liepin"
+      ],
+      "tier": "longtail",
+      "status": "current"
+    },
+    "certificate.name": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "certificate.period": {
+      "platforms": [
+        "boss",
+        "liepin"
+      ],
+      "tier": "longtail",
+      "status": "current"
+    },
+    "education.campus": {
+      "platforms": [
+        "boss",
+        "liepin"
+      ],
+      "tier": "common",
+      "status": "current"
+    },
+    "education.courses": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "longtail",
+      "status": "current"
+    },
+    "education.degree": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "education.degreeType": {
+      "platforms": [
+        "boss"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "education.isUnified": {
+      "platforms": [
+        "liepin"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "education.major": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "education.overseasEdu": {
+      "platforms": [
+        "zhaopin"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "education.period": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "education.school": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "education.thesis": {
+      "platforms": [
+        "boss"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "education.thesisTitle": {
+      "platforms": [
+        "boss"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "experience.achievements": {
+      "platforms": [
+        "boss",
+        "liepin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "experience.company": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "experience.currentSalary": {
+      "platforms": [
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "common",
+      "status": "proposed"
+    },
+    "experience.department": {
+      "platforms": [
+        "boss"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "experience.industry": {
+      "platforms": [
+        "boss"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "experience.isIntern": {
+      "platforms": [
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "common",
+      "status": "proposed"
+    },
+    "experience.period": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "experience.position": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "experience.skillTags": {
+      "platforms": [
+        "boss"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "experience.summary": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "language.level": {
+      "platforms": [
+        "liepin"
+      ],
+      "tier": "common",
+      "status": "proposed"
+    },
+    "language.listeningSpeaking": {
+      "platforms": [
+        "zhaopin"
+      ],
+      "tier": "common",
+      "status": "proposed"
+    },
+    "language.name": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "common",
+      "status": "proposed"
+    },
+    "language.proficiency": {
+      "platforms": [
+        "liepin"
+      ],
+      "tier": "common",
+      "status": "proposed"
+    },
+    "language.readingWriting": {
+      "platforms": [
+        "zhaopin"
+      ],
+      "tier": "common",
+      "status": "proposed"
+    },
+    "profile.avatar": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "profile.birthDate": {
+      "platforms": [
+        "boss",
+        "liepin"
+      ],
+      "tier": "longtail",
+      "status": "current"
+    },
+    "profile.currentSalary": {
+      "platforms": [
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "common",
+      "status": "proposed"
+    },
+    "profile.email": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "profile.expectIndustry": {
+      "platforms": [
+        "liepin"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "profile.expectJobs": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "common",
+      "status": "proposed"
+    },
+    "profile.expectPreference": {
+      "platforms": [
+        "zhaopin"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "profile.experience": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "profile.firstWorkDate": {
+      "platforms": [
+        "zhaopin"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "profile.gender": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "longtail",
+      "status": "current"
+    },
+    "profile.github": {
+      "platforms": [
+        "boss",
+        "liepin"
+      ],
+      "tier": "longtail",
+      "status": "current"
+    },
+    "profile.jobStatus": {
+      "platforms": [
+        "boss",
+        "zhaopin"
+      ],
+      "tier": "common",
+      "status": "current"
+    },
+    "profile.location": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "profile.name": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "profile.phone": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "profile.politicalStatus": {
+      "platforms": [
+        "liepin"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "profile.title": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "profile.wechat": {
+      "platforms": [
+        "liepin"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "projects.achievements": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "common",
+      "status": "current"
+    },
+    "projects.link": {
+      "platforms": [
+        "boss"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "projects.name": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "projects.period": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "projects.role": {
+      "platforms": [
+        "boss"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "projects.summary": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "projects.tags": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "longtail",
+      "status": "current"
+    },
+    "skills.detail": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "longtail",
+      "status": "current"
+    },
+    "skills.name": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "summary.items": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core",
+      "status": "current"
+    },
+    "training.course": {
+      "platforms": [
+        "zhaopin"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "training.institution": {
+      "platforms": [
+        "zhaopin"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    },
+    "training.period": {
+      "platforms": [
+        "zhaopin"
+      ],
+      "tier": "longtail",
+      "status": "proposed"
+    }
+  }
+}
