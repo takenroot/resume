@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 本地错误队列 (telemetry): `window.onerror` / `unhandledrejection` / 导入异常写 localStorage `cv_errors` (留最近 20 条, 不外发), 编辑器底部加「复制错误」按钮一键拷走 UA + URL + 错误栈.
 - 「重置默认」按钮接上 handler (原来是死按钮, 无 JS 绑定): 点击 confirm 后备份当前数据再 `resetCvData()`.
 - `docs/cv-schema.json`: cv-autofill `schema/cv-superset.schema.json` 的副本, README 所称 "CV 为 canonical 源" 现在有仓库内凭证.
+- `template/` 简历版式研究: 5 种版式 (单栏/双栏侧栏/上下分栏/网格卡片/时间轴) + 4 种头部变体, 每份含结构图/字段容量/平台解析兼容性/代表模板/CV 适配要点, 选型表见 `template/README.md` (结论: 求稳走单栏+H2 无头像三层收束).
 - 字段治理 (CROSS_REPO_PLAN 四步全落地): vendor `site/fields.json` (cv-autofill 生成的字段全集只读副本, 只能整体替换升级); 对账测试 `test/fields-sync.mjs` (config key ⊆ fields.json + `CV_OWN` 显式白名单 + camelCase 命名机检, 信息性输出上游有而 config 未用的字段清单); 仲裁规则写进 SCHEMA_NAMING/README (字段存不存在与英文 key → fields.json; 中文 label 与渲染 → CV 自己定); 数据版本戳 `schemaVersion` (saveCvData 落盘盖章, 导出/备份自带, 缺失时 warning 提示不拦截).
 
 ### Fixed

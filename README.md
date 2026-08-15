@@ -43,6 +43,7 @@ cv/
 ├── docs/
 │   ├── SCHEMA_NAMING.md            # CV 字段 ↔ 平台输入框 命名对照表
 │   └── REFACTOR_PLAN.md            # 重构路线图 (已执行部分标 ✅)
+├── template/                       # 简历版式研究 (5 种版式 + 头部变体, 选型见 README)
 ├── test/                           # 无框架 node 自检 (*.mjs, 直接 node 跑)
 ├── start.sh / start.bat            # 本地启动脚本 (自动探测可用端口)
 └── README.md
