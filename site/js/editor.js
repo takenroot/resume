@@ -71,13 +71,25 @@ function buildEditorPrefs() {
   return '<div class="editor-section editor-section-prefs"><h3>页面设置</h3><div class="prefs-row"><div class="editor-field"><label>主题配色</label><select id="prefTheme">' + to + '</select></div><div class="editor-field"><label>字号</label><select id="prefFontSize">' + so + '</select></div><div class="editor-field"><label>字体</label><select id="prefFontFamily">' + fo + '</select></div></div><p class="prefs-hint">打印页边距请在浏览器打印对话框里设置（建议选「无」或「最小」，本项目 @page 已固定 0mm）</p></div>';
 }
 
+// ponytail: 头部显示开关 — 可切的是「头部会渲染的字段」全集 (含 expectJobs 派生块和头像).
+// 状态存 prefs.profileHidden (视图层), 不进 profile 数据, 不影响导出/平台填充.
+const HEADER_TOGGLES = [['title', '岗位'], ['experience', '工作经验'], ['phone', '电话'], ['email', '邮箱'], ['location', '所在地'], ['jobStatus', '求职状态'], ['github', 'GitHub'], ['wechat', '微信'], ['expectJobs', '期望职位/薪资/城市'], ['expectIndustry', '期望行业']];
+
+function buildVisToggles() {
+  return '<div class="editor-field"><label>头部显示</label><div class="vis-toggles">' +
+    HEADER_TOGGLES.map(function (t) { return '<label class="vis-toggle"><input type="checkbox" data-vis="' + t[0] + '"' + (isProfileShown(t[0]) ? ' checked' : '') + '>' + t[1] + '</label>'; }).join('') +
+    '<label class="vis-toggle"><input type="checkbox" data-vis-avatar' + (cvPrefs.showAvatar !== false ? ' checked' : '') + '>头像</label>' +
+    '</div><p class="vis-hint">只控制预览显示, 不影响数据与导出; 空字段本来就不显示</p></div>';
+}
+
 function buildProfileFields(profile) {
   const name = profile && profile.name ? profile.name : '';
   const av = profile && profile.avatar ? profile.avatar : '';
   const localAvatar = av ? av : loadAvatar(name);
   const hasLocalAvatar = !!loadAvatar(name);
   // ponytail: 隐藏字段 (currentSalary 等) 不在 PROFILE_FIELDS 里出现, 用户手写 JSON 才能填. cv-autofill 引擎读 schema.json 知道存在.
-  let hh = '<div class="editor-field editor-field-avatar"><label>头像</label><div class="avatar-upload"><div class="avatar-preview" id="avatarPreview" style="' + (localAvatar ? "background-image: url('" + esc(localAvatar) + "')" : '') + '"></div><div class="avatar-upload-inputs"><input type="file" id="avatarFileInput" accept="image/*">' + (hasLocalAvatar ? '<button type="button" class="editor-btn" id="clearAvatarBtn" style="font-size:12px;padding:4px 8px">清除头像</button>' : '') + '<input type="text" name="profile.avatar" value="' + esc(av) + '" placeholder="留空则使用浏览器本地头像"></div><p style="font-size:11px;color:var(--text-soft);margin:4px 0 0">选择图片后自动转为 base64 存入浏览器本地，导出 JSON/Markdown 时不含头像</p></div></div>';
+  let hh = buildVisToggles();
+  hh += '<div class="editor-field editor-field-avatar"><label>头像</label><div class="avatar-upload"><div class="avatar-preview" id="avatarPreview" style="' + (localAvatar ? "background-image: url('" + esc(localAvatar) + "')" : '') + '"></div><div class="avatar-upload-inputs"><input type="file" id="avatarFileInput" accept="image/*">' + (hasLocalAvatar ? '<button type="button" class="editor-btn" id="clearAvatarBtn" style="font-size:12px;padding:4px 8px">清除头像</button>' : '') + '<input type="text" name="profile.avatar" value="' + esc(av) + '" placeholder="留空则使用浏览器本地头像"></div><p style="font-size:11px;color:var(--text-soft);margin:4px 0 0">选择图片后自动转为 base64 存入浏览器本地，导出 JSON/Markdown 时不含头像</p></div></div>';
   hh += PROFILE_FIELDS.filter(function (f) { return !f.custom; }).map(function (f) { return '<div class="editor-field"><label>' + f.l + '</label>' + renderProfileFieldInput(f, profile) + '</div>'; }).join('');
   // ponytail: expectJobs 单条目 (猎聘/智联期望职位), schema 是单元素数组 [{title, jobType, salary:{low,high}, cities[]}], 编辑器拍平.
   // 2026-08: expectSalary/expectCities 独立字段已删, 头部展示从 expectJobs[0] 派生 (renderer.js renderHeaderExtra).
@@ -251,6 +263,19 @@ function bindEditorEvents() {
     closeAllDropdowns();
   });
   document.addEventListener('change', function (ev) {
+    // ponytail: 头部显示开关 — checkbox 无 name, collectFormData 的白名单 ([name^=...]) 物理碰不到它.
+    if (ev.target.dataset && ev.target.dataset.vis) {
+      const k = ev.target.dataset.vis, i = cvPrefs.profileHidden.indexOf(k);
+      if (ev.target.checked && i >= 0) cvPrefs.profileHidden.splice(i, 1);
+      if (!ev.target.checked && i < 0) cvPrefs.profileHidden.push(k);
+      savePrefs(); renderCv(); syncResumeLayout();
+      return;
+    }
+    if (ev.target.hasAttribute && ev.target.hasAttribute('data-vis-avatar')) {
+      // ponytail: 头像显隐的实际判定在 renderCv (开关 && 有图), 这里重渲染即可.
+      cvPrefs.showAvatar = ev.target.checked; savePrefs(); renderCv();
+      return;
+    }
     if (ev.target.id === 'avatarFileInput') {
       const f = ev.target.files[0];
       // ponytail: 选完即清空 input.value, 否则选同一文件不触发 change (换头像须切别的再切回来).
