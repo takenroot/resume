@@ -25,8 +25,9 @@ const IDENTITY_ICONS = {
 };
 function iconSvg(path) { return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="icon-svg"><path d="' + path + '"/></svg>'; }
 
-// ponytail: 必备行 — icon + 值, 浓缩一行 (职位/电话/邮箱/意向城市/经验), 空字段不显示.
-// 电话/邮箱保留点击复制. 意向城市取 expectJobs[0].cities, 显隐跟 expectJobs 开关走.
+// ponytail: 必备行 — icon + 值, 浓缩一行 (职位/电话/意向城市/经验), 空字段不显示.
+// 电话保留点击复制 (identity-action 是 app.js 复制委托的钩子类). 意向城市取 expectJobs[0].cities, 显隐跟 expectJobs 开关走.
+// 邮箱值长易挤破行, 放胶囊层 (renderIdentityLine).
 function renderIdentityEssential(p) {
   const el = document.getElementById('identityEssential'); if (!el) return;
   el.replaceChildren();
@@ -34,7 +35,7 @@ function renderIdentityEssential(p) {
   el.classList.toggle('layout-grid', typeof cvPrefs === 'object' && cvPrefs && cvPrefs.essentialLayout === 'grid');
   const ej = (Array.isArray(p.expectJobs) && p.expectJobs[0]) || {};
   const cities = Array.isArray(ej.cities) && ej.cities.length ? ej.cities.join('/') : '';
-  const items = [['title', p.title], ['phone', p.phone, 'copy'], ['email', p.email, 'copy'], ['cities', cities, null, 'expectJobs'], ['experience', p.experience]];
+  const items = [['title', p.title], ['phone', p.phone, 'copy'], ['cities', cities, null, 'expectJobs'], ['experience', p.experience]];
   let count = 0;
   items.forEach(function (it) {
     const iconKey = it[0], v = it[1], visKey = it[3] || iconKey;
@@ -42,7 +43,7 @@ function renderIdentityEssential(p) {
     let node;
     if (it[2] === 'copy') { node = document.createElement('button'); node.type = 'button'; node.dataset.copy = v; node.setAttribute('aria-label', '复制' + v); }
     else node = document.createElement('span');
-    node.className = 'identity-item';
+    node.className = it[2] === 'copy' ? 'identity-item identity-action' : 'identity-item';
     node.innerHTML = iconSvg(IDENTITY_ICONS[iconKey]);
     node.appendChild(document.createTextNode(v));
     el.appendChild(node);
@@ -51,22 +52,24 @@ function renderIdentityEssential(p) {
   el.style.display = count ? '' : 'none';
 }
 
-// ponytail: 胶囊层 — 必备行之外的可选字段 (籍贯/求职状态/GitHub/微信) + 期望标签 (expectJobs[0] 派生).
-// 电话/邮箱/GitHub 交互保留. expectJobs 关掉 = 期望职位/薪资全关 (意向城市在必备行, 同一开关). 空字段不渲染.
+// ponytail: 胶囊层 — 必备行之外的可选字段 (籍贯/求职状态/GitHub/微信/邮箱) + 期望标签 (expectJobs[0] 派生).
+// GitHub 跳转, 邮箱点击复制 (identity-action + span 值, flashCopiedState 需要 span 子节点). 邮箱长值在这层不怕换行.
+// expectJobs 关掉 = 期望职位/薪资全关 (意向城市在必备行, 同一开关). 空字段不渲染.
 function renderIdentityLine(p) {
   const el = document.getElementById('identityLine'); if (!el) return;
   el.replaceChildren();
   let count = 0;
   const addPill = function (node) { el.appendChild(node); count++; };
-  const items = [['location', '籍贯'], ['jobStatus', '求职状态'], ['github', 'GitHub', 'link'], ['wechat', '微信']];
+  const items = [['location', '籍贯'], ['jobStatus', '求职状态'], ['github', 'GitHub', 'link'], ['wechat', '微信'], ['email', '邮箱', 'copy']];
   items.forEach(function (it) {
     const k = it[0], v = p[k];
     if (!v || !String(v).trim() || !isProfileShown(k)) return;
     let node;
     if (it[2] === 'link') { node = document.createElement('a'); node.href = (String(v).startsWith('http') ? '' : 'https://') + v; node.target = '_blank'; node.rel = 'noopener noreferrer'; }
+    else if (it[2] === 'copy') { node = document.createElement('button'); node.type = 'button'; node.dataset.copy = v; node.setAttribute('aria-label', '复制' + v); }
     else node = document.createElement('span');
-    node.className = 'identity-pill';
-    node.innerHTML = '<em>' + it[1] + '</em>' + esc(String(v));
+    node.className = it[2] === 'copy' ? 'identity-pill identity-action' : 'identity-pill';
+    node.innerHTML = '<em>' + it[1] + '</em>' + (it[2] === 'copy' ? '<span>' + esc(String(v)) + '</span>' : esc(String(v)));
     addPill(node);
   });
   const ej = (Array.isArray(p.expectJobs) && p.expectJobs[0]) || {};

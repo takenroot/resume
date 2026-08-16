@@ -34,13 +34,14 @@ function assert(cond, msg) { if (!cond) { console.error('FAIL: ' + msg); process
 const FULL = { title: '全栈工程师', experience: '5年', phone: '138', email: 'a@b.com', location: '北京', jobStatus: '随时到岗', github: 'github.com/x', wechat: 'wx1',
   expectJobs: [{ title: '全栈开发', jobType: '全职', salary: { low: 15, high: 20 }, cities: ['北京', '上海'] }], expectIndustry: '互联网' };
 
-// 1. 必备行: 职位/电话/邮箱/意向城市/经验, 顺序固定, 带 icon
+// 1. 必备行: 职位/电话/意向城市/经验, 顺序固定, 带 icon (邮箱长值在胶囊层)
 api.setHidden([]);
 api.renderIdentityEssential(FULL);
 const e = essTexts();
-assert(e.join('|') === '全栈工程师|138|a@b.com|北京/上海|5年', '必备行五字段顺序');
+assert(e.join('|') === '全栈工程师|138|北京/上海|5年', '必备行四字段顺序');
 assert(els.identityEssential.children.every(function (c) { return c.innerHTML.indexOf('<svg') === 0; }), '每项带 icon-svg');
 assert(els.identityEssential.children[1].dataset.copy === '138', '电话保留 data-copy');
+assert(els.identityEssential.children[1].className === 'identity-item identity-action', '电话带 identity-action 复制钩子');
 
 // 2. 空字段跳过 (没有不显示)
 api.renderIdentityEssential({ phone: '138' });
@@ -49,18 +50,20 @@ assert(essTexts().join('') === '138', '必备行空字段跳过');
 // 3. 显隐: title 勾掉不显示; 意向城市跟 expectJobs 开关走
 api.setHidden(['title', 'expectJobs']);
 api.renderIdentityEssential(FULL);
-assert(essTexts().join('|') === '138|a@b.com|5年', 'title 隐藏 + 意向城市随 expectJobs 关');
+assert(essTexts().join('|') === '138|5年', 'title 隐藏 + 意向城市随 expectJobs 关');
 
-// 4. 胶囊层: 籍贯/求职状态/github/微信 + 期望职位/薪资/行业 (期望城市已上必备行, 不重复)
+// 4. 胶囊层: 籍贯/求职状态/github/微信/邮箱 + 期望职位/薪资/行业 (期望城市已上必备行, 不重复)
 api.setHidden([]);
 api.renderIdentityLine(FULL);
 const t = pillTexts();
-assert(t.length === 7, '7 个胶囊, 实际 ' + t.length);
+assert(t.length === 8, '8 个胶囊, 实际 ' + t.length);
 assert(t[0].indexOf('<em>籍贯</em>') === 0 && t[0].indexOf('北京') >= 0, '籍贯带标题');
 assert(t[1].indexOf('<em>求职状态</em>') === 0 && t[1].indexOf('随时到岗') >= 0, '求职状态带标题');
 assert(t[3].indexOf('<em>微信</em>') === 0 && t[3].indexOf('wx1') >= 0, '微信带标题');
+assert(t[4].indexOf('<em>邮箱</em><span>a@b.com</span>') === 0, '邮箱带标题 + span 值 (复制反馈需要)');
+assert(els.identityLine.children[4].dataset.copy === 'a@b.com', '邮箱保留 data-copy');
 assert(els.identityLine.children[2].href === 'https://github.com/x', 'github 补 https://');
-assert(t[4].indexOf('期望职位') >= 0 && t[5].indexOf('15-20K') >= 0 && t[6].indexOf('期望行业') >= 0, '期望标签胶囊');
+assert(t[5].indexOf('期望职位') >= 0 && t[6].indexOf('15-20K') >= 0 && t[7].indexOf('期望行业') >= 0, '期望标签胶囊');
 assert(t.join('').indexOf('期望城市') < 0, '期望城市不进胶囊层');
 
 // 5. 全空 → 整层隐藏
@@ -87,4 +90,4 @@ const sp = api.getPrefs();
 assert(sp.nameAlign === 'left' && sp.avatarShape === 'rounded' && sp.pillDensity === 'compact', '样式开关默认: 左对齐/圆角/紧凑');
 assert(sp.headerRule === false && sp.essentialIcons === true, '样式开关默认: 无分隔线/有图标');
 
-console.log('header-visibility self-check OK (18 assertions)');
+console.log('header-visibility self-check OK (22 assertions)');
