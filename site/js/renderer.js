@@ -75,10 +75,11 @@ function renderHeaderExtra(p) {
   }
   if (!tags.length) { el.style.display = 'none'; return; }
   el.style.display = '';
-  tags.forEach(function (t) {
+  tags.forEach(function (t, i) {
+    if (i > 0) el.appendChild(document.createTextNode(' · '));
     const tag = document.createElement('span');
     tag.className = 'header-extra-tag';
-    tag.innerHTML = '<em>' + esc(t.k) + '</em>' + esc(t.v);
+    tag.innerHTML = '<em>' + esc(t.k) + '</em> ' + esc(t.v);
     el.appendChild(tag);
   });
 }

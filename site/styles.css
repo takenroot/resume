@@ -843,30 +843,21 @@ html.js .resume-document[data-js-ready="false"] {
   display: inline;
 }
 
-/* ponytail: 头部第三行期望标签: 期望职位/薪资/城市 (expectJobs 派生) + 期望行业.
-   灰色 badge 风格, 跟项目经历的 .item-meta-tag 视觉一致. */
+/* ponytail: 头部第三行期望标签 — 与联系行同款纯文本 · 分隔, 不用胶囊, 保持头部三层样式一致.
+   标签名 (期望职位 等) 用 <em> 加粗区分. */
 .header-extra {
   display: block;
-  margin-top: 6px;
-  font-size: 12px;
-  line-height: 1.6;
+  margin-top: 2px;
+  font-size: var(--fs-meta);
+  line-height: 1.7;
+  color: var(--text-soft);
 }
 .header-extra:empty {
   display: none;
 }
-.header-extra-tag {
-  display: inline-block;
-  margin-right: 12px;
-  padding: 2px 8px;
-  background: #f1f5f9;
-  border-radius: 4px;
-  color: #475569;
-}
 .header-extra-tag em {
   font-style: normal;
   font-weight: 600;
-  color: #334155;
-  margin-right: 4px;
 }
 
 /* ponytail: 编辑器「头部显示」开关组 — checkbox 横排小字, 控制 prefs.profileHidden */
