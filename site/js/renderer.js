@@ -57,11 +57,12 @@ function renderIdentityEssential(p) {
 
 // ponytail: 胶囊行均衡装箱 — 纯函数, 可单测. 视觉优先于语义顺序 (用户已确认).
 // 目标: 长短搭配 — 每行先放剩余最长, 再反复填"剩余最短且塞得下"的 (双指针贪心). ≥0.8W 独占行.
+// 行序: 按填充宽降序 (第一行铺满原则; GitHub 这种塞不进任何搭档的长胶囊即使填充率不高也不抢第一行).
 // 已知边缘: 全是 ~0.7W 的尴尬尺寸时会出现 <80% 的中间行, 放行不 DP.
 function packPillRows(widths, W, gap) {
   const rows = [], pool = [];
   widths.map(function (w, i) { return [w, i]; }).sort(function (a, b) { return b[0] - a[0]; })
-    .forEach(function (wi) { if (wi[0] >= 0.8 * W) rows.push([wi[1]]); else pool.push(wi); });
+    .forEach(function (wi) { if (wi[0] >= 0.8 * W) rows.push({ idxs: [wi[1]], w: wi[0] }); else pool.push(wi); });
   while (pool.length) {
     const row = [pool.shift()]; // 最长开头
     let rw = row[0][0], progress = true;
@@ -71,9 +72,10 @@ function packPillRows(widths, W, gap) {
         if (rw + gap + pool[j][0] <= W) { rw += gap + pool[j][0]; row.push(pool.splice(j, 1)[0]); progress = true; break; }
       }
     }
-    rows.push(row.map(function (wi) { return wi[1]; }));
+    rows.push({ idxs: row.map(function (wi) { return wi[1]; }), w: rw });
   }
-  return rows;
+  rows.sort(function (a, b) { return b.w - a.w; });
+  return rows.map(function (r) { return r.idxs; });
 }
 
 // ponytail: 渲染后测宽重排 — 两遍布局. W = 必备行内容右缘 (item rect.right 最大值 − 容器左缘),

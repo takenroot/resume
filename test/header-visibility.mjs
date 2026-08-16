@@ -96,6 +96,7 @@ assert(pack([340, 200, 180, 100, 90], 400) === '[[0],[1,4],[2,3]]', '装箱: 340
 assert(pack([100, 100, 100], 400) === '[[0,2,1]]', '装箱: 全短一行');
 assert(pack([320], 400) === '[[0]]', '装箱: 恰好 0.8W 独占');
 assert(pack([280, 280, 280], 400) === '[[0],[1],[2]]', '装箱: 三个 0.7W 尴尬尺寸各自成行 (已知边缘, 放行)');
+assert(pack([250, 180, 110], 330) === '[[1,2],[0]]', '装箱: 行按填充宽降序 — 250 独行 (76%) 不抢 298 组合行 (90%) 的第一行');
 assert(sp.plainText === false, '样式开关默认: 非纯文本模式');
 
 // 10. 纯文本模式 (plainText): 无 icon 无 em 标签, 期望类单独一行 (pill-row-break)
@@ -114,4 +115,4 @@ api.setPlain(false);
 api.renderIdentityLine(FULL);
 assert(!els.identityLine.classList.contains('plain') && els.identityLine.children.every(function (c) { return c.className !== 'pill-row-break'; }), 'plain 关掉: 无 plain 类无换行符');
 
-console.log('header-visibility self-check OK (32 assertions)');
+console.log('header-visibility self-check OK (33 assertions)');
