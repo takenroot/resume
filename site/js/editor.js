@@ -108,7 +108,8 @@ function buildVisToggles() {
     '<div class="editor-field"><label>头部显示</label><div class="vis-toggles">' +
     HEADER_TOGGLES.map(function (t) { return '<label class="vis-toggle"><input type="checkbox" data-vis="' + t[0] + '"' + (isProfileShown(t[0]) ? ' checked' : '') + '>' + t[1] + '</label>'; }).join('') +
     '<label class="vis-toggle"><input type="checkbox" data-vis-avatar' + (cvPrefs.showAvatar !== false ? ' checked' : '') + '>头像</label>' +
-    '</div><p class="vis-hint">只控制预览显示, 不影响数据与导出; 空字段本来就不显示</p>' +
+    '</div><p class="vis-hint">只控制预览显示, 不影响数据与导出; 空字段本来就不显示</p></div>' +
+    '<div class="editor-field"><label>细节样式</label>' +
     '<div class="vis-toggles"><span class="vis-hint">必备行布局</span>' +
     '<label class="vis-toggle"><input type="radio" name="essentialLayout" data-vis-layout="flow"' + (cvPrefs.essentialLayout !== 'grid' ? ' checked' : '') + '>自动换行</label>' +
     '<label class="vis-toggle"><input type="radio" name="essentialLayout" data-vis-layout="grid"' + (cvPrefs.essentialLayout === 'grid' ? ' checked' : '') + '>表格对齐</label>' +

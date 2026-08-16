@@ -954,12 +954,20 @@ button.identity-pill:hover {
   font-size: 12px;
   color: var(--text-soft);
 }
-.vis-toggle {
+/* ponytail: 权重须压过 .editor-field label/input (0,1,1) — 否则弹窗里 radio 变独占行、文字挤到下面 */
+.vis-toggles .vis-toggle {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  margin: 0;
+  font-weight: 400;
   cursor: pointer;
   user-select: none;
+}
+.vis-toggles .vis-toggle input {
+  width: auto;
+  padding: 0;
+  margin: 0;
 }
 .vis-hint {
   font-size: 11px;
