@@ -234,10 +234,56 @@ html.js .resume-document[data-js-ready="false"] {
   color: #000000;
 }
 
-/* ponytail: 头部信息层 — 全部字段统一胶囊, flex-wrap 自动换行.
-   电话/邮箱是 <button> 点击复制, GitHub 是 <a> 跳转, 期望标签带 <em> 标签名. */
+/* ponytail: 必备行 — icon + 值, 浓缩一行 (职位/电话/邮箱/意向城市/经验).
+   电话/邮箱是 <button> 点击复制. icon 14px, 字段间 gap 14px. */
+.identity-essential {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 14px;
+  row-gap: 4px;
+  font-size: var(--fs-meta);
+  line-height: 1.7;
+  color: var(--text-soft);
+  white-space: nowrap;
+}
+
+.identity-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: default;
+}
+
+button.identity-item {
+  cursor: pointer;
+}
+
+button.identity-item:hover {
+  color: #1d4ed8;
+}
+
+.identity-item:focus-visible {
+  outline: 2px solid #93c5fd;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.identity-essential .icon-svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+}
+
+/* ponytail: 胶囊层 — 必备行之外的可选字段 + 期望标签, flex-wrap 自动换行. */
 .identity-line {
-  margin-top: 14px;
+  margin-top: 8px;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -1473,12 +1519,22 @@ button.identity-pill:hover {
     padding-right: 0;
   }
 
+  .identity-essential,
   .identity-line {
     max-width: calc(100% - var(--mobile-header-aside-width));
-    margin-top: 10px;
+  }
+
+  .identity-essential {
+    margin-top: 8px;
+    column-gap: 12px;
+  }
+
+  .identity-line {
+    margin-top: 6px;
     gap: 6px;
   }
 
+  .no-avatar .identity-essential,
   .no-avatar .identity-line {
     max-width: 100%;
   }
