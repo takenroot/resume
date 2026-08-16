@@ -94,7 +94,7 @@ const HEADER_PRESETS = [
 
 // ponytail: 样式 radio 行 — label + 两/三选, name 带 pref. 前缀 (不匹配 collectFormData 白名单, 物理安全).
 function styleRadioRow(label, pref, opts) {
-  return '<div class="vis-toggles"><span class="vis-hint" style="margin:0">' + label + '</span>' +
+  return '<div class="vis-toggles"><span class="vis-hint">' + label + '</span>' +
     opts.map(function (o) { return '<label class="vis-toggle"><input type="radio" name="pref.' + pref + '" data-vis-pref="' + pref + '" value="' + o[0] + '"' + (cvPrefs[pref] === o[0] ? ' checked' : '') + '>' + o[1] + '</label>'; }).join('') + '</div>';
 }
 
@@ -109,14 +109,14 @@ function buildVisToggles() {
     HEADER_TOGGLES.map(function (t) { return '<label class="vis-toggle"><input type="checkbox" data-vis="' + t[0] + '"' + (isProfileShown(t[0]) ? ' checked' : '') + '>' + t[1] + '</label>'; }).join('') +
     '<label class="vis-toggle"><input type="checkbox" data-vis-avatar' + (cvPrefs.showAvatar !== false ? ' checked' : '') + '>头像</label>' +
     '</div><p class="vis-hint">只控制预览显示, 不影响数据与导出; 空字段本来就不显示</p>' +
-    '<div class="vis-toggles"><span class="vis-hint" style="margin:0">必备行布局</span>' +
+    '<div class="vis-toggles"><span class="vis-hint">必备行布局</span>' +
     '<label class="vis-toggle"><input type="radio" name="essentialLayout" data-vis-layout="flow"' + (cvPrefs.essentialLayout !== 'grid' ? ' checked' : '') + '>自动换行</label>' +
     '<label class="vis-toggle"><input type="radio" name="essentialLayout" data-vis-layout="grid"' + (cvPrefs.essentialLayout === 'grid' ? ' checked' : '') + '>表格对齐</label>' +
     '</div>' +
     styleRadioRow('姓名对齐', 'nameAlign', [['left', '左对齐'], ['center', '居中']]) +
     styleRadioRow('头像形状', 'avatarShape', [['rounded', '圆角'], ['circle', '圆形'], ['square', '直角']]) +
     styleRadioRow('胶囊密度', 'pillDensity', [['compact', '紧凑'], ['loose', '宽松']]) +
-    '<div class="vis-toggles"><span class="vis-hint" style="margin:0">其它</span>' +
+    '<div class="vis-toggles"><span class="vis-hint">其它</span>' +
     '<label class="vis-toggle"><input type="checkbox" data-vis-plain' + (cvPrefs.plainText === true ? ' checked' : '') + '>纯文本 (| 分隔)</label>' +
     '<label class="vis-toggle"><input type="checkbox" data-vis-icons' + (cvPrefs.essentialIcons !== false ? ' checked' : '') + '>必备行图标</label>' +
     '<label class="vis-toggle"><input type="checkbox" data-vis-rule' + (cvPrefs.headerRule === true ? ' checked' : '') + '>头部分隔线</label>' +

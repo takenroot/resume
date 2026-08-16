@@ -78,8 +78,9 @@ function packPillRows(widths, W, gap) {
   return rows.map(function (r) { return r.idxs; });
 }
 
-// ponytail: 渲染后测宽重排 — 两遍布局. W = 必备行内容右缘 (item rect.right 最大值 − 容器左缘),
-// 不是元素宽 (flex 容器尾部有空白). 缩放 (transform scale) 下 rect 是缩放坐标, offsetWidth 是布局坐标,
+// ponytail: 渲染后测宽重排 — 两遍布局. W = 必备行内容宽 (maxRight − minLeft),
+// 不是元素宽 (flex 容器尾部有空白), 也兼容居中 (nameAlign=center 时 minLeft 自动去掉左侧空白).
+// 缩放 (transform scale) 下 rect 是缩放坐标, offsetWidth 是布局坐标,
 // 除以 scale 归一. 量不到 (隐藏/测试桩) 直接跳过.
 // 调用点: renderIdentityLine 末尾 (source 可见时, 移动端) + paginateResume 末尾 (桌面分页克隆).
 function reflowPillRows(el) {
@@ -88,13 +89,15 @@ function reflowPillRows(el) {
   if (el.classList && el.classList.contains && el.classList.contains('plain')) return;
   const hd = el.parentElement;
   const ess = hd && hd.querySelector ? hd.querySelector('.identity-essential') : null;
-  let W = 0;
+  let W = 0, minL = Infinity;
   if (ess && ess.offsetWidth && ess.children.length && ess.getBoundingClientRect) {
     const er = ess.getBoundingClientRect(), sc = er.width / ess.offsetWidth || 1;
     for (let i = 0; i < ess.children.length; i++) {
-      const w = (ess.children[i].getBoundingClientRect().right - er.left) / sc;
-      if (w > W) W = w;
+      const cr = ess.children[i].getBoundingClientRect();
+      if (cr.left < minL) minL = cr.left;
+      if (cr.right > W) W = cr.right;
     }
+    W = (W - minL) / sc;
   }
   if (!W) W = (ess && ess.offsetWidth) || el.offsetWidth;
   if (!W) return;
@@ -131,8 +134,8 @@ function renderIdentityLine(p) {
     else if (it[2] === 'copy') { node = document.createElement('button'); node.type = 'button'; node.dataset.copy = v; node.setAttribute('aria-label', '复制' + v); }
     else node = document.createElement('span');
     node.className = it[2] === 'copy' ? 'identity-pill identity-action' : 'identity-pill';
-    node.innerHTML = plain ? (it[2] === 'copy' ? '<span>' + esc(String(v)) + '</span>' : esc(String(v)))
-                           : '<em>' + it[1] + '</em>' + (it[2] === 'copy' ? '<span>' + esc(String(v)) + '</span>' : esc(String(v)));
+    const val = it[2] === 'copy' ? '<span>' + esc(String(v)) + '</span>' : esc(String(v)); // ponytail: copy 的值包 span, flashCopiedState 需要
+    node.innerHTML = plain ? val : '<em>' + it[1] + '</em>' + val;
     addPill(node);
   });
   const ej = (Array.isArray(p.expectJobs) && p.expectJobs[0]) || {};

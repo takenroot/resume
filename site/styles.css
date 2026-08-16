@@ -966,6 +966,9 @@ button.identity-pill:hover {
   color: var(--text-soft);
   margin: 4px 0 0;
 }
+.vis-toggles .vis-hint {
+  margin: 0; /* ponytail: 开关行内联标签 (必备行布局/姓名对齐等行首 label) 不要段间距 */
+}
 
 /* ponytail: 模块标题右侧 ⚙ 样式配置按钮 + 通用样式弹窗 (遮罩 z-index 低于 toast 2000, 高于编辑器面板 1000) */
 .module-style-btn {
