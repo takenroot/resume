@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- 个人信息 ⚙ 样式弹窗 (`openStyleModal` 通用弹窗, 各模块可复用): 头部字段显隐开关迁入弹窗 + 5 个样式开关 (姓名对齐 / 头像形状圆角-圆形-直角 / 胶囊密度 / 头部分隔线 / 必备行图标显隐) + 必备行布局开关, 全走 CSS 变量不重渲染, 状态存 `cv_prefs` (localStorage) 不进数据/导出.
+- 头部版式预设: 分层胶囊 / 纯文本居中 (无头像, 字段 "|" 分隔, 期望类单独一行). 预设 = 开关组合一键套餐, 派生不存储 — 细节开关改任何一项即脱离预设 (自定义), 零状态同步.
+- 胶囊层装箱排版 (`packPillRows` 纯函数 + `reflowPillRows` 两遍布局): ≥80% 必备行内容宽的长胶囊独占行, 其余长短双指针搭配凑行, 行按填充宽降序 (第一行铺满); W 测必备行内容宽 (maxRight−minLeft, 兼容居中), 缩放下 rect 坐标归一; 桌面端在分页克隆上重测 (source display:none 量不到), 幂等可重复装箱.
+- 自检 `test/header-visibility.mjs` (33 assertions): 必备行/胶囊层渲染 + 显隐开关 + 装箱算法 + 纯文本模式.
+
+### Changed
+
+- 头部改为两层结构: 必备行 (icon+值, 职位/电话/意向城市/经验) + 胶囊层 (籍贯/求职状态/GitHub/微信/邮箱 + 期望职位/薪资/行业标签). 邮箱从必备行挪到胶囊层 (长值不再挤 icon 行), 意向城市从 expectJobs[0].cities 派生. `所在地` 更名 `籍贯`.
+- 头像改一寸照比例 5:7 (25×35mm).
+- 胶囊层内聚外松: 与必备行拉开 14px, 行距独立 `--pill-rgap` (紧凑 4px / 宽松 8px, 列距 `--pill-gap` 供装箱算法读取).
+
+### Fixed
+
+- 修复制委托断链: `.identity-action[data-copy]` 选择器在头部重构后从未匹配, 电话/邮箱复制点击无反应 — 复制节点补 `identity-action` 钩子类, 邮箱值包 `<span>` 供 `flashCopiedState` 闪现「已复制」.
+- 修圆形头像变椭圆: 5:7 盒子上 `border-radius:50%` 是椭圆, 圆形时高度压成宽度 (`--avatar-height = --avatar-width`).
+- 修样式弹窗布局: `.editor-field` 表单规则 (label block / input 100%) 权重压过 `.vis-toggle`, radio 被压成独占行、文字挤到下方 — 开关规则提权重 + 弹窗内容分三组 (版式预设/头部显示/细节样式).
+- 修胶囊装箱两处: 桌面端装箱从没跑过 (renderIdentityLine 在 display:none source 上量不到宽, 挪到 paginateResume 末尾对可见克隆重测); 行序按填充宽降序 (塞不进搭档的长胶囊不抢第一行).
+- 修装箱 W 居中虚宽: 原算法 = 最右 child.right − 容器左缘, nameAlign=center 时把左侧空白算进宽度 — 改测 maxRight − minLeft.
+
+### Added
+
 - `experience[].isIntern` 渲染: item-meta 加「实习」tag (跟 industry/department 同行), mdItem 加 `| 实习` marker.
 - `education[].overseasEdu` 新字段: select 是/否 (存 boolean), 渲染「海外留学」tag, mdItem 加 marker.
 - `profile.firstWorkDate` 新字段: 编辑器 date input (首次参加工作时间, 招聘平台字段), 预览不渲染.

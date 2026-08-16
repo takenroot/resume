@@ -13,6 +13,7 @@
 - **本地存储** — 编辑内容自动保存到浏览器 `localStorage`
 - **数据安全** — 导入/重置前自动备份 + 每 5 分钟快照到 `cv_backup` 槽位，编辑器底部「恢复备份」一键找回；导入前走 schema 校验拦截坏数据
 - **编辑器实时联动** — 任意表单改动触发 50ms debounce 重渲染预览，不需要点保存
+- **头部版式自定义** — 个人信息 ⚙ 弹窗：版式预设（分层胶囊 / 纯文本居中）+ 字段显隐 + 细节开关（姓名对齐/头像形状/胶囊密度/分隔线/图标）；头部两层 = 必备行（icon+值：职位/电话/意向城市/经验）+ 胶囊层（其余可选字段，自动装箱排版：长胶囊独占行、长短搭配凑行）。样式全存 `cv_prefs` (localStorage)，不进简历数据、不影响导出
 - **头像上传** — 上传后自动转为 base64 存入浏览器 localStorage，按姓名绑定；导出 JSON/Markdown 时不含头像，减轻文件体积
 - **缩放控制** — 右下角悬浮工具栏，范围 100%–130%，步进 10%
 - **响应式布局** — 适配桌面端、平板、手机三档断点
@@ -34,7 +35,7 @@ cv/
 │   │   ├── editor.js               # 编辑器 (buildEditorForm / collectFormData)
 │   │   ├── markdown.js             # Markdown 导入/导出
 │   │   ├── pagination.js           # 自动分页布局
-│   │   ├── prefs.js                # 页面偏好 (theme / fontSize / fontFamily)
+│   │   ├── prefs.js                # 页面偏好 (theme / fontSize / fontFamily / 头部样式开关)
 │   │   ├── renderer.js             # 渲染引擎
 │   │   ├── utils.js                # 工具函数
 │   │   └── zoom.js                 # 缩放控制
@@ -110,7 +111,7 @@ python -m http.server 8000
 | `title` | string | text |
 | `experience` | string | text (工作年限如 "5年") |
 | `jobStatus` | string | select 4 选项 (求职状态) |
-| `location` | string | text (所在地) |
+| `location` | string | text (籍贯) |
 | `gender` | string | text (表单保留, 预览不渲染) |
 | `birthDate` | string (YYYY-MM-DD) | date |
 | `phone` / `email` / `github` | string | text/email/url |
@@ -133,7 +134,7 @@ python -m http.server 8000
 - `profile.currentSalary` — 当前薪资 (敏感, 永久隐藏, 只能手写 JSON 才能填)
 - `profile.timeline` — 预留字段, 编辑器可填但预览不渲染
 
-> 注意: `expectJobs[0]` 的薪资/城市、`expectIndustry`、`wechat` 填写后**会**渲染在简历头部 (`header-extra` 标签行), 不是隐藏字段。2026-08 起 `expectSalary` / `expectCities` 独立字段已删除, 头部展示从 `expectJobs[0]` 派生 (项目开发期不做老数据迁移, 老 localStorage 请「重置默认」重填)。
+> 注意: `expectJobs[0]` 的薪资/城市、`expectIndustry`、`wechat` 填写后**会**渲染在简历头部 (意向城市在必备行, 其余在胶囊层), 不是隐藏字段。2026-08 起 `expectSalary` / `expectCities` 独立字段已删除, 头部展示从 `expectJobs[0]` 派生 (项目开发期不做老数据迁移, 老 localStorage 请「重置默认」重填)。
 
 ### 模块类型选择策略
 
