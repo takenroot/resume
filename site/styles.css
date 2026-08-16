@@ -243,6 +243,7 @@ html.js .resume-document[data-js-ready="false"] {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: var(--lines-justify, normal); /* ponytail: prefs.nameAlign=center 时信息行一起居中 */
   column-gap: 14px;
   row-gap: 4px;
   font-size: var(--fs-meta);
@@ -294,11 +295,32 @@ button.identity-item:hover {
   display: none;
 }
 
+/* ponytail: prefs.plainText — 两条信息行纯文本化: 无 icon/无胶囊底色, 相邻字段 "|" 分隔.
+   分隔符用相邻兄弟 ::before, pill-row-break 换行后的行首自然不带 |. */
+.identity-essential.plain .identity-item + .identity-item::before {
+  content: '|';
+  margin-right: 14px; /* 跟容器 column-gap 对齐, | 两侧等距 */
+  color: #cbd5e1;
+}
+
+.identity-line.plain .identity-pill + .identity-pill::before {
+  content: '|';
+  margin-right: var(--pill-gap, 8px);
+  color: #cbd5e1;
+}
+
+.identity-line.plain .identity-pill {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
 /* ponytail: 胶囊层 — 必备行之外的可选字段 + 期望标签, flex-wrap 自动换行. */
 .identity-line {
   margin-top: 8px;
   display: flex;
   flex-wrap: wrap;
+  justify-content: var(--lines-justify, normal);
   gap: var(--pill-gap, 8px); /* ponytail: prefs.pillDensity — 紧凑/宽松 */
   font-size: var(--fs-meta);
   line-height: 1.7;

@@ -33,6 +33,9 @@ function renderIdentityEssential(p) {
   el.replaceChildren();
   // ponytail: 必备行布局开关 — flow 自动换行 (默认) / grid 表格对齐, 存 prefs.essentialLayout.
   el.classList.toggle('layout-grid', typeof cvPrefs === 'object' && cvPrefs && cvPrefs.essentialLayout === 'grid');
+  // ponytail: 纯文本模式 (prefs.plainText) — 无 icon, 值用 "|" 分隔 (分隔符走 CSS ::before).
+  const plain = typeof cvPrefs === 'object' && cvPrefs && cvPrefs.plainText === true;
+  el.classList.toggle('plain', plain);
   const ej = (Array.isArray(p.expectJobs) && p.expectJobs[0]) || {};
   const cities = Array.isArray(ej.cities) && ej.cities.length ? ej.cities.join('/') : '';
   const items = [['title', p.title], ['phone', p.phone, 'copy'], ['cities', cities, null, 'expectJobs'], ['experience', p.experience]];
@@ -44,7 +47,7 @@ function renderIdentityEssential(p) {
     if (it[2] === 'copy') { node = document.createElement('button'); node.type = 'button'; node.dataset.copy = v; node.setAttribute('aria-label', '复制' + v); }
     else node = document.createElement('span');
     node.className = it[2] === 'copy' ? 'identity-item identity-action' : 'identity-item';
-    node.innerHTML = iconSvg(IDENTITY_ICONS[iconKey]);
+    node.innerHTML = plain ? '' : iconSvg(IDENTITY_ICONS[iconKey]);
     node.appendChild(document.createTextNode(v));
     el.appendChild(node);
     count++;
@@ -79,8 +82,8 @@ function packPillRows(widths, W, gap) {
 // 调用点: renderIdentityLine 末尾 (source 可见时, 移动端) + paginateResume 末尾 (桌面分页克隆).
 function reflowPillRows(el) {
   if (!el) return;
-  const pills = Array.prototype.slice.call(el.children);
-  if (pills.length < 2) return;
+  // ponytail: 纯文本模式不装箱 — 期望类的换行符是有意插的, 装箱会把两行混排.
+  if (el.classList && el.classList.contains && el.classList.contains('plain')) return;
   const hd = el.parentElement;
   const ess = hd && hd.querySelector ? hd.querySelector('.identity-essential') : null;
   let W = 0;
@@ -93,6 +96,11 @@ function reflowPillRows(el) {
   }
   if (!W) W = (ess && ess.offsetWidth) || el.offsetWidth;
   if (!W) return;
+  // ponytail: 幂等 — 先清掉上次装箱留下的分隔符, 否则重复装箱 (source 预装箱→paginate 克隆再装箱 /
+  // plain→modern 切换) 会把旧分隔符当胶囊一起打包.
+  if (el.querySelectorAll) Array.prototype.slice.call(el.querySelectorAll('.pill-row-break')).forEach(function (b) { b.parentNode.removeChild(b); });
+  const pills = Array.prototype.slice.call(el.children);
+  if (pills.length < 2) return;
   const gap = parseFloat(getComputedStyle(el).columnGap) || 8;
   const rows = packPillRows(pills.map(function (n) { return n.offsetWidth; }), W, gap);
   rows.forEach(function (row, ri) {
@@ -104,9 +112,12 @@ function reflowPillRows(el) {
 // ponytail: 胶囊层 — 必备行之外的可选字段 (籍贯/求职状态/GitHub/微信/邮箱) + 期望标签 (expectJobs[0] 派生).
 // GitHub 跳转, 邮箱点击复制 (identity-action + span 值, flashCopiedState 需要 span 子节点). 邮箱长值在这层不怕换行.
 // expectJobs 关掉 = 期望职位/薪资全关 (意向城市在必备行, 同一开关). 空字段不渲染.
+// ponytail: 纯文本模式 — 全部不带 em 标签 (用户拍板), 期望类用 pill-row-break 强制换一行, 不装箱 (自然换行).
 function renderIdentityLine(p) {
   const el = document.getElementById('identityLine'); if (!el) return;
   el.replaceChildren();
+  const plain = typeof cvPrefs === 'object' && cvPrefs && cvPrefs.plainText === true;
+  el.classList.toggle('plain', plain);
   let count = 0;
   const addPill = function (node) { el.appendChild(node); count++; };
   const items = [['location', '籍贯'], ['jobStatus', '求职状态'], ['github', 'GitHub', 'link'], ['wechat', '微信'], ['email', '邮箱', 'copy']];
@@ -118,7 +129,8 @@ function renderIdentityLine(p) {
     else if (it[2] === 'copy') { node = document.createElement('button'); node.type = 'button'; node.dataset.copy = v; node.setAttribute('aria-label', '复制' + v); }
     else node = document.createElement('span');
     node.className = it[2] === 'copy' ? 'identity-pill identity-action' : 'identity-pill';
-    node.innerHTML = '<em>' + it[1] + '</em>' + (it[2] === 'copy' ? '<span>' + esc(String(v)) + '</span>' : esc(String(v)));
+    node.innerHTML = plain ? (it[2] === 'copy' ? '<span>' + esc(String(v)) + '</span>' : esc(String(v)))
+                           : '<em>' + it[1] + '</em>' + (it[2] === 'copy' ? '<span>' + esc(String(v)) + '</span>' : esc(String(v)));
     addPill(node);
   });
   const ej = (Array.isArray(p.expectJobs) && p.expectJobs[0]) || {};
@@ -129,14 +141,17 @@ function renderIdentityLine(p) {
     if (sal.low || sal.high) tags.push({ k: '期望薪资', v: (sal.low || '?') + '-' + (sal.high || '?') + 'K' });
   }
   if (isProfileShown('expectIndustry') && p.expectIndustry && String(p.expectIndustry).trim()) tags.push({ k: '期望行业', v: p.expectIndustry });
+  let broke = false;
   tags.forEach(function (t) {
+    // ponytail: 纯文本模式下期望类单独一行 — 首个期望标签前插强制换行符.
+    if (plain && !broke && count > 0) { const br = document.createElement('span'); br.className = 'pill-row-break'; el.appendChild(br); broke = true; }
     const tag = document.createElement('span');
     tag.className = 'identity-pill';
-    tag.innerHTML = '<em>' + esc(t.k) + '</em>' + esc(t.v);
+    tag.innerHTML = plain ? esc(t.v) : '<em>' + esc(t.k) + '</em>' + esc(t.v);
     addPill(tag);
   });
   el.style.display = count ? '' : 'none';
-  reflowPillRows(el);
+  if (!plain) reflowPillRows(el);
 }
 
 function renderCv() {

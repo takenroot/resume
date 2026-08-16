@@ -24,7 +24,7 @@ globalThis.localStorage = { getItem: function () { return null; }, setItem: func
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'site', 'js');
 const src = ['utils.js', 'prefs.js', 'renderer.js'].map(function (f) { return readFileSync(join(root, f), 'utf8'); }).join('\n');
-const api = new Function(src + '; loadPrefs(); return { renderIdentityEssential: renderIdentityEssential, renderIdentityLine: renderIdentityLine, packPillRows: packPillRows, setHidden: function (a) { cvPrefs.profileHidden = a; }, setLayout: function (v) { cvPrefs.essentialLayout = v; }, getPrefs: function () { return cvPrefs; } };')();
+const api = new Function(src + '; loadPrefs(); return { renderIdentityEssential: renderIdentityEssential, renderIdentityLine: renderIdentityLine, packPillRows: packPillRows, setHidden: function (a) { cvPrefs.profileHidden = a; }, setLayout: function (v) { cvPrefs.essentialLayout = v; }, setPlain: function (v) { cvPrefs.plainText = v; }, getPrefs: function () { return cvPrefs; } };')();
 
 function itemText(c) { return c.children.map(function (n) { return n.__text || ''; }).join(''); }
 function essTexts() { return els.identityEssential.children.map(itemText); }
@@ -96,5 +96,22 @@ assert(pack([340, 200, 180, 100, 90], 400) === '[[0],[1,4],[2,3]]', '装箱: 340
 assert(pack([100, 100, 100], 400) === '[[0,2,1]]', '装箱: 全短一行');
 assert(pack([320], 400) === '[[0]]', '装箱: 恰好 0.8W 独占');
 assert(pack([280, 280, 280], 400) === '[[0],[1],[2]]', '装箱: 三个 0.7W 尴尬尺寸各自成行 (已知边缘, 放行)');
+assert(sp.plainText === false, '样式开关默认: 非纯文本模式');
 
-console.log('header-visibility self-check OK (26 assertions)');
+// 10. 纯文本模式 (plainText): 无 icon 无 em 标签, 期望类单独一行 (pill-row-break)
+api.setHidden([]);
+api.setPlain(true);
+api.renderIdentityEssential(FULL);
+assert(els.identityEssential.classList.contains('plain') && els.identityEssential.children[0].innerHTML === '', 'plain: 必备行无 icon 带 plain 类');
+api.renderIdentityLine(FULL);
+const pt = pillTexts();
+assert(els.identityLine.classList.contains('plain'), 'plain: 胶囊层带 plain 类');
+assert(pt[0] === '北京' && pt.join('').indexOf('<em>') < 0, 'plain: 全部不带 em 标签');
+const brIdx = els.identityLine.children.findIndex(function (c) { return c.className === 'pill-row-break'; });
+const afterBr = els.identityLine.children[brIdx + 1];
+assert(brIdx > 0 && (afterBr.textContent || afterBr.innerHTML).indexOf('全栈开发') === 0, 'plain: 期望类前插换行符单独一行');
+api.setPlain(false);
+api.renderIdentityLine(FULL);
+assert(!els.identityLine.classList.contains('plain') && els.identityLine.children.every(function (c) { return c.className !== 'pill-row-break'; }), 'plain 关掉: 无 plain 类无换行符');
+
+console.log('header-visibility self-check OK (32 assertions)');

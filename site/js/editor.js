@@ -85,6 +85,13 @@ function closeStyleModal() { const m = document.getElementById('styleModal'); if
 
 const HEADER_TOGGLES = [['title', '岗位'], ['experience', '工作经验'], ['phone', '电话'], ['email', '邮箱'], ['location', '籍贯'], ['jobStatus', '求职状态'], ['github', 'GitHub'], ['wechat', '微信'], ['expectJobs', '期望职位/薪资/城市'], ['expectIndustry', '期望行业']];
 
+// ponytail: 版式预设 — 只是 ⚙ 开关组合的一键套餐, 派生不存储: 当前开关值全匹配才点亮,
+// 改任何细节后两个预设都不亮 (= 自定义), 零状态同步问题.
+const HEADER_PRESETS = [
+  ['modern', '分层胶囊', { showAvatar: true, nameAlign: 'left', essentialIcons: true, plainText: false }],
+  ['plain', '纯文本居中', { showAvatar: false, nameAlign: 'center', essentialIcons: false, plainText: true }]
+];
+
 // ponytail: 样式 radio 行 — label + 两/三选, name 带 pref. 前缀 (不匹配 collectFormData 白名单, 物理安全).
 function styleRadioRow(label, pref, opts) {
   return '<div class="vis-toggles"><span class="vis-hint" style="margin:0">' + label + '</span>' +
@@ -92,7 +99,13 @@ function styleRadioRow(label, pref, opts) {
 }
 
 function buildVisToggles() {
-  return '<div class="editor-field"><label>头部显示</label><div class="vis-toggles">' +
+  return '<div class="editor-field"><label>版式预设</label><div class="vis-toggles">' +
+    HEADER_PRESETS.map(function (pr) {
+      const on = Object.keys(pr[2]).every(function (k) { return cvPrefs[k] === pr[2][k]; });
+      return '<label class="vis-toggle"><input type="radio" name="headerPreset" data-vis-preset="' + pr[0] + '"' + (on ? ' checked' : '') + '>' + pr[1] + '</label>';
+    }).join('') +
+    '</div><p class="vis-hint">预设只是初始值, 下面的细节开关都可再调</p></div>' +
+    '<div class="editor-field"><label>头部显示</label><div class="vis-toggles">' +
     HEADER_TOGGLES.map(function (t) { return '<label class="vis-toggle"><input type="checkbox" data-vis="' + t[0] + '"' + (isProfileShown(t[0]) ? ' checked' : '') + '>' + t[1] + '</label>'; }).join('') +
     '<label class="vis-toggle"><input type="checkbox" data-vis-avatar' + (cvPrefs.showAvatar !== false ? ' checked' : '') + '>头像</label>' +
     '</div><p class="vis-hint">只控制预览显示, 不影响数据与导出; 空字段本来就不显示</p>' +
@@ -104,6 +117,7 @@ function buildVisToggles() {
     styleRadioRow('头像形状', 'avatarShape', [['rounded', '圆角'], ['circle', '圆形'], ['square', '直角']]) +
     styleRadioRow('胶囊密度', 'pillDensity', [['compact', '紧凑'], ['loose', '宽松']]) +
     '<div class="vis-toggles"><span class="vis-hint" style="margin:0">其它</span>' +
+    '<label class="vis-toggle"><input type="checkbox" data-vis-plain' + (cvPrefs.plainText === true ? ' checked' : '') + '>纯文本 (| 分隔)</label>' +
     '<label class="vis-toggle"><input type="checkbox" data-vis-icons' + (cvPrefs.essentialIcons !== false ? ' checked' : '') + '>必备行图标</label>' +
     '<label class="vis-toggle"><input type="checkbox" data-vis-rule' + (cvPrefs.headerRule === true ? ' checked' : '') + '>头部分隔线</label>' +
     '</div></div>';
@@ -311,6 +325,18 @@ function bindEditorEvents() {
     }
     if (ev.target.dataset && ev.target.dataset.visLayout) {
       cvPrefs.essentialLayout = ev.target.dataset.visLayout; savePrefs(); renderCv(); syncResumeLayout();
+      return;
+    }
+    // ponytail: 版式预设 — 批量赋 prefs 后重渲染弹窗 body, 让所有开关状态跟预设同步.
+    if (ev.target.dataset && ev.target.dataset.visPreset) {
+      const pr = HEADER_PRESETS.find(function (x) { return x[0] === ev.target.dataset.visPreset; });
+      if (!pr) return;
+      Object.assign(cvPrefs, pr[2]); savePrefs(); applyPrefs(); renderCv(); syncResumeLayout();
+      const mb = document.getElementById('styleModalBody'); if (mb) mb.innerHTML = buildVisToggles();
+      return;
+    }
+    if (ev.target.hasAttribute && ev.target.hasAttribute('data-vis-plain')) {
+      cvPrefs.plainText = ev.target.checked; savePrefs(); renderCv(); syncResumeLayout();
       return;
     }
     // ponytail: 头部样式 radio — 纯 CSS 变量, applyPrefs 即生效, 不重渲染.
