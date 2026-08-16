@@ -12,7 +12,10 @@ function savePrefs() { localStorage.setItem(PREFS_KEY, JSON.stringify(cvPrefs));
 function applyPrefs() { const r = document.documentElement, th = THEMES[cvPrefs.theme] || THEMES[FIRST_THEME], fs = FONT_SIZES[cvPrefs.fontSize] || FONT_SIZES.medium, ff = FONT_FAMILIES[cvPrefs.fontFamily] || FONT_FAMILIES.default; Object.entries(th.vars).forEach(function (kv) { r.style.setProperty(kv[0], kv[1]); }); Object.entries(fs.vars).forEach(function (kv) { r.style.setProperty(kv[0], kv[1]); }); r.style.setProperty('--font-family', ff.value);
   // ponytail: 头部样式开关 — 全走 CSS 变量/类, 不重渲染 DOM. 值在 loadPrefs 已归一.
   r.style.setProperty('--name-align', cvPrefs.nameAlign);
-  r.style.setProperty('--avatar-radius', { rounded: '4px', circle: '50%', square: '0' }[cvPrefs.avatarShape]);
+  const circle = cvPrefs.avatarShape === 'circle';
+  r.style.setProperty('--avatar-radius', circle ? '50%' : cvPrefs.avatarShape === 'square' ? '0' : '4px');
+  // ponytail: 正圆必须正方形盒子 — 头像默认 5:7 (一寸照), 50% radius 在非方形上是椭圆. 圆形时高度压成宽度.
+  if (circle) r.style.setProperty('--avatar-height', 'var(--avatar-width)'); else r.style.removeProperty('--avatar-height');
   const loose = cvPrefs.pillDensity === 'loose';
   r.style.setProperty('--pill-gap', loose ? '12px' : '8px');
   r.style.setProperty('--pill-pad', loose ? '4px 14px' : '2px 10px');
