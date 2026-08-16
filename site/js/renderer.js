@@ -49,14 +49,14 @@ function renderIdentityEssential(p) {
   el.style.display = count ? '' : 'none';
 }
 
-// ponytail: 胶囊层 — 必备行之外的可选字段 (现居地/求职状态/GitHub/微信) + 期望标签 (expectJobs[0] 派生).
+// ponytail: 胶囊层 — 必备行之外的可选字段 (籍贯/求职状态/GitHub/微信) + 期望标签 (expectJobs[0] 派生).
 // 电话/邮箱/GitHub 交互保留. expectJobs 关掉 = 期望职位/薪资全关 (意向城市在必备行, 同一开关). 空字段不渲染.
 function renderIdentityLine(p) {
   const el = document.getElementById('identityLine'); if (!el) return;
   el.replaceChildren();
   let count = 0;
   const addPill = function (node) { el.appendChild(node); count++; };
-  const items = [['location', '现居地'], ['jobStatus', '求职状态'], ['github', 'GitHub', 'link'], ['wechat', '微信']];
+  const items = [['location', '籍贯'], ['jobStatus', '求职状态'], ['github', 'GitHub', 'link'], ['wechat', '微信']];
   items.forEach(function (it) {
     const k = it[0], v = p[k];
     if (!v || !String(v).trim() || !isProfileShown(k)) return;

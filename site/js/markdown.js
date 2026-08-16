@@ -1,7 +1,7 @@
 /* ===========================================================
    CV 简历网页 — Markdown 导入解析 / 导出构建
    =========================================================== */
-const FIELD_ALIAS = { '姓名': 'name', '岗位': 'title', '性别': 'gender', '年龄': 'age', '电话': 'phone', '邮箱': 'email', '头像': 'avatar', '头像url': 'avatar', '求职状态': 'jobStatus', '所在地': 'location', '学校': 'school', '专业': 'major', '时间': 'period', '主修课程': 'courses', '公司': 'company', '职位': 'position', '简介': 'summary', '工作描述': 'summary', '技能名': 'name', '详情': 'detail', '项目名': 'name', '项目描述': 'summary', '技术栈': '__tags__', '亮点': '__highlights__', '标题': 'heading', '标签': 'tag' };
+const FIELD_ALIAS = { '姓名': 'name', '岗位': 'title', '性别': 'gender', '年龄': 'age', '电话': 'phone', '邮箱': 'email', '头像': 'avatar', '头像url': 'avatar', '求职状态': 'jobStatus', '所在地': 'location', '籍贯': 'location', '学校': 'school', '专业': 'major', '时间': 'period', '主修课程': 'courses', '公司': 'company', '职位': 'position', '简介': 'summary', '工作描述': 'summary', '技能名': 'name', '详情': 'detail', '项目名': 'name', '项目描述': 'summary', '技术栈': '__tags__', '亮点': '__highlights__', '标题': 'heading', '标签': 'tag' };
 
 function parseMarkdown(md) {
   const d = { profile: {}, sections: [] }; md = md.replace(/^### /gm, '## ');
@@ -22,7 +22,7 @@ function parsePipeItems(ct, tp, hd, d) { const its = []; const lns = ct.split('\
 
 function buildMarkdown(d) {
   const lns = []; const p = d.profile || {};
-  lns.push('## 个人信息', ''); if (p.name) lns.push('- **姓名**：' + p.name); if (p.title) lns.push('- **岗位**：' + p.title); if (p.experience) lns.push('- **工作经验**：' + p.experience); if (p.location) lns.push('- **所在地**：' + p.location); if (p.jobStatus) lns.push('- **求职状态**：' + p.jobStatus); if (p.gender || p.birthDate) { const age = p.birthDate ? computeAge(p.birthDate) : ''; lns.push('- **基本信息**：' + (p.gender || '') + (p.gender && age ? ' / ' : '') + age); } if (p.phone) lns.push('- **电话**：' + p.phone); if (p.email) lns.push('- **邮箱**：' + p.email); if (p.github) lns.push('- **GitHub**：' + p.github);
+  lns.push('## 个人信息', ''); if (p.name) lns.push('- **姓名**：' + p.name); if (p.title) lns.push('- **岗位**：' + p.title); if (p.experience) lns.push('- **工作经验**：' + p.experience); if (p.location) lns.push('- **籍贯**：' + p.location); if (p.jobStatus) lns.push('- **求职状态**：' + p.jobStatus); if (p.gender || p.birthDate) { const age = p.birthDate ? computeAge(p.birthDate) : ''; lns.push('- **基本信息**：' + (p.gender || '') + (p.gender && age ? ' / ' : '') + age); } if (p.phone) lns.push('- **电话**：' + p.phone); if (p.email) lns.push('- **邮箱**：' + p.email); if (p.github) lns.push('- **GitHub**：' + p.github);
   (d.sections || []).forEach(function (s) { const cfg = SECTION_CONFIG[s.type]; if (!cfg) return; lns.push('', '## ' + (s.title || cfg.label || ''), ''); if (cfg.mdPrefix) lns.push(cfg.mdPrefix); if (cfg.contentField) { lns.push(cfg.mdBlock(cfg.contentField === 'items' ? s.items : s.content)); } else { (s.items || []).forEach(function (i) { lns.push(cfg.mdItem(i)); lns.push('', '*   *   *', ''); }); } });
   return lns.join('\n');
 }

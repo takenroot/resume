@@ -73,7 +73,7 @@ function buildEditorPrefs() {
 
 // ponytail: 头部显示开关 — 可切的是「头部会渲染的字段」全集 (含 expectJobs 派生块和头像).
 // 状态存 prefs.profileHidden (视图层), 不进 profile 数据, 不影响导出/平台填充.
-const HEADER_TOGGLES = [['title', '岗位'], ['experience', '工作经验'], ['phone', '电话'], ['email', '邮箱'], ['location', '所在地'], ['jobStatus', '求职状态'], ['github', 'GitHub'], ['wechat', '微信'], ['expectJobs', '期望职位/薪资/城市'], ['expectIndustry', '期望行业']];
+const HEADER_TOGGLES = [['title', '岗位'], ['experience', '工作经验'], ['phone', '电话'], ['email', '邮箱'], ['location', '籍贯'], ['jobStatus', '求职状态'], ['github', 'GitHub'], ['wechat', '微信'], ['expectJobs', '期望职位/薪资/城市'], ['expectIndustry', '期望行业']];
 
 function buildVisToggles() {
   return '<div class="editor-field"><label>头部显示</label><div class="vis-toggles">' +

@@ -60,7 +60,7 @@ const PROFILE_FIELDS = [
   { n: 'name', l: '姓名' }, { n: 'title', l: '岗位' }, { n: 'experience', l: '工作经验' },
   { n: 'firstWorkDate', l: '首次参加工作时间', t: 'date' },
   { n: 'jobStatus', l: '求职状态', t: 'select', options: ['随时到岗', '在职-看机会', '在职-暂不考虑', '暂不找工作'] },
-  { n: 'location', l: '所在地' }, { n: 'gender', l: '性别' }, { n: 'birthDate', l: '出生日期', t: 'date' },
+  { n: 'location', l: '籍贯' }, { n: 'gender', l: '性别' }, { n: 'birthDate', l: '出生日期', t: 'date' },
   { n: 'phone', l: '电话' }, { n: 'email', l: '邮箱' }, { n: 'github', l: 'GitHub' }, { n: 'wechat', l: '微信号' },
   { n: 'expectIndustry', l: '期望行业' }, { n: 'timeline', l: '顶部时间线 (预留, 预览不渲染)' }
 ];

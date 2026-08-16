@@ -49,12 +49,12 @@ api.setHidden(['title', 'expectJobs']);
 api.renderIdentityEssential(FULL);
 assert(essTexts().join('|') === '138|a@b.com|5年', 'title 隐藏 + 意向城市随 expectJobs 关');
 
-// 4. 胶囊层: 现居地/求职状态/github/微信 + 期望职位/薪资/行业 (期望城市已上必备行, 不重复)
+// 4. 胶囊层: 籍贯/求职状态/github/微信 + 期望职位/薪资/行业 (期望城市已上必备行, 不重复)
 api.setHidden([]);
 api.renderIdentityLine(FULL);
 const t = pillTexts();
 assert(t.length === 7, '7 个胶囊, 实际 ' + t.length);
-assert(t[0].indexOf('<em>现居地</em>') === 0 && t[0].indexOf('北京') >= 0, '现居地带标题');
+assert(t[0].indexOf('<em>籍贯</em>') === 0 && t[0].indexOf('北京') >= 0, '籍贯带标题');
 assert(t[1].indexOf('<em>求职状态</em>') === 0 && t[1].indexOf('随时到岗') >= 0, '求职状态带标题');
 assert(t[3].indexOf('<em>微信</em>') === 0 && t[3].indexOf('wx1') >= 0, '微信带标题');
 assert(els.identityLine.children[2].href === 'https://github.com/x', 'github 补 https://');

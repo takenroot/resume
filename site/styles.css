@@ -234,13 +234,12 @@ html.js .resume-document[data-js-ready="false"] {
   color: #000000;
 }
 
-/* ponytail: 必备行 — icon + 值, 浓缩一行 (职位/电话/邮箱/意向城市/经验).
-   电话/邮箱是 <button> 点击复制. icon 14px, 字段间 gap 14px. */
+/* ponytail: 必备行 — icon + 值, grid 表格对齐 (列宽一致, 多行时列对列).
+   电话/邮箱是 <button> 点击复制. icon 14px. */
 .identity-essential {
   margin-top: 12px;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   column-gap: 14px;
   row-gap: 4px;
   font-size: var(--fs-meta);
