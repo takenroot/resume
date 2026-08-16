@@ -328,11 +328,12 @@ button.identity-item:hover {
 
 /* ponytail: 胶囊层 — 必备行之外的可选字段 + 期望标签, flex-wrap 自动换行. */
 .identity-line {
-  margin-top: 8px;
+  margin-top: 14px; /* ponytail: 内聚外松 — 与必备行拉开, 内部行距收紧 (--pill-rgap) */
   display: flex;
   flex-wrap: wrap;
   justify-content: var(--lines-justify, normal);
-  gap: var(--pill-gap, 8px); /* ponytail: prefs.pillDensity — 紧凑/宽松 */
+  column-gap: var(--pill-gap, 8px); /* ponytail: prefs.pillDensity — 紧凑/宽松, 装箱算法读 columnGap */
+  row-gap: var(--pill-rgap, 4px);
   font-size: var(--fs-meta);
   line-height: 1.7;
 }

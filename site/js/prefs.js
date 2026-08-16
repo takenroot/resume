@@ -19,6 +19,7 @@ function applyPrefs() { const r = document.documentElement, th = THEMES[cvPrefs.
   if (circle) r.style.setProperty('--avatar-height', 'var(--avatar-width)'); else r.style.removeProperty('--avatar-height');
   const loose = cvPrefs.pillDensity === 'loose';
   r.style.setProperty('--pill-gap', loose ? '12px' : '8px');
+  r.style.setProperty('--pill-rgap', loose ? '8px' : '4px');
   r.style.setProperty('--pill-pad', loose ? '4px 14px' : '2px 10px');
   r.style.setProperty('--header-rule', cvPrefs.headerRule ? '1px solid var(--line-soft)' : '0');
   document.body.classList.toggle('no-icons', cvPrefs.essentialIcons === false); }
