@@ -234,37 +234,49 @@ html.js .resume-document[data-js-ready="false"] {
   color: #000000;
 }
 
-/* ponytail: H2 头部第 2 层 — 联系信息一行, · 分隔 (分隔符是 JS 插入的文本节点), 无 icon.
-   电话/邮箱是 <button class="identity-action"> 点击复制, GitHub 是 <a> 跳转, 其余纯文本. */
+/* ponytail: 头部信息层 — 全部字段统一胶囊, flex-wrap 自动换行.
+   电话/邮箱是 <button> 点击复制, GitHub 是 <a> 跳转, 期望标签带 <em> 标签名. */
 .identity-line {
-  margin-top: 6px;
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   font-size: var(--fs-meta);
   line-height: 1.7;
-  color: var(--text-soft);
-  word-break: break-all;
 }
 
-.identity-action {
+.identity-pill {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 0;
+  padding: 2px 10px;
   border: 0;
-  background: transparent;
-  color: inherit;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: #475569;
   font: inherit;
   text-decoration: none;
+  cursor: default;
+}
+
+button.identity-pill {
   cursor: pointer;
 }
 
-.identity-action:hover {
+a.identity-pill:hover,
+button.identity-pill:hover {
   color: #1d4ed8;
 }
 
-.identity-action:focus-visible {
+.identity-pill:focus-visible {
   outline: 2px solid #93c5fd;
-  outline-offset: 2px;
-  border-radius: 4px;
+  outline-offset: 1px;
+}
+
+.identity-pill em {
+  font-style: normal;
+  font-weight: 600;
+  color: #334155;
+  margin-right: 4px;
 }
 
 /* ========== 头像 ========== */
@@ -834,31 +846,6 @@ html.js .resume-document[data-js-ready="false"] {
 
 /* 求职状态 badge: 已废弃, 现用纯文字 (跟联系行其他项一致), 不需要特殊样式 */
 /* 删了原 .profile-status 和 .profile-status:empty 规则, 用户要求"直接上文字即可, 不要用样式" */
-
-/* 头部姓名下方横条 (岗位/工作经验). 由 renderHeaderRow() 在 renderer.js 里动态生成.
-   非空字段之间插 " | " (最后一个非空字段后面不插), 空字段跳过. 详见 renderer.js */
-
-/* 简历预览上 .hdr-item 是单个字段, 行内展示 */
-.header-row .hdr-item {
-  display: inline;
-}
-
-/* ponytail: 头部第三行期望标签 — 与联系行同款纯文本 · 分隔, 不用胶囊, 保持头部三层样式一致.
-   标签名 (期望职位 等) 用 <em> 加粗区分. */
-.header-extra {
-  display: block;
-  margin-top: 2px;
-  font-size: var(--fs-meta);
-  line-height: 1.7;
-  color: var(--text-soft);
-}
-.header-extra:empty {
-  display: none;
-}
-.header-extra-tag em {
-  font-style: normal;
-  font-weight: 600;
-}
 
 /* ponytail: 编辑器「头部显示」开关组 — checkbox 横排小字, 控制 prefs.profileHidden */
 .vis-toggles {
@@ -1488,15 +1475,12 @@ html.js .resume-document[data-js-ready="false"] {
 
   .identity-line {
     max-width: calc(100% - var(--mobile-header-aside-width));
-    margin-top: 6px;
+    margin-top: 10px;
+    gap: 6px;
   }
 
   .no-avatar .identity-line {
     max-width: 100%;
-  }
-
-  .identity-action {
-    gap: 4px;
   }
 
   .section-heading::before {

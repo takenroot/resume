@@ -22,11 +22,9 @@
           <header class="resume-header">
             <div>
               <h1 data-render="profile.name">姓名</h1>
-              <span class="header-row" id="headerRow"></span>
-              <!-- ponytail: H2 三层收束头部 (template/01-single-column.md): 姓名+岗位 / 联系行(· 分隔, 无 icon) / 期望标签行.
-                   联系行由 renderer.js renderIdentityLine 动态生成, 字段显隐走 prefs.profileHidden. -->
+              <!-- ponytail: 头部信息层 — 全部字段统一胶囊, 一层排完 (岗位/经验/联系方式/期望),
+                   renderer.js renderIdentityLine 动态生成, 字段显隐走 prefs.profileHidden. -->
               <div class="identity-line" id="identityLine"></div>
-              <div class="header-extra" id="headerExtra"></div>
             </div>
             <div class="resume-avatar" data-render="profile.avatar" style="--avatar-image: url('');" aria-hidden="true"></div>
           </header>
