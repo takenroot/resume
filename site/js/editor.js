@@ -3,7 +3,7 @@
    =========================================================== */
 function buildEditorForm() {
   if (!cvData) return; const ec = document.getElementById('editorContent'); if (!ec) return;
-  let hh = buildEditorPrefs() + '<div class="editor-section"><h3>个人信息</h3>' + buildProfileFields(cvData.profile) + '</div>';
+  let hh = buildEditorPrefs() + '<div class="editor-section"><h3>个人信息 <button type="button" class="module-style-btn" data-style-modal="profile" aria-label="个人信息样式配置" title="样式配置">⚙</button></h3>' + buildProfileFields(cvData.profile) + '</div>';
   (cvData.sections || []).forEach(function (sec, idx) { hh += buildEditorSectionForm(sec, idx); });
   hh += '<div class="editor-add-section"><button type="button" class="editor-add-btn" id="addSectionBtn">+ 添加模块</button><div class="add-section-menu" id="addSectionMenu" hidden>' + Object.keys(SECTION_CONFIG).map(function (t) { return '<button type="button" class="dropdown-item" data-add-type="' + t + '">' + (SECTION_CONFIG[t] ? SECTION_CONFIG[t].label : t) + '</button>'; }).join('') + '</div></div>';
   ec.innerHTML = hh;
@@ -73,6 +73,16 @@ function buildEditorPrefs() {
 
 // ponytail: 头部显示开关 — 可切的是「头部会渲染的字段」全集 (含 expectJobs 派生块和头像).
 // 状态存 prefs.profileHidden (视图层), 不进 profile 数据, 不影响导出/平台填充.
+// ponytail: 通用样式配置弹窗 — open 时现取 cvPrefs 渲染 body (checkbox 状态总是最新),
+// 里面的开关仍走 document 级 change 委托 (data-vis / data-vis-avatar / data-vis-layout), 挪位置不影响逻辑.
+function openStyleModal(title, bodyHtml) {
+  const m = document.getElementById('styleModal'); if (!m) return;
+  document.getElementById('styleModalTitle').textContent = title;
+  document.getElementById('styleModalBody').innerHTML = bodyHtml;
+  m.hidden = false;
+}
+function closeStyleModal() { const m = document.getElementById('styleModal'); if (m) m.hidden = true; }
+
 const HEADER_TOGGLES = [['title', '岗位'], ['experience', '工作经验'], ['phone', '电话'], ['email', '邮箱'], ['location', '籍贯'], ['jobStatus', '求职状态'], ['github', 'GitHub'], ['wechat', '微信'], ['expectJobs', '期望职位/薪资/城市'], ['expectIndustry', '期望行业']];
 
 function buildVisToggles() {
@@ -92,7 +102,8 @@ function buildProfileFields(profile) {
   const localAvatar = av ? av : loadAvatar(name);
   const hasLocalAvatar = !!loadAvatar(name);
   // ponytail: 隐藏字段 (currentSalary 等) 不在 PROFILE_FIELDS 里出现, 用户手写 JSON 才能填. cv-autofill 引擎读 schema.json 知道存在.
-  let hh = buildVisToggles();
+  // ponytail: 头部显示开关组已挪进 ⚙ 样式弹窗 (openStyleModal + buildVisToggles), 编辑区只留数据字段.
+  let hh = '';
   hh += '<div class="editor-field editor-field-avatar"><label>头像</label><div class="avatar-upload"><div class="avatar-preview" id="avatarPreview" style="' + (localAvatar ? "background-image: url('" + esc(localAvatar) + "')" : '') + '"></div><div class="avatar-upload-inputs"><input type="file" id="avatarFileInput" accept="image/*">' + (hasLocalAvatar ? '<button type="button" class="editor-btn" id="clearAvatarBtn" style="font-size:12px;padding:4px 8px">清除头像</button>' : '') + '<input type="text" name="profile.avatar" value="' + esc(av) + '" placeholder="留空则使用浏览器本地头像"></div><p style="font-size:11px;color:var(--text-soft);margin:4px 0 0">选择图片后自动转为 base64 存入浏览器本地，导出 JSON/Markdown 时不含头像</p></div></div>';
   hh += PROFILE_FIELDS.filter(function (f) { return !f.custom; }).map(function (f) { return '<div class="editor-field"><label>' + f.l + '</label>' + renderProfileFieldInput(f, profile) + '</div>'; }).join('');
   // ponytail: expectJobs 单条目 (猎聘/智联期望职位), schema 是单元素数组 [{title, jobType, salary:{low,high}, cities[]}], 编辑器拍平.
@@ -264,7 +275,12 @@ function bindEditorEvents() {
     if (ev.target.closest('#addSectionBtn')) return;
     if (ev.target.closest('[data-add-type]')) return;
     if (ev.target.closest('[data-dropdown]')) { ev.stopPropagation(); const dd = ev.target.closest('[data-dropdown]'); const p = dd.closest('.dropdown'); const wo = p && p.classList.contains('open'); closeAllDropdowns(); if (p && !wo) p.classList.add('open'); return; }
+    const smb = ev.target.closest('[data-style-modal]'); if (smb) { openStyleModal('个人信息样式', buildVisToggles()); return; }
+    if (ev.target.closest('[data-modal-close]')) { closeStyleModal(); return; }
     closeAllDropdowns();
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.key === 'Escape') closeStyleModal();
   });
   document.addEventListener('change', function (ev) {
     // ponytail: 头部显示开关 — checkbox 无 name, collectFormData 的白名单 ([name^=...]) 物理碰不到它.

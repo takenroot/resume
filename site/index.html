@@ -15,6 +15,18 @@
   </noscript>
   <button type="button" class="menu-button" id="menuBtn" aria-label="打开编辑菜单" title="打开编辑菜单">☰</button>
   <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ponytail: 通用样式配置弹窗 — 各模块 ⚙ 打开, body 由 openStyleModal 动态注入. -->
+  <div class="style-modal" id="styleModal" hidden>
+    <div class="style-modal-overlay" data-modal-close></div>
+    <div class="style-modal-panel" role="dialog" aria-modal="true" aria-labelledby="styleModalTitle">
+      <div class="style-modal-head">
+        <h3 id="styleModalTitle"></h3>
+        <button type="button" class="style-modal-close" data-modal-close aria-label="关闭">×</button>
+      </div>
+      <div class="style-modal-body" id="styleModalBody"></div>
+    </div>
+  </div>
   <div class="page-shell">
     <div class="resume-stage">
       <main class="resume-document" id="resumeDocument" data-js-ready="false">
