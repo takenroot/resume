@@ -52,6 +52,43 @@ function renderIdentityEssential(p) {
   el.style.display = count ? '' : 'none';
 }
 
+// ponytail: 胶囊行均衡装箱 — 纯函数, 可单测. 视觉优先于语义顺序 (用户已确认): 按宽度降序 FFD 装箱.
+// 规则: ≥0.8W 独占行; 其余塞进第一个还装得下的行 (含 gap); 都装不下开新行.
+// 已知边缘: 全是 ~0.7W 的尴尬尺寸时会出现 <80% 的中间行, 放行不 DP.
+function packPillRows(widths, W, gap) {
+  const order = widths.map(function (w, i) { return [w, i]; }).sort(function (a, b) { return b[0] - a[0]; });
+  const rows = []; // { idxs, w, solo }
+  order.forEach(function (wi) {
+    const w = wi[0], i = wi[1];
+    if (w >= 0.8 * W) { rows.push({ idxs: [i], w: w, solo: true }); return; }
+    for (let r = 0; r < rows.length; r++) {
+      const row = rows[r];
+      if (row.solo) continue;
+      if (row.w + gap + w <= W) { row.idxs.push(i); row.w += gap + w; return; }
+    }
+    rows.push({ idxs: [i], w: w, solo: false });
+  });
+  return rows.map(function (r) { return r.idxs; });
+}
+
+// ponytail: 渲染后测宽重排 — 两遍布局; W 取同 header 里必备行宽 (分页克隆里也有), 量不到 (隐藏/测试桩) 直接跳过.
+// 调用点: renderIdentityLine 末尾 (source 可见时, 移动端) + paginateResume 末尾 (桌面分页克隆).
+function reflowPillRows(el) {
+  if (!el) return;
+  const pills = Array.prototype.slice.call(el.children);
+  if (pills.length < 2) return;
+  const hd = el.parentElement;
+  const ess = hd && hd.querySelector ? hd.querySelector('.identity-essential') : null;
+  const W = (ess && ess.offsetWidth) || el.offsetWidth;
+  if (!W) return;
+  const gap = parseFloat(getComputedStyle(el).columnGap) || 8;
+  const rows = packPillRows(pills.map(function (n) { return n.offsetWidth; }), W, gap);
+  rows.forEach(function (row, ri) {
+    if (ri > 0) { const br = document.createElement('span'); br.className = 'pill-row-break'; el.appendChild(br); }
+    row.forEach(function (pi) { el.appendChild(pills[pi]); }); // appendChild 已有节点 = 移动, DOM 顺序即行顺序
+  });
+}
+
 // ponytail: 胶囊层 — 必备行之外的可选字段 (籍贯/求职状态/GitHub/微信/邮箱) + 期望标签 (expectJobs[0] 派生).
 // GitHub 跳转, 邮箱点击复制 (identity-action + span 值, flashCopiedState 需要 span 子节点). 邮箱长值在这层不怕换行.
 // expectJobs 关掉 = 期望职位/薪资全关 (意向城市在必备行, 同一开关). 空字段不渲染.
@@ -87,6 +124,7 @@ function renderIdentityLine(p) {
     addPill(tag);
   });
   el.style.display = count ? '' : 'none';
+  reflowPillRows(el);
 }
 
 function renderCv() {

@@ -338,6 +338,12 @@ button.identity-pill:hover {
   margin-right: 4px;
 }
 
+/* ponytail: 胶囊装箱 (reflowPillRows) 的行间分隔符 — flex-basis:100% 强制换行 */
+.pill-row-break {
+  flex-basis: 100%;
+  height: 0;
+}
+
 /* ========== 头像 ========== */
 
 .resume-avatar {

@@ -24,7 +24,7 @@ globalThis.localStorage = { getItem: function () { return null; }, setItem: func
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'site', 'js');
 const src = ['utils.js', 'prefs.js', 'renderer.js'].map(function (f) { return readFileSync(join(root, f), 'utf8'); }).join('\n');
-const api = new Function(src + '; loadPrefs(); return { renderIdentityEssential: renderIdentityEssential, renderIdentityLine: renderIdentityLine, setHidden: function (a) { cvPrefs.profileHidden = a; }, setLayout: function (v) { cvPrefs.essentialLayout = v; }, getPrefs: function () { return cvPrefs; } };')();
+const api = new Function(src + '; loadPrefs(); return { renderIdentityEssential: renderIdentityEssential, renderIdentityLine: renderIdentityLine, packPillRows: packPillRows, setHidden: function (a) { cvPrefs.profileHidden = a; }, setLayout: function (v) { cvPrefs.essentialLayout = v; }, getPrefs: function () { return cvPrefs; } };')();
 
 function itemText(c) { return c.children.map(function (n) { return n.__text || ''; }).join(''); }
 function essTexts() { return els.identityEssential.children.map(itemText); }
@@ -90,4 +90,11 @@ const sp = api.getPrefs();
 assert(sp.nameAlign === 'left' && sp.avatarShape === 'rounded' && sp.pillDensity === 'compact', '样式开关默认: 左对齐/圆角/紧凑');
 assert(sp.headerRule === false && sp.essentialIcons === true, '样式开关默认: 无分隔线/有图标');
 
-console.log('header-visibility self-check OK (22 assertions)');
+// 9. 胶囊装箱 (packPillRows): ≥0.8W 独占, 其余降序 FFD, 栈底豁免
+const pack = function (ws, W) { return JSON.stringify(api.packPillRows(ws, W, 8)); };
+assert(pack([340, 200, 180, 100, 90], 400) === '[[0],[1,2],[3,4]]', '装箱: 340 独占, 200+180 凑行 (97%), 100+90 栈底');
+assert(pack([100, 100, 100], 400) === '[[0,1,2]]', '装箱: 全短一行');
+assert(pack([320], 400) === '[[0]]', '装箱: 恰好 0.8W 独占');
+assert(pack([280, 280, 280], 400) === '[[0],[1],[2]]', '装箱: 三个 0.7W 尴尬尺寸各自成行 (已知边缘, 放行)');
+
+console.log('header-visibility self-check OK (26 assertions)');
