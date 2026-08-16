@@ -234,18 +234,26 @@ html.js .resume-document[data-js-ready="false"] {
   color: #000000;
 }
 
-/* ponytail: 必备行 — icon + 值, grid 表格对齐 (列宽一致, 多行时列对列).
+/* ponytail: 必备行 — icon + 值, 默认 flex 自动换行 (能挤一行就一行).
+   prefs.essentialLayout = 'grid' 时加 .layout-grid: 表格对齐 (列宽一致, 多行列对列).
    电话/邮箱是 <button> 点击复制. icon 14px. */
 .identity-essential {
   margin-top: 12px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   column-gap: 14px;
   row-gap: 4px;
   font-size: var(--fs-meta);
   line-height: 1.7;
   color: var(--text-soft);
   white-space: nowrap;
+}
+
+.identity-essential.layout-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  align-items: start;
 }
 
 .identity-item {

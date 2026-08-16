@@ -30,6 +30,8 @@ function iconSvg(path) { return '<svg xmlns="http://www.w3.org/2000/svg" viewBox
 function renderIdentityEssential(p) {
   const el = document.getElementById('identityEssential'); if (!el) return;
   el.replaceChildren();
+  // ponytail: 必备行布局开关 — flow 自动换行 (默认) / grid 表格对齐, 存 prefs.essentialLayout.
+  el.classList.toggle('layout-grid', typeof cvPrefs === 'object' && cvPrefs && cvPrefs.essentialLayout === 'grid');
   const ej = (Array.isArray(p.expectJobs) && p.expectJobs[0]) || {};
   const cities = Array.isArray(ej.cities) && ej.cities.length ? ej.cities.join('/') : '';
   const items = [['title', p.title], ['phone', p.phone, 'copy'], ['email', p.email, 'copy'], ['cities', cities, null, 'expectJobs'], ['experience', p.experience]];

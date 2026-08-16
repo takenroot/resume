@@ -5,8 +5,10 @@ import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 function elStub() {
+  const cls = {};
   return {
     children: [], style: {}, dataset: {}, className: '', textContent: '', innerHTML: '',
+    classList: { toggle: function (c, on) { cls[c] = !!on; }, contains: function (c) { return !!cls[c]; } },
     replaceChildren: function () { this.children = []; },
     appendChild: function (n) { this.children.push(n); },
     setAttribute: function () {}
@@ -22,7 +24,7 @@ globalThis.localStorage = { getItem: function () { return null; }, setItem: func
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'site', 'js');
 const src = ['utils.js', 'prefs.js', 'renderer.js'].map(function (f) { return readFileSync(join(root, f), 'utf8'); }).join('\n');
-const api = new Function(src + '; loadPrefs(); return { renderIdentityEssential: renderIdentityEssential, renderIdentityLine: renderIdentityLine, setHidden: function (a) { cvPrefs.profileHidden = a; } };')();
+const api = new Function(src + '; loadPrefs(); return { renderIdentityEssential: renderIdentityEssential, renderIdentityLine: renderIdentityLine, setHidden: function (a) { cvPrefs.profileHidden = a; }, setLayout: function (v) { cvPrefs.essentialLayout = v; } };')();
 
 function itemText(c) { return c.children.map(function (n) { return n.__text || ''; }).join(''); }
 function essTexts() { return els.identityEssential.children.map(itemText); }
@@ -72,4 +74,12 @@ const j = pillTexts().join('');
 assert(j.indexOf('期望职位') < 0 && j.indexOf('期望薪资') < 0, 'expectJobs 整块关');
 assert(j.indexOf('期望行业') >= 0, 'expectIndustry 独立');
 
-console.log('header-visibility self-check OK (14 assertions)');
+// 7. 必备行布局开关: 默认 flow 无 grid 类, grid 时加 layout-grid
+api.setLayout('flow');
+api.renderIdentityEssential(FULL);
+assert(!els.identityEssential.classList.contains('layout-grid'), 'flow 默认无 layout-grid');
+api.setLayout('grid');
+api.renderIdentityEssential(FULL);
+assert(els.identityEssential.classList.contains('layout-grid'), 'grid 加 layout-grid');
+
+console.log('header-visibility self-check OK (16 assertions)');
