@@ -315,6 +315,17 @@ button.identity-item:hover {
   border-radius: 0;
 }
 
+/* ponytail: 纯文本模式行距收紧 — 胶囊版的 margin/line-height 是给带底色的胶囊留的, 纯文本显松散 */
+.identity-essential.plain {
+  margin-top: 8px;
+  line-height: 1.4;
+}
+
+.identity-line.plain {
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
 /* ponytail: 胶囊层 — 必备行之外的可选字段 + 期望标签, flex-wrap 自动换行. */
 .identity-line {
   margin-top: 8px;
