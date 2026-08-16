@@ -56,7 +56,18 @@ if command -v python3 &>/dev/null; then
   echo "  按 Ctrl+C 停止"
   echo ""
   cd "$SITE_DIR"
-  exec python3 -m http.server "$PORT"
+  # ponytail: UI 迭代禁缓存 (全局规则 5) — http.server 默认不发 Cache-Control, 旧 JS/CSS 会被浏览器复读
+  exec python3 - "$PORT" <<'PY'
+import sys
+from http.server import HTTPServer, SimpleHTTPRequestHandler
+
+class H(SimpleHTTPRequestHandler):
+    def end_headers(self):
+        self.send_header('Cache-Control', 'no-store')
+        super().end_headers()
+
+HTTPServer(('', int(sys.argv[1])), H).serve_forever()
+PY
 fi
 
 # 降级到 Python
