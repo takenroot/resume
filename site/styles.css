@@ -216,7 +216,7 @@ html.js .resume-document[data-js-ready="false"] {
   column-gap: var(--header-gap);
   row-gap: 8px;
   padding-bottom: 4px;
-  border-bottom: 0;
+  border-bottom: var(--header-rule, 0); /* ponytail: prefs.headerRule — 头部底部分隔线 */
 }
 
 /* ponytail: 头像可开关 (prefs.showAvatar), 隐藏时信息区占满整行 */
@@ -232,6 +232,7 @@ html.js .resume-document[data-js-ready="false"] {
   font-size: var(--fs-h1);
   line-height: 1.15;
   color: #000000;
+  text-align: var(--name-align, left); /* ponytail: prefs.nameAlign — 左/居中 */
 }
 
 /* ponytail: 必备行 — icon + 值, 默认 flex 自动换行 (能挤一行就一行).
@@ -288,12 +289,17 @@ button.identity-item:hover {
   flex: 0 0 14px;
 }
 
+/* ponytail: prefs.essentialIcons=false — 必备行纯文本 */
+.no-icons .identity-essential .icon-svg {
+  display: none;
+}
+
 /* ponytail: 胶囊层 — 必备行之外的可选字段 + 期望标签, flex-wrap 自动换行. */
 .identity-line {
   margin-top: 8px;
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: var(--pill-gap, 8px); /* ponytail: prefs.pillDensity — 紧凑/宽松 */
   font-size: var(--fs-meta);
   line-height: 1.7;
 }
@@ -301,7 +307,7 @@ button.identity-item:hover {
 .identity-pill {
   display: inline-flex;
   align-items: center;
-  padding: 2px 10px;
+  padding: var(--pill-pad, 2px 10px); /* ponytail: prefs.pillDensity */
   border: 0;
   border-radius: 999px;
   background: #f1f5f9;
@@ -339,7 +345,7 @@ button.identity-pill:hover {
   grid-row: 1 / span 2;
   width: var(--avatar-width);
   height: var(--avatar-height);
-  border-radius: 4px;
+  border-radius: var(--avatar-radius, 4px); /* ponytail: prefs.avatarShape — 圆角/圆形/直角 */
   align-self: start;
   margin-top: var(--avatar-offset-top);
   background-image: var(--avatar-image);

@@ -24,7 +24,7 @@ globalThis.localStorage = { getItem: function () { return null; }, setItem: func
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'site', 'js');
 const src = ['utils.js', 'prefs.js', 'renderer.js'].map(function (f) { return readFileSync(join(root, f), 'utf8'); }).join('\n');
-const api = new Function(src + '; loadPrefs(); return { renderIdentityEssential: renderIdentityEssential, renderIdentityLine: renderIdentityLine, setHidden: function (a) { cvPrefs.profileHidden = a; }, setLayout: function (v) { cvPrefs.essentialLayout = v; } };')();
+const api = new Function(src + '; loadPrefs(); return { renderIdentityEssential: renderIdentityEssential, renderIdentityLine: renderIdentityLine, setHidden: function (a) { cvPrefs.profileHidden = a; }, setLayout: function (v) { cvPrefs.essentialLayout = v; }, getPrefs: function () { return cvPrefs; } };')();
 
 function itemText(c) { return c.children.map(function (n) { return n.__text || ''; }).join(''); }
 function essTexts() { return els.identityEssential.children.map(itemText); }
@@ -82,4 +82,9 @@ api.setLayout('grid');
 api.renderIdentityEssential(FULL);
 assert(els.identityEssential.classList.contains('layout-grid'), 'grid 加 layout-grid');
 
-console.log('header-visibility self-check OK (16 assertions)');
+// 8. 头部样式开关默认值归一 (applyPrefs 的 CSS 变量输入)
+const sp = api.getPrefs();
+assert(sp.nameAlign === 'left' && sp.avatarShape === 'rounded' && sp.pillDensity === 'compact', '样式开关默认: 左对齐/圆角/紧凑');
+assert(sp.headerRule === false && sp.essentialIcons === true, '样式开关默认: 无分隔线/有图标');
+
+console.log('header-visibility self-check OK (18 assertions)');

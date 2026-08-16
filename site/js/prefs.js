@@ -7,9 +7,17 @@ let cvPrefs = null;
 // ponytail: THEMES 删 default key 后, 用户初始 prefs 没有 theme 字段. fallback 到 themes 第一个键. 应用时也用 fallback 链 (THEMES[k] || THEMES[first]).
 const FIRST_THEME = Object.keys(THEMES)[0];
 
-function loadPrefs() { const st = localStorage.getItem(PREFS_KEY); if (st) { try { cvPrefs = JSON.parse(st); } catch (e) { cvPrefs = null; } } if (!cvPrefs) cvPrefs = { fontFamily: 'default', fontSize: 'medium', theme: FIRST_THEME }; if (!cvPrefs.theme || !THEMES[cvPrefs.theme]) cvPrefs.theme = FIRST_THEME; if (!FONT_FAMILIES[cvPrefs.fontFamily]) cvPrefs.fontFamily = 'default'; if (!Array.isArray(cvPrefs.profileHidden)) cvPrefs.profileHidden = []; if (typeof cvPrefs.showAvatar !== 'boolean') cvPrefs.showAvatar = true; if (cvPrefs.essentialLayout !== 'grid') cvPrefs.essentialLayout = 'flow'; }
+function loadPrefs() { const st = localStorage.getItem(PREFS_KEY); if (st) { try { cvPrefs = JSON.parse(st); } catch (e) { cvPrefs = null; } } if (!cvPrefs) cvPrefs = { fontFamily: 'default', fontSize: 'medium', theme: FIRST_THEME }; if (!cvPrefs.theme || !THEMES[cvPrefs.theme]) cvPrefs.theme = FIRST_THEME; if (!FONT_FAMILIES[cvPrefs.fontFamily]) cvPrefs.fontFamily = 'default'; if (!Array.isArray(cvPrefs.profileHidden)) cvPrefs.profileHidden = []; if (typeof cvPrefs.showAvatar !== 'boolean') cvPrefs.showAvatar = true; if (cvPrefs.essentialLayout !== 'grid') cvPrefs.essentialLayout = 'flow'; if (cvPrefs.nameAlign !== 'center') cvPrefs.nameAlign = 'left'; if (['rounded', 'circle', 'square'].indexOf(cvPrefs.avatarShape) < 0) cvPrefs.avatarShape = 'rounded'; if (cvPrefs.pillDensity !== 'loose') cvPrefs.pillDensity = 'compact'; if (typeof cvPrefs.headerRule !== 'boolean') cvPrefs.headerRule = false; if (typeof cvPrefs.essentialIcons !== 'boolean') cvPrefs.essentialIcons = true; }
 function savePrefs() { localStorage.setItem(PREFS_KEY, JSON.stringify(cvPrefs)); }
-function applyPrefs() { const r = document.documentElement, th = THEMES[cvPrefs.theme] || THEMES[FIRST_THEME], fs = FONT_SIZES[cvPrefs.fontSize] || FONT_SIZES.medium, ff = FONT_FAMILIES[cvPrefs.fontFamily] || FONT_FAMILIES.default; Object.entries(th.vars).forEach(function (kv) { r.style.setProperty(kv[0], kv[1]); }); Object.entries(fs.vars).forEach(function (kv) { r.style.setProperty(kv[0], kv[1]); }); r.style.setProperty('--font-family', ff.value); }
+function applyPrefs() { const r = document.documentElement, th = THEMES[cvPrefs.theme] || THEMES[FIRST_THEME], fs = FONT_SIZES[cvPrefs.fontSize] || FONT_SIZES.medium, ff = FONT_FAMILIES[cvPrefs.fontFamily] || FONT_FAMILIES.default; Object.entries(th.vars).forEach(function (kv) { r.style.setProperty(kv[0], kv[1]); }); Object.entries(fs.vars).forEach(function (kv) { r.style.setProperty(kv[0], kv[1]); }); r.style.setProperty('--font-family', ff.value);
+  // ponytail: 头部样式开关 — 全走 CSS 变量/类, 不重渲染 DOM. 值在 loadPrefs 已归一.
+  r.style.setProperty('--name-align', cvPrefs.nameAlign);
+  r.style.setProperty('--avatar-radius', { rounded: '4px', circle: '50%', square: '0' }[cvPrefs.avatarShape]);
+  const loose = cvPrefs.pillDensity === 'loose';
+  r.style.setProperty('--pill-gap', loose ? '12px' : '8px');
+  r.style.setProperty('--pill-pad', loose ? '4px 14px' : '2px 10px');
+  r.style.setProperty('--header-rule', cvPrefs.headerRule ? '1px solid var(--line-soft)' : '0');
+  document.body.classList.toggle('no-icons', cvPrefs.essentialIcons === false); }
 
 // ponytail: 头部字段显隐 — 存 prefs.profileHidden (视图层偏好, 不进数据/不影响导出与平台填充).
 // 默认「填了就显示」: 空字段渲染层本来就跳过, 开关只管「填了但不想展示」.
