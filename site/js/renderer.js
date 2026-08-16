@@ -56,15 +56,15 @@ function renderIdentityLine(p) {
   el.replaceChildren();
   let count = 0;
   const addPill = function (node) { el.appendChild(node); count++; };
-  const items = [['location'], ['jobStatus'], ['github', 'link'], ['wechat']];
+  const items = [['location', '现居地'], ['jobStatus', '求职状态'], ['github', 'GitHub', 'link'], ['wechat', '微信']];
   items.forEach(function (it) {
     const k = it[0], v = p[k];
     if (!v || !String(v).trim() || !isProfileShown(k)) return;
     let node;
-    if (it[1] === 'link') { node = document.createElement('a'); node.href = (String(v).startsWith('http') ? '' : 'https://') + v; node.target = '_blank'; node.rel = 'noopener noreferrer'; }
+    if (it[2] === 'link') { node = document.createElement('a'); node.href = (String(v).startsWith('http') ? '' : 'https://') + v; node.target = '_blank'; node.rel = 'noopener noreferrer'; }
     else node = document.createElement('span');
     node.className = 'identity-pill';
-    node.textContent = v;
+    node.innerHTML = '<em>' + it[1] + '</em>' + esc(String(v));
     addPill(node);
   });
   const ej = (Array.isArray(p.expectJobs) && p.expectJobs[0]) || {};
