@@ -52,26 +52,30 @@ function renderIdentityEssential(p) {
   el.style.display = count ? '' : 'none';
 }
 
-// ponytail: 胶囊行均衡装箱 — 纯函数, 可单测. 视觉优先于语义顺序 (用户已确认): 按宽度降序 FFD 装箱.
-// 规则: ≥0.8W 独占行; 其余塞进第一个还装得下的行 (含 gap); 都装不下开新行.
+// ponytail: 胶囊行均衡装箱 — 纯函数, 可单测. 视觉优先于语义顺序 (用户已确认).
+// 目标: 长短搭配 — 每行先放剩余最长, 再反复填"剩余最短且塞得下"的 (双指针贪心). ≥0.8W 独占行.
 // 已知边缘: 全是 ~0.7W 的尴尬尺寸时会出现 <80% 的中间行, 放行不 DP.
 function packPillRows(widths, W, gap) {
-  const order = widths.map(function (w, i) { return [w, i]; }).sort(function (a, b) { return b[0] - a[0]; });
-  const rows = []; // { idxs, w, solo }
-  order.forEach(function (wi) {
-    const w = wi[0], i = wi[1];
-    if (w >= 0.8 * W) { rows.push({ idxs: [i], w: w, solo: true }); return; }
-    for (let r = 0; r < rows.length; r++) {
-      const row = rows[r];
-      if (row.solo) continue;
-      if (row.w + gap + w <= W) { row.idxs.push(i); row.w += gap + w; return; }
+  const rows = [], pool = [];
+  widths.map(function (w, i) { return [w, i]; }).sort(function (a, b) { return b[0] - a[0]; })
+    .forEach(function (wi) { if (wi[0] >= 0.8 * W) rows.push([wi[1]]); else pool.push(wi); });
+  while (pool.length) {
+    const row = [pool.shift()]; // 最长开头
+    let rw = row[0][0], progress = true;
+    while (progress) {
+      progress = false;
+      for (let j = pool.length - 1; j >= 0; j--) { // 从最短往长找第一个塞得下的
+        if (rw + gap + pool[j][0] <= W) { rw += gap + pool[j][0]; row.push(pool.splice(j, 1)[0]); progress = true; break; }
+      }
     }
-    rows.push({ idxs: [i], w: w, solo: false });
-  });
-  return rows.map(function (r) { return r.idxs; });
+    rows.push(row.map(function (wi) { return wi[1]; }));
+  }
+  return rows;
 }
 
-// ponytail: 渲染后测宽重排 — 两遍布局; W 取同 header 里必备行宽 (分页克隆里也有), 量不到 (隐藏/测试桩) 直接跳过.
+// ponytail: 渲染后测宽重排 — 两遍布局. W = 必备行内容右缘 (item rect.right 最大值 − 容器左缘),
+// 不是元素宽 (flex 容器尾部有空白). 缩放 (transform scale) 下 rect 是缩放坐标, offsetWidth 是布局坐标,
+// 除以 scale 归一. 量不到 (隐藏/测试桩) 直接跳过.
 // 调用点: renderIdentityLine 末尾 (source 可见时, 移动端) + paginateResume 末尾 (桌面分页克隆).
 function reflowPillRows(el) {
   if (!el) return;
@@ -79,7 +83,15 @@ function reflowPillRows(el) {
   if (pills.length < 2) return;
   const hd = el.parentElement;
   const ess = hd && hd.querySelector ? hd.querySelector('.identity-essential') : null;
-  const W = (ess && ess.offsetWidth) || el.offsetWidth;
+  let W = 0;
+  if (ess && ess.offsetWidth && ess.children.length && ess.getBoundingClientRect) {
+    const er = ess.getBoundingClientRect(), sc = er.width / ess.offsetWidth || 1;
+    for (let i = 0; i < ess.children.length; i++) {
+      const w = (ess.children[i].getBoundingClientRect().right - er.left) / sc;
+      if (w > W) W = w;
+    }
+  }
+  if (!W) W = (ess && ess.offsetWidth) || el.offsetWidth;
   if (!W) return;
   const gap = parseFloat(getComputedStyle(el).columnGap) || 8;
   const rows = packPillRows(pills.map(function (n) { return n.offsetWidth; }), W, gap);

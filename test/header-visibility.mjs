@@ -90,10 +90,10 @@ const sp = api.getPrefs();
 assert(sp.nameAlign === 'left' && sp.avatarShape === 'rounded' && sp.pillDensity === 'compact', '样式开关默认: 左对齐/圆角/紧凑');
 assert(sp.headerRule === false && sp.essentialIcons === true, '样式开关默认: 无分隔线/有图标');
 
-// 9. 胶囊装箱 (packPillRows): ≥0.8W 独占, 其余降序 FFD, 栈底豁免
+// 9. 胶囊装箱 (packPillRows): ≥0.8W 独占, 长短双指针搭配, 栈底豁免
 const pack = function (ws, W) { return JSON.stringify(api.packPillRows(ws, W, 8)); };
-assert(pack([340, 200, 180, 100, 90], 400) === '[[0],[1,2],[3,4]]', '装箱: 340 独占, 200+180 凑行 (97%), 100+90 栈底');
-assert(pack([100, 100, 100], 400) === '[[0,1,2]]', '装箱: 全短一行');
+assert(pack([340, 200, 180, 100, 90], 400) === '[[0],[1,4],[2,3]]', '装箱: 340 独占, 长+短搭配 (200+90, 180+100)');
+assert(pack([100, 100, 100], 400) === '[[0,2,1]]', '装箱: 全短一行');
 assert(pack([320], 400) === '[[0]]', '装箱: 恰好 0.8W 独占');
 assert(pack([280, 280, 280], 400) === '[[0],[1],[2]]', '装箱: 三个 0.7W 尴尬尺寸各自成行 (已知边缘, 放行)');
 
