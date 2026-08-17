@@ -18,14 +18,14 @@ assert(h.indexOf('统招') >= 0 && h.indexOf('海外留学') >= 0, 'education bo
 h = SECTION_CONFIG.education.renderItem({ school: 'X', period: 'p', isUnified: '否', overseasEdu: false, honors: [] }).innerHTML;
 assert(h.indexOf('统招') < 0 && h.indexOf('海外留学') < 0, 'education string 否 / boolean false 不出 tag');
 
-// experience: isIntern boolean true 出「实习」tag, string '否' 不出
+// experience: isIntern boolean true → 职位后拼（实习）, string '否' 不出
 h = SECTION_CONFIG.experience.renderItem({ company: 'C', position: 'P', period: 'p', isIntern: true }).innerHTML;
-assert(h.indexOf('实习') >= 0, 'experience isIntern=true 出实习 tag');
+assert(h.indexOf('P（实习）') >= 0, 'experience isIntern=true 职位后拼（实习）');
 h = SECTION_CONFIG.experience.renderItem({ company: 'C', position: 'P', period: 'p', isIntern: '否' }).innerHTML;
-assert(h.indexOf('实习') < 0, 'experience isIntern=string 否 不出实习 tag');
+assert(h.indexOf('实习') < 0, 'experience isIntern=string 否 不出实习');
 
-// mdItem 同步出 marker
-assert(SECTION_CONFIG.experience.mdItem({ period: 'p', company: 'C', position: 'P', isIntern: true }).indexOf('| 实习') >= 0, 'mdItem 实习 marker');
+// mdItem 同步拼在职位后
+assert(SECTION_CONFIG.experience.mdItem({ period: 'p', company: 'C', position: 'P', isIntern: true }).indexOf('P（实习）') >= 0, 'mdItem 职位后拼（实习）');
 assert(SECTION_CONFIG.education.mdItem({ period: 'p', school: 'X', isUnified: true }).indexOf('| 统招') >= 0, 'mdItem 统招 marker');
 
 console.log('render-tags self-check OK (6 assertions)');

@@ -47,13 +47,17 @@ function renderItemFieldInput(f, v, name) {
     const dv = f.a ? (Array.isArray(v) ? v.join('\n') : v) : v;
     return '<textarea name="' + name + '">' + esc(dv || '') + '</textarea>';
   }
-  const dv = f.a ? (Array.isArray(v) ? v.join(f.n === 'tags' ? ', ' : '\n') : v) : v;
+  // ponytail: 短标签类 (tags/skillTags) 单行逗号分隔, 长列表 (achievements 等) textarea 每行一条. 收集都走 arr() 逗号/换行通吃.
+  const dv = f.a ? (Array.isArray(v) ? v.join(/tags/i.test(f.n) ? ', ' : '\n') : v) : v;
   return '<input name="' + name + '" value="' + esc(dv || '') + '">';
 }
 
 function buildItemCard(si, ii, fields, item) {
   let hh = '<div class="editor-item" data-section-index="' + si + '" data-item-index="' + ii + '">';
-  hh += '<div class="editor-item-header"><span>#' + (ii + 1) + '</span><div class="item-header-actions">';
+  // ponytail: header 带首字段值 (公司/项目名/学校) — 折叠后 #N 认不出是哪条.
+  const fv = fields[0] && item[fields[0].n];
+  hh += '<div class="editor-item-header"><span>#' + (ii + 1) + (fv ? ' ' + esc(fv) : '') + '</span><div class="item-header-actions">';
+  hh += '<button type="button" class="item-action-btn collapse-btn" data-action="toggle-item-collapse" title="折叠/展开"></button>';
   hh += '<button type="button" class="item-action-btn" data-action="move-item-up" data-section-index="' + si + '" data-item-index="' + ii + '" title="上移"' + (ii === 0 ? ' disabled' : '') + '>↑</button>';
   hh += '<button type="button" class="item-action-btn" data-action="move-item-down" data-section-index="' + si + '" data-item-index="' + ii + '" title="下移">↓</button>';
   hh += '<button type="button" class="item-action-btn" data-action="copy-item" data-section-index="' + si + '" data-item-index="' + ii + '" title="复制">⧉</button>';
@@ -285,6 +289,8 @@ function bindEditorEvents() {
   }
   document.addEventListener('click', function (ev) {
     const cb = ev.target.closest('[data-action="toggle-section-collapse"]'); if (cb) { const i = parseInt(cb.dataset.index, 10); const sec = document.querySelector('.editor-section.editor-module[data-section-index="' + i + '"]'); if (sec) sec.classList.toggle('is-collapsed'); return; }
+    // ponytail: 条目级折叠 — 抄模块折叠同模式, class toggle + CSS 隐藏 content.
+    const ib = ev.target.closest('[data-action="toggle-item-collapse"]'); if (ib) { const it = ib.closest('.editor-item'); if (it) it.classList.toggle('is-collapsed'); return; }
     const ab = ev.target.closest('[data-action]'); if (ab) { const a = ab.dataset.action;
       // ponytail: import-json / import-md 都触发同一个隐藏的 file input, 走 importData 根据扩展名分支解析.
       if (a === 'import-json' || a === 'import-md') { document.getElementById('fileImportInput').click(); return; }

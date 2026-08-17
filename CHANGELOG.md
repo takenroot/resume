@@ -30,7 +30,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `experience[].isIntern` 渲染: item-meta 加「实习」tag (跟 industry/department 同行), mdItem 加 `| 实习` marker.
+- 编辑器条目级折叠: 条目卡片 header 加 ▸ 按钮 (抄模块折叠同模式, class toggle + CSS), header 常驻显示 `#N + 首字段值` (公司/项目名/学校), 折叠后认得出是哪条.
+- 编辑器模块标题吸顶: 模块 header + 区块 h3 `position: sticky`, 滚动时当前模块名常驻面板顶部, 折叠/排序按钮随手可用.
+- `start.sh` 静态响应带 `Cache-Control: no-store` (UI 迭代禁浏览器缓存, 全局规则 5 落地).
+
+### Changed
+
+- 「实习」标志从 item-meta 标签行挪到职位后: `公司 · 职位（实习）`, mdItem 同步拼在职位字段后 (不再 `| 实习`).
+- 项目经验标题改 `项目名 · 担任角色` (跟工作经历的 `公司 · 职位` 一致), 角色不再套 item-meta-tag 胶囊.
+- 工作描述/项目描述等 `.summary` 段落首行缩进 2em, 跟上方标题行拉出层次.
+- 技能标签/技术栈编辑改单行逗号分隔 (原 textarea 换行是技术惯性, label 写「逗号分隔」实现却按换行 join — 不一致缺陷): `skillTags` / `projects.tags` 去掉 `t:'textarea'`, 存储格式 `string[]` 不变, `arr()` 逗号/换行通吃无迁移.
+
+### Added
+
+- `experience[].isIntern` 字段: 是否实习 (select 是/否, 存 boolean), 渲染与 mdItem 见上方 Changed「实习标志」条目.
 - `education[].overseasEdu` 新字段: select 是/否 (存 boolean), 渲染「海外留学」tag, mdItem 加 marker.
 - `profile.firstWorkDate` 新字段: 编辑器 date input (首次参加工作时间, 招聘平台字段), 预览不渲染.
 - `profile.expectJobs` 单条目新 schema: `[{title, jobType, salary:{low,high}, cities[]}]`, 编辑器拍平成一行复合表单 (职位名/工作性质/薪资下限-上限) + 城市 textarea, collectFormData 独立收集重组 (全空 delete).

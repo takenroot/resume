@@ -444,6 +444,7 @@ button.identity-pill:hover {
   font-size: 1em;
   line-height: var(--lh-body);
   color: var(--text-main);
+  text-indent: 2em; /* ponytail: 描述段首行缩进, 跟上方公司/项目行拉出层次 */
 }
 
 .timeline-item li {
@@ -899,6 +900,16 @@ button.identity-pill:hover {
   border-bottom: 2px solid var(--line-soft);
 }
 
+/* ponytail: 编辑区吸顶标题 — 滚动时当前模块名常驻面板顶部, 折叠等辅助按钮随手可用.
+   h3 (个人信息/页面设置) 与模块 header 都吸, 后一个模块把前一个顶走 (sticky 标准行为). */
+.editor-section > h3,
+.editor-module-header {
+  position: sticky;
+  top: 0;
+  background: #ffffff;
+  z-index: 5;
+}
+
 .editor-field {
   margin-bottom: 14px;
 }
@@ -1310,7 +1321,8 @@ button.identity-pill:hover {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 14px;
+  /* ponytail: margin-bottom 改 padding — 吸顶时 margin 带会透出下面滚动的内容 */
+  padding-bottom: 14px;
 }
 
 .module-type-label {
@@ -1353,16 +1365,21 @@ button.identity-pill:hover {
 }
 
 /* 折叠/展开: 折叠后模块正文 display: none, 按钮里的 ▾ 旋转 90° 变成 ▸ */
-.module-action-btn.collapse-btn::after {
+.module-action-btn.collapse-btn::after,
+.item-action-btn.collapse-btn::after {
   content: '▾';
   font-size: 14px;
   line-height: 1;
   transition: transform 140ms ease;
 }
-.editor-section.editor-module.is-collapsed .module-action-btn.collapse-btn::after {
+.editor-section.editor-module.is-collapsed .module-action-btn.collapse-btn::after,
+.editor-item.is-collapsed .item-action-btn.collapse-btn::after {
   transform: rotate(-90deg);
 }
 .editor-section.editor-module.is-collapsed .editor-module-body {
+  display: none;
+}
+.editor-item.is-collapsed .editor-item-content {
   display: none;
 }
 
