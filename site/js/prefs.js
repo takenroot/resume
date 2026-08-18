@@ -7,16 +7,22 @@ let cvPrefs = null;
 // ponytail: THEMES 删 default key 后, 用户初始 prefs 没有 theme 字段. fallback 到 themes 第一个键. 应用时也用 fallback 链 (THEMES[k] || THEMES[first]).
 const FIRST_THEME = Object.keys(THEMES)[0];
 
-function loadPrefs() { const st = localStorage.getItem(PREFS_KEY); if (st) { try { cvPrefs = JSON.parse(st); } catch (e) { cvPrefs = null; } } if (!cvPrefs) cvPrefs = { fontFamily: 'default', fontSize: 'medium', theme: FIRST_THEME }; if (!cvPrefs.theme || !THEMES[cvPrefs.theme]) cvPrefs.theme = FIRST_THEME; if (!FONT_FAMILIES[cvPrefs.fontFamily]) cvPrefs.fontFamily = 'default'; if (!Array.isArray(cvPrefs.profileHidden)) cvPrefs.profileHidden = []; if (!Array.isArray(cvPrefs.eduHidden)) cvPrefs.eduHidden = []; if (typeof cvPrefs.showAvatar !== 'boolean') cvPrefs.showAvatar = true; if (cvPrefs.essentialLayout !== 'grid') cvPrefs.essentialLayout = 'flow'; if (cvPrefs.nameAlign !== 'center') cvPrefs.nameAlign = 'left'; if (['rounded', 'circle', 'square', 'squareBox'].indexOf(cvPrefs.avatarShape) < 0) cvPrefs.avatarShape = 'rounded'; if (cvPrefs.pillDensity !== 'loose') cvPrefs.pillDensity = 'compact'; if (typeof cvPrefs.headerRule !== 'boolean') cvPrefs.headerRule = false; if (typeof cvPrefs.essentialIcons !== 'boolean') cvPrefs.essentialIcons = true; if (typeof cvPrefs.plainText !== 'boolean') cvPrefs.plainText = false; const ac = cvPrefs.avatarCrop; if (ac !== null && ac !== undefined && !(typeof ac === 'object' && ac.iw > 0 && ac.ih > 0 && ac.fw > 0 && ac.fh > 0)) cvPrefs.avatarCrop = null; }
+function loadPrefs() { const st = localStorage.getItem(PREFS_KEY); if (st) { try { cvPrefs = JSON.parse(st); } catch (e) { cvPrefs = null; } } if (!cvPrefs) cvPrefs = { fontFamily: 'default', fontSize: 'medium', theme: FIRST_THEME }; if (!cvPrefs.theme || !THEMES[cvPrefs.theme]) cvPrefs.theme = FIRST_THEME; if (!FONT_FAMILIES[cvPrefs.fontFamily]) cvPrefs.fontFamily = 'default'; if (!Array.isArray(cvPrefs.profileHidden)) cvPrefs.profileHidden = []; if (!Array.isArray(cvPrefs.eduHidden)) cvPrefs.eduHidden = []; if (typeof cvPrefs.showAvatar !== 'boolean') cvPrefs.showAvatar = true; if (cvPrefs.essentialLayout !== 'grid') cvPrefs.essentialLayout = 'flow'; if (cvPrefs.nameAlign !== 'center') cvPrefs.nameAlign = 'left'; if (['rounded', 'circle', 'square', 'squareBox'].indexOf(cvPrefs.avatarShape) < 0) cvPrefs.avatarShape = 'rounded'; if (cvPrefs.pillDensity !== 'loose') cvPrefs.pillDensity = 'compact'; if (typeof cvPrefs.headerRule !== 'boolean') cvPrefs.headerRule = false; if (typeof cvPrefs.essentialIcons !== 'boolean') cvPrefs.essentialIcons = true; if (typeof cvPrefs.plainText !== 'boolean') cvPrefs.plainText = false; const ac = cvPrefs.avatarCrop; if (ac !== null && ac !== undefined && !(typeof ac === 'object' && ac.iw > 0 && ac.ih > 0 && ac.fw > 0 && ac.fh > 0)) cvPrefs.avatarCrop = null; if (cvPrefs.avatarCrop && cvPrefs.avatarCrop.fh > cvPrefs.avatarCrop.fw * 2) cvPrefs.avatarCrop = null; } // ponytail: 比例超 2:1 的旧裁剪直接丢弃 — 移动端绝对定位头像会溢出头部, 回落 cover 安全.
+
+// ponytail: 1:1 形状谓词单源 — applyPrefs 与裁剪弹窗 (editor.js openAvatarCrop) 共用, 加形状只改这里.
+function avatarShapeIsSquare() { return cvPrefs.avatarShape === 'circle' || cvPrefs.avatarShape === 'squareBox'; }
 
 // ponytail: 头像裁剪 — 弹窗原始状态 {ox,oy,iw,ih,fw,fh} (偏移/图片显示宽高/选择框宽高, px) 原样存,
 // 这里换算成 background 变量: S = 图宽占盒宽 %, pos% 对齐公式 p% → 偏移 = -p% × (图−盒).
-function avatarCropVars(crop) {
+// squareBox=true 时盒子被压成 1:1, Y% 必须按方盒高 (=fw) 算, 否则纵向偏移错位.
+function avatarCropVars(crop, squareBox) {
   if (!crop || !(crop.iw > 0) || !(crop.ih > 0) || !(crop.fw > 0) || !(crop.fh > 0)) return null;
-  const s = crop.iw / crop.fw;
+  const s = crop.iw / crop.fw, bh = squareBox ? crop.fw : crop.fh;
   function pct(o, f, img) { const r = img / f; return r <= 1 ? 50 : Math.min(100, Math.max(0, (-o / f) / (r - 1) * 100)); }
-  return { size: (s * 100).toFixed(2) + '% auto', pos: pct(crop.ox, crop.fw, crop.iw).toFixed(2) + '% ' + pct(crop.oy, crop.fh, crop.ih).toFixed(2) + '%', ratio: (crop.fh / crop.fw).toFixed(4) };
+  return { size: (s * 100).toFixed(2) + '% auto', pos: pct(crop.ox, crop.fw, crop.iw).toFixed(2) + '% ' + pct(crop.oy, bh, crop.ih).toFixed(2) + '%', ratio: (squareBox ? 1 : crop.fh / crop.fw).toFixed(4) };
 }
+// ponytail: 换图清裁剪单入口 — 上传/清除头像/手改 URL/改名换本地头像/导入, 五处都走这里.
+function resetAvatarCrop() { if (!cvPrefs.avatarCrop) return; cvPrefs.avatarCrop = null; savePrefs(); applyPrefs(); }
 function savePrefs() { localStorage.setItem(PREFS_KEY, JSON.stringify(cvPrefs)); }
 function applyPrefs() { const r = document.documentElement, th = THEMES[cvPrefs.theme] || THEMES[FIRST_THEME], fs = FONT_SIZES[cvPrefs.fontSize] || FONT_SIZES.medium, ff = FONT_FAMILIES[cvPrefs.fontFamily] || FONT_FAMILIES.default; Object.entries(th.vars).forEach(function (kv) { r.style.setProperty(kv[0], kv[1]); }); Object.entries(fs.vars).forEach(function (kv) { r.style.setProperty(kv[0], kv[1]); }); r.style.setProperty('--font-family', ff.value);
   // ponytail: 头部样式开关 — 全走 CSS 变量/类, 不重渲染 DOM. 值在 loadPrefs 已归一.
@@ -25,13 +31,13 @@ function applyPrefs() { const r = document.documentElement, th = THEMES[cvPrefs.
   const circle = cvPrefs.avatarShape === 'circle';
   // ponytail: squareBox(正方形) 与 circle 共用 1:1 盒子规则, 只 radius 不同; 直角/正方形都是 0.
   r.style.setProperty('--avatar-radius', circle ? '50%' : cvPrefs.avatarShape === 'rounded' ? '4px' : '0');
-  // ponytail: 正圆/正方形必须正方形盒子 — 头像默认 5:7 (一寸照), 50% radius 在非方形上是椭圆. 1:1 时高度压成宽度.
-  const sq = circle || cvPrefs.avatarShape === 'squareBox';
-  const acv = avatarCropVars(cvPrefs.avatarCrop);
-  if (sq) r.style.setProperty('--avatar-height', 'var(--avatar-width)');
-  else if (acv) r.style.setProperty('--avatar-height', 'calc(var(--avatar-width) * ' + acv.ratio + ')');
-  else r.style.removeProperty('--avatar-height');
-  // ponytail: 裁剪 pos/size 与形状正交 — 1:1 形状下盒子比例被压, 但图在盒里的摆法仍吃这两个变量.
+  // ponytail: 按形状分档阴影 — 圆形最软 (大而柔), 圆角居中, 直角/正方形最贴 (锐利); 打印/移动端样式表直接关.
+  r.style.setProperty('--avatar-shadow', circle ? '0 2px 10px rgba(15, 23, 42, 0.22)' : cvPrefs.avatarShape === 'rounded' ? '0 1px 6px rgba(15, 23, 42, 0.18)' : '0 1px 3px rgba(15, 23, 42, 0.16)');
+  // ponytail: 正圆/正方形必须正方形盒子 — 头像默认 5:7 (一寸照), 50% radius 在非方形上是椭圆.
+  // 盒子比例走 --avatar-ratio (styles.css :root 的 --avatar-height 引用它), 方形盒下 avatarCropVars 已按方盒重算 pos.
+  const sq = avatarShapeIsSquare();
+  const acv = avatarCropVars(cvPrefs.avatarCrop, sq);
+  r.style.setProperty('--avatar-ratio', acv ? acv.ratio : sq ? '1' : '1.4');
   if (acv) { r.style.setProperty('--avatar-pos', acv.pos); r.style.setProperty('--avatar-size', acv.size); }
   else { r.style.removeProperty('--avatar-pos'); r.style.removeProperty('--avatar-size'); }
   const loose = cvPrefs.pillDensity === 'loose';

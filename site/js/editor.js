@@ -91,20 +91,22 @@ function closeStyleModal() { const m = document.getElementById('styleModal'); if
 
 // ponytail: 头像裁剪弹窗 — 状态 {ox,oy,iw,ih,fw,fh} 就是 prefs.avatarCrop 的原型;
 // 拖拽/缩放/改框都只改这组数, 保存时原样存 prefs, 换算成 background 变量在 avatarCropVars (prefs.js).
-let cropState = null;
+// 拖拽暂存 (cropDrag*) 和元素引用是模块级变量 — 不污染 cropState (它要原样存 prefs), 也不每帧查 DOM.
+let cropState = null, cropDragging = false, cropDragX = 0, cropDragY = 0, cropFrameEl = null, cropImgEl = null;
+const CROP_FW = 260; // ponytail: 框宽对渲染无影响 (最终只吃比例 fh/fw), 固定常量, UI 不暴露.
 function closeAvatarCrop() { const m = document.getElementById('avatarCropModal'); if (m) m.hidden = true; cropState = null; }
 function clampCrop() {
   cropState.ox = Math.min(0, Math.max(cropState.fw - cropState.iw, cropState.ox));
   cropState.oy = Math.min(0, Math.max(cropState.fh - cropState.ih, cropState.oy));
 }
 function renderCrop() {
-  const f = document.getElementById('cropFrame'), img = document.getElementById('cropImg');
-  f.style.width = cropState.fw + 'px';
-  f.style.height = cropState.fh + 'px';
-  img.style.width = cropState.iw + 'px';
-  img.style.transform = 'translate(' + cropState.ox + 'px, ' + cropState.oy + 'px)';
+  if (!cropFrameEl || !cropImgEl) return;
+  cropFrameEl.style.width = cropState.fw + 'px';
+  cropFrameEl.style.height = cropState.fh + 'px';
+  cropImgEl.style.width = cropState.iw + 'px';
+  cropImgEl.style.transform = 'translate(' + cropState.ox + 'px, ' + cropState.oy + 'px)';
 }
-function syncCropFrame() { // 框尺寸或缩放变了: 保持 zoom 倍率, 重算图片宽, 收拢偏移
+function syncCropFrame() { // 框高或缩放变了: 保持 zoom 倍率, 重算图片宽, 收拢偏移
   const zoom = parseFloat(document.getElementById('cropZoom').value) || 1;
   const base = Math.max(cropState.fw, cropState.fh * cropState.nat);
   cropState.iw = base * zoom;
@@ -112,20 +114,34 @@ function syncCropFrame() { // 框尺寸或缩放变了: 保持 zoom 倍率, 重�
   clampCrop();
   renderCrop();
 }
+// ponytail: 形状挪进裁剪弹窗 — 1:1 形状 (圆形/正方形) 锁方框并禁用框高/比例按钮; 弹窗内切形状实时重锁.
+function applyShapeToCropFrame() {
+  const sq = avatarShapeIsSquare();
+  if (sq) cropState.fh = cropState.fw;
+  clampCrop();
+  document.getElementById('cropFH').value = cropState.fh;
+  document.getElementById('cropFH').disabled = sq;
+  Array.from(document.querySelectorAll('[data-crop-ratio]')).forEach(function (b) { b.disabled = sq; });
+  renderCrop();
+}
 function openAvatarCrop(url) {
   const m = document.getElementById('avatarCropModal'); if (!m) return;
   const probe = new Image();
+  probe.onerror = function () { showToast('头像图片加载失败，无法调整', 'info'); };
   probe.onload = function () {
     const nat = probe.naturalWidth / probe.naturalHeight, saved = cvPrefs.avatarCrop;
-    // ponytail: 1:1 形状 (圆形/正方形) 默认框锁方形; 否则默认证件照 5:7.
-    const sq = cvPrefs.avatarShape === 'circle' || cvPrefs.avatarShape === 'squareBox';
-    const fw = saved ? saved.fw : 260, fh = saved ? saved.fh : (sq ? 260 : 364);
-    if (saved) cropState = { ox: saved.ox, oy: saved.oy, iw: saved.iw, ih: saved.ih, fw: fw, fh: fh, nat: nat };
-    else { const base = Math.max(fw, fh * nat); cropState = { iw: base, ih: base / nat, ox: (fw - base) / 2, oy: (fh - base / nat) / 2, fw: fw, fh: fh, nat: nat }; }
-    document.getElementById('cropImg').src = url;
-    document.getElementById('cropFW').value = fw;
-    document.getElementById('cropFH').value = fh;
-    document.getElementById('cropZoom').value = (cropState.iw / Math.max(fw, fh * nat)).toFixed(2);
+    if (!(nat > 0) || !isFinite(nat)) { showToast('头像图片尺寸异常，无法调整', 'info'); return; } // ponytail: 无固有尺寸的 SVG 会报 0/0.
+    // ponytail: 旧裁剪按 CROP_FW 等比缩放重放; 1:1 形状的锁框在 applyShapeToCropFrame 统一做.
+    const fw = CROP_FW;
+    const fh = saved ? Math.round(saved.fh * fw / saved.fw) : (avatarShapeIsSquare() ? fw : 364);
+    if (saved) { const k = fw / saved.fw; cropState = { ox: saved.ox * k, oy: saved.oy * k, iw: saved.iw * k, ih: saved.ih * k, fw: fw, fh: fh, nat: nat }; }
+    else { const base = Math.max(fw, fh * nat); cropState = { iw: base, ih: base / nat, ox: (fw - base) / 2, oy: 0, fw: fw, fh: fh, nat: nat }; } // ponytail: 顶对齐 — 与无裁剪时的 cover center top 一致, 「打开就保存」不变脸.
+    clampCrop();
+    cropImgEl.src = url;
+    const sr = document.querySelector('input[data-vis-pref="avatarShape"][value="' + cvPrefs.avatarShape + '"]');
+    if (sr) sr.checked = true;
+    applyShapeToCropFrame();
+    document.getElementById('cropZoom').value = (cropState.iw / Math.max(fw, cropState.fh * nat)).toFixed(2);
     renderCrop();
     m.hidden = false;
   };
@@ -172,7 +188,6 @@ function buildVisToggles() {
     '<label class="vis-toggle"><input type="radio" name="essentialLayout" data-vis-layout="grid"' + (cvPrefs.essentialLayout === 'grid' ? ' checked' : '') + '>表格对齐</label>' +
     '</div>' +
     styleRadioRow('姓名对齐', 'nameAlign', [['left', '左对齐'], ['center', '居中']]) +
-    styleRadioRow('头像形状', 'avatarShape', [['rounded', '圆角'], ['circle', '圆形'], ['square', '直角'], ['squareBox', '正方形']]) +
     styleRadioRow('胶囊密度', 'pillDensity', [['compact', '紧凑'], ['loose', '宽松']]) +
     '<div class="vis-toggles"><span class="vis-hint">其它</span>' +
     '<label class="vis-toggle"><input type="checkbox" data-vis-plain' + (cvPrefs.plainText === true ? ' checked' : '') + '>纯文本 (| 分隔)</label>' +
@@ -189,7 +204,7 @@ function buildProfileFields(profile) {
   // ponytail: 隐藏字段 (currentSalary 等) 不在 PROFILE_FIELDS 里出现, 用户手写 JSON 才能填. cv-autofill 引擎读 schema.json 知道存在.
   // ponytail: 头部显示开关组已挪进 ⚙ 样式弹窗 (openStyleModal + buildVisToggles), 编辑区只留数据字段.
   let hh = '';
-  hh += '<div class="editor-field editor-field-avatar"><label>头像</label><div class="avatar-upload"><div class="avatar-preview" id="avatarPreview" style="' + (localAvatar ? "background-image: url('" + esc(localAvatar) + "')" : '') + '"></div><div class="avatar-upload-inputs"><input type="file" id="avatarFileInput" accept="image/*">' + (hasLocalAvatar ? '<button type="button" class="editor-btn" id="clearAvatarBtn" style="font-size:12px;padding:4px 8px">清除头像</button>' : '') + '<input type="text" name="profile.avatar" value="' + esc(av) + '" placeholder="留空则使用浏览器本地头像"></div><p style="font-size:11px;color:var(--text-soft);margin:4px 0 0">选择图片后自动转为 base64 存入浏览器本地，导出 JSON/Markdown 时不含头像</p></div></div>';
+  hh += '<div class="editor-field editor-field-avatar"><label>头像</label><div class="avatar-upload"><div class="avatar-preview" id="avatarPreview" title="点击调整裁剪" style="' + (localAvatar ? "background-image: url('" + esc(localAvatar) + "')" : '') + '"></div><div class="avatar-upload-inputs"><input type="file" id="avatarFileInput" accept="image/*">' + (hasLocalAvatar ? '<button type="button" class="editor-btn" id="clearAvatarBtn" style="font-size:12px;padding:4px 8px">清除头像</button>' : '') + '<input type="text" name="profile.avatar" value="' + esc(av) + '" placeholder="留空则使用浏览器本地头像"></div><p style="font-size:11px;color:var(--text-soft);margin:4px 0 0">选择图片后自动转为 base64 存入浏览器本地，导出 JSON/Markdown 时不含头像；点击左侧图片可拖拽调整裁剪</p></div></div>';
   hh += PROFILE_FIELDS.filter(function (f) { return !f.custom; }).map(function (f) { return '<div class="editor-field"><label>' + f.l + '</label>' + renderProfileFieldInput(f, profile) + '</div>'; }).join('');
   // ponytail: expectJobs 单条目 (猎聘/智联期望职位), schema 是单元素数组 [{title, jobType, salary:{low,high}, cities[]}], 编辑器拍平.
   // 2026-08: expectSalary/expectCities 独立字段已删, 头部展示从 expectJobs[0] 派生 (renderer.js renderHeaderExtra).
@@ -334,7 +349,8 @@ function bindEditorEvents() {
   document.getElementById('closeEditor') && document.getElementById('closeEditor').addEventListener('click', closeEditor);
   document.getElementById('menuBtn') && document.getElementById('menuBtn').addEventListener('click', toggleEditor);
   document.getElementById('saveData') && document.getElementById('saveData').addEventListener('click', function () { collectFormData(); closeEditor(); });
-  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { const ep = document.getElementById('editorPanel'); if (ep && ep.classList.contains('is-open')) closeEditor(); } });
+  // ponytail: 弹窗开着时 Esc 只关弹窗 (由下方另一个监听处理), 不连带收编辑器面板.
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') { const cm = document.getElementById('avatarCropModal'), sm = document.getElementById('styleModal'); if ((cm && !cm.hidden) || (sm && !sm.hidden)) return; const ep = document.getElementById('editorPanel'); if (ep && ep.classList.contains('is-open')) closeEditor(); } });
   const editorPanelForSync = document.getElementById('editorPanel');
   if (editorPanelForSync) {
     editorPanelForSync.addEventListener('focusin', function (ev) { if (ev.target.matches && ev.target.matches('input, textarea, select')) scrollPreviewToSection(ev.target); });
@@ -363,41 +379,47 @@ function bindEditorEvents() {
     if (ev.target.closest('[data-add-type]')) return;
     if (ev.target.closest('[data-dropdown]')) { ev.stopPropagation(); const dd = ev.target.closest('[data-dropdown]'); const p = dd.closest('.dropdown'); const wo = p && p.classList.contains('open'); closeAllDropdowns(); if (p && !wo) p.classList.add('open'); return; }
     const smb = ev.target.closest('[data-style-modal]'); if (smb) { if (smb.dataset.styleModal === 'education') openStyleModal('教育背景样式', buildEduToggles()); else openStyleModal('个人信息样式', buildVisToggles()); return; }
-    if (ev.target.closest('[data-modal-close]')) { closeStyleModal(); return; }
+    // ponytail: 关闭约定单源 — 两个弹窗都挂 data-modal-close, 两个都关 (hidden 幂等).
+    if (ev.target.closest('[data-modal-close]')) { closeStyleModal(); closeAvatarCrop(); return; }
     // ponytail: 头像裁剪 — 点编辑器头像预览开弹窗; 弹窗内按钮全在这里委托.
     const apv = ev.target.closest('.avatar-preview');
     if (apv) { const p = (cvData && cvData.profile) || {}; const url = p.avatar || loadAvatar(p.name || 'default'); if (!url) { showToast('先上传头像', 'info'); return; } openAvatarCrop(url); return; }
     const crb = ev.target.closest('[data-crop-ratio]');
     if (crb && cropState) { const pt = crb.dataset.cropRatio.split(':'); cropState.fh = Math.round(cropState.fw * parseInt(pt[1], 10) / parseInt(pt[0], 10)); document.getElementById('cropFH').value = cropState.fh; syncCropFrame(); return; }
     if (ev.target.closest('#cropSaveBtn')) { if (cropState) { cvPrefs.avatarCrop = { ox: Math.round(cropState.ox), oy: Math.round(cropState.oy), iw: Math.round(cropState.iw), ih: Math.round(cropState.ih), fw: cropState.fw, fh: cropState.fh }; savePrefs(); applyPrefs(); } closeAvatarCrop(); return; }
-    if (ev.target.closest('#cropResetBtn')) { cvPrefs.avatarCrop = null; savePrefs(); applyPrefs(); closeAvatarCrop(); return; }
-    if (ev.target.closest('[data-crop-close]')) { closeAvatarCrop(); return; }
+    if (ev.target.closest('#cropResetBtn')) { resetAvatarCrop(); closeAvatarCrop(); return; }
     closeAllDropdowns();
   });
   document.addEventListener('keydown', function (ev) {
     if (ev.key === 'Escape') { closeStyleModal(); closeAvatarCrop(); }
   });
-  // ponytail: 裁剪弹窗拖拽/滑块 — 元素是 index.html 静态的, 绑一次; cropState 为 null 时全短路.
-  const cropFrame = document.getElementById('cropFrame');
-  if (cropFrame) {
-    cropFrame.addEventListener('pointerdown', function (ev) { if (!cropState) return; ev.preventDefault(); cropFrame.setPointerCapture(ev.pointerId); cropFrame.classList.add('dragging'); cropState.dx = ev.clientX - cropState.ox; cropState.dy = ev.clientY - cropState.oy; });
-    cropFrame.addEventListener('pointermove', function (ev) { if (!cropState || cropState.dx === undefined) return; cropState.ox = ev.clientX - cropState.dx; cropState.oy = ev.clientY - cropState.dy; clampCrop(); renderCrop(); });
-    const dragEnd = function () { if (cropState) { delete cropState.dx; delete cropState.dy; } cropFrame.classList.remove('dragging'); };
-    cropFrame.addEventListener('pointerup', dragEnd);
-    cropFrame.addEventListener('pointercancel', dragEnd);
+  // ponytail: 裁剪弹窗拖拽/滑块 — 元素是 index.html 静态的, 绑一次并缓存引用; cropState 为 null 时全短路.
+  cropFrameEl = document.getElementById('cropFrame');
+  cropImgEl = document.getElementById('cropImg');
+  if (cropFrameEl) {
+    cropFrameEl.addEventListener('pointerdown', function (ev) { if (!cropState) return; ev.preventDefault(); cropFrameEl.setPointerCapture(ev.pointerId); cropFrameEl.classList.add('dragging'); cropDragging = true; cropDragX = ev.clientX - cropState.ox; cropDragY = ev.clientY - cropState.oy; });
+    cropFrameEl.addEventListener('pointermove', function (ev) { if (!cropState || !cropDragging) return; cropState.ox = ev.clientX - cropDragX; cropState.oy = ev.clientY - cropDragY; clampCrop(); renderCrop(); });
+    const dragEnd = function () { cropDragging = false; cropFrameEl.classList.remove('dragging'); };
+    cropFrameEl.addEventListener('pointerup', dragEnd);
+    cropFrameEl.addEventListener('pointercancel', dragEnd);
   }
   document.addEventListener('input', function (ev) {
     if (!cropState) return;
     if (ev.target.id === 'cropZoom') { syncCropFrame(); return; }
-    if (ev.target.id === 'cropFW' || ev.target.id === 'cropFH') {
+    if (ev.target.id === 'cropFH') {
       const v = parseInt(ev.target.value, 10);
       if (!(v > 0)) return;
-      if (ev.target.id === 'cropFW') cropState.fw = Math.min(400, Math.max(160, v));
-      else cropState.fh = Math.min(560, Math.max(160, v));
+      // ponytail: 边界单源在 HTML min/max 属性; 另卡比例 ≤ 2:1 — 移动端绝对定位头像更高会溢出头部.
+      cropState.fh = Math.min(+ev.target.max || 560, Math.max(+ev.target.min || 160, v), cropState.fw * 2);
       syncCropFrame();
     }
   });
   document.addEventListener('change', function (ev) {
+    // ponytail: 换图清裁剪的另两条路 — 手改 avatar URL, 或改名导致命中的本地头像槽位变了 (仅当没填 URL).
+    if (cvPrefs.avatarCrop && cvData && cvData.profile) {
+      if (ev.target.name === 'profile.avatar' && ev.target.value !== (cvData.profile.avatar || '')) resetAvatarCrop();
+      if (ev.target.name === 'profile.name' && !cvData.profile.avatar && ev.target.value !== cvData.profile.name) resetAvatarCrop();
+    }
     // ponytail: 头部显示开关 — checkbox 无 name, collectFormData 的白名单 ([name^=...]) 物理碰不到它.
     if (ev.target.dataset && ev.target.dataset.vis) {
       const k = ev.target.dataset.vis, i = cvPrefs.profileHidden.indexOf(k);
@@ -438,6 +460,7 @@ function bindEditorEvents() {
     // ponytail: 头部样式 radio — 纯 CSS 变量, applyPrefs 即生效, 不重渲染.
     if (ev.target.dataset && ev.target.dataset.visPref) {
       cvPrefs[ev.target.dataset.visPref] = ev.target.value; savePrefs(); applyPrefs();
+      if (ev.target.dataset.visPref === 'avatarShape' && cropState) applyShapeToCropFrame(); // 弹窗内切形状 → 裁剪框实时锁/解锁
       return;
     }
     if (ev.target.hasAttribute && ev.target.hasAttribute('data-vis-icons')) {
@@ -459,7 +482,7 @@ function bindEditorEvents() {
         const name = (cvData && cvData.profile && cvData.profile.name) || 'default';
         saveAvatar(name, base64);
         // ponytail: 换了图旧裁剪无意义, 清掉回落 cover.
-        cvPrefs.avatarCrop = null; savePrefs(); applyPrefs();
+        resetAvatarCrop();
         const pv = document.getElementById('avatarPreview');
         if (pv) pv.style.backgroundImage = "url('" + base64 + "')";
         const ai = document.querySelector('input[name="profile.avatar"]');
@@ -476,6 +499,7 @@ function bindEditorEvents() {
     if (ev.target.closest('#clearAvatarBtn')) {
       const name = (cvData && cvData.profile && cvData.profile.name) || 'default';
       clearAvatar(name);
+      resetAvatarCrop(); // ponytail: 同上传路径 — 图没了裁剪也没意义.
       const ai = document.querySelector('input[name="profile.avatar"]');
       if (ai) ai.value = '';
       collectFormData();

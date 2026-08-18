@@ -31,4 +31,10 @@ assert(v.ratio === '1.0000', '1:1 框 → ratio 1, got ' + v.ratio);
 // oy=-50, fh=260, ih=520: p = (50/260) / (2-1) * 100 ≈ 19.23
 assert(v.pos === '50.00% 19.23%', '垂直偏移换算, got ' + v.pos);
 
-console.log('avatar-crop self-check OK (8 assertions)');
+// 5. squareBox=true (1:1 形状重放非方形裁剪): ratio 锁 1, Y% 按方盒高 fw 算而非 fh
+v = avatarCropVars({ ox: 0, oy: -50, iw: 260, ih: 520, fw: 260, fh: 364 }, true);
+assert(v.ratio === '1.0000', '方形盒 → ratio 锁 1, got ' + v.ratio);
+// 按 fh=364 算是 (50/364)/(520/364-1)*100≈32.02 (旧 bug); 按方盒 260 算才是 19.23
+assert(v.pos === '50.00% 19.23%', '方形盒 Y% 按 fw 算, got ' + v.pos);
+
+console.log('avatar-crop self-check OK (11 assertions)');

@@ -168,6 +168,7 @@ function importData(file) {
       backupCvData('import');
       // ponytail: 外部文件的 avatar 可能是别人简历的 base64, 清掉防泄露; 头像走本地 AVATAR_PREFIX 槽位.
       if (d.profile) d.profile.avatar = '';
+      resetAvatarCrop(); // ponytail: 导入后头像是别人的, 旧裁剪无意义.
       applyImportedData(d);
       showToast('导入成功', 'success');
     } catch (err) {

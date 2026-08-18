@@ -26,8 +26,10 @@
   --header-gap: 20px;
   --meta-column-gap: 34px;
   --avatar-width: 112px;
-  /* ponytail: 一寸照 25×35mm = 5:7, 高度跟宽度走, 各断点只改宽度 */
-  --avatar-height: calc(var(--avatar-width) * 1.4);
+  /* ponytail: 一寸照 25×35mm = 5:7, 高度跟宽度走, 各断点只改宽度.
+     比例单源 --avatar-ratio (applyPrefs 按裁剪/形状覆写), 编辑器预览 (80px 固定宽) 也吃它. */
+  --avatar-ratio: 1.4;
+  --avatar-height: calc(var(--avatar-width) * var(--avatar-ratio));
   --avatar-offset-top: -4px;
   --mobile-header-aside-width: 78px;
   --space-section-top: 12px;
@@ -400,6 +402,8 @@ button.identity-pill:hover {
   background-repeat: no-repeat;
   background-size: var(--avatar-size, cover);
   background-color: #f0f2f5;
+  /* ponytail: 按形状分档的阴影 (applyPrefs 设 --avatar-shadow), 打印时下方 print 块关掉 */
+  box-shadow: var(--avatar-shadow, none);
   pointer-events: none;
   user-select: none;
   -webkit-user-select: none;
@@ -1260,12 +1264,15 @@ button.identity-pill:hover {
 
 .editor-field-avatar .avatar-preview {
   width: 80px;
-  height: 112px;
-  border-radius: 6px;
+  /* ponytail: 预览与简历同一个比例/圆角变量 — 裁剪成 1:1 或选圆形时, 这里跟着变, 所见即所得 */
+  height: calc(80px * var(--avatar-ratio, 1.4));
+  border-radius: var(--avatar-radius, 6px);
   background-size: var(--avatar-size, cover);
   background-position: var(--avatar-pos, center top);
   background-repeat: no-repeat;
   background-color: #f0f2f5;
+  box-shadow: var(--avatar-shadow, none);
+  cursor: pointer;
   flex: 0 0 80px;
   cursor: pointer;
 }
@@ -1571,6 +1578,8 @@ button.identity-pill:hover {
 
   :root {
     --page-padding: 14mm;
+    /* ponytail: 打印归零头像上探 — 屏幕的 -4px 视觉对齐在纸面上会探出可打印区顶边被裁 (彩色头像明显). */
+    --avatar-offset-top: 0;
     /* 字号锁死, 与视口无关, 保证 OCR 命中 */
     --fs-body: 13px;
     --fs-meta: 12.5px;
@@ -1621,6 +1630,11 @@ button.identity-pill:hover {
     border-radius: 0;
     box-shadow: none;
     overflow: hidden;
+  }
+
+  /* ponytail: 纸面不打阴影 — 打印发灰; 内联变量压不掉, 直接规则关 (同样式表后者胜). */
+  .resume-avatar {
+    box-shadow: none;
   }
 
   .resume-page-content {
@@ -1749,6 +1763,7 @@ button.identity-pill:hover {
     top: 0;
     right: 0;
     margin-top: 0;
+    box-shadow: none; /* ponytail: 移动端关阴影 — 小图上阴影糊边, 且绝对定位贴边时阴影会被裁 */
   }
 
   .no-avatar .resume-header {

@@ -30,13 +30,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 修续页测量容量虚大 ~18px: 续页 banner 文本由 `updatePageBanners` 在分页结束后才填, 测量期空 span 不产生行盒 → 分页按 1008px 容量排版, 文本填入后内容区缩到 990px, 内容溢出页脚 — `.resume-page-banner span:empty::before` 占位 nbsp, 空/填文本同高 (存量 bug, 条目级分页时代被条目粒度掩盖).
 - 修经历条目标题裸「·」: 公司为空时 (其它经历常见) 仍拼 ` · ` 分隔 — 公司/职位改 filter 非空再 join, mdItem 同步 (不再出 `|  |` 空段).
 - 修编辑器吸顶缝隙: 吸顶元素停在「编辑简历」标题栏下 24px (= `.editor-content` 上 padding, sticky top 参照内容盒), 缝隙透出滚动内容 — 滚动容器上 padding 改内容的 margin, 吸顶即贴面板头; 顺带「页面设置」区块不再吸顶.
+- 修 1:1 形状下裁剪纵向偏移算错: 盒子被压方后 Y% 仍按裁剪框高换算 — `avatarCropVars(crop, squareBox)` 按方盒高重算, 弹窗内切形状不再跑位.
+- 修 Esc 关裁剪弹窗连带收编辑器面板: 编辑器 Esc 监听先查弹窗开着则跳过 (两个 document 级 keydown 对同一次 Esc 都响应).
+- 修打印头像顶部被裁一层: `--avatar-offset-top: -4px` 屏幕视觉对齐探出浏览器可打印区顶边 (default/最小边距档), 白底头像看不出来彩色明显 — print 归零 (同移动端处理).
+- 修编辑器头像预览与简历不一致: 固定 80×112+6px 圆角, 不吃裁剪比例/形状 — 新增 `--avatar-ratio` 单源变量 (`--avatar-height` 引用它), 预览同步比例+圆角+阴影.
+- 修裁剪弹窗静默失败: 头像图加载失败 (404/跨域) 或无固有尺寸的 SVG 时点预览无反应 — `probe.onerror` + `nat` NaN 守卫, toast 提示.
+- 修默认裁剪「打开就保存会变脸」: 旧默认垂直居中替代了 cover center top — 默认 oy=0 顶对齐, 未动直接保存 = no-op.
+- 头像裁剪比例上限 2:1: 更高比例移动端绝对定位头像溢出头部压正文; 输入 clamp + 旧脏数据 loadPrefs 直接丢弃.
 
 ### Added
 
 - 编辑器条目级折叠: 条目卡片 header 加 ▸ 按钮 (抄模块折叠同模式, class toggle + CSS), header 常驻显示 `#N + 首字段值` (公司/项目名/学校), 折叠后认得出是哪条.
 - 编辑器模块标题吸顶: 模块 header + 区块 h3 `position: sticky`, 滚动时当前模块名常驻面板顶部, 折叠/排序按钮随手可用.
-- 头像裁剪弹窗: 编辑器点头像预览打开, 拖拽调位置 + 滑块缩放 + 选框宽高输入 (证件照 5:7 / 方形 1:1 快捷比例) — 状态存 `prefs.avatarCrop`, applyPrefs 换算成 `--avatar-pos/size/height` 变量, 不进数据/导出; 换新头像自动清裁剪.
-- 头像形状新增「正方形」(1:1 直角盒, 圆形不圆版), 与圆形共用高度=宽度规则; 默认仍为圆角.
+- 头像裁剪弹窗: 编辑器点头像预览打开, 拖拽调位置 + 滑块缩放 + 选框高输入 (宽固定 260 — 渲染只吃比例, 宽是假自由度; 证件照 5:7 / 方形 1:1 快捷比例) — 状态存 `prefs.avatarCrop`, applyPrefs 换算成 `--avatar-pos/size` + `--avatar-ratio` 变量, 不进数据/导出; 换图 (上传/清除头像/手改 URL/改名换本地槽位/导入) 五路自动清裁剪 (`resetAvatarCrop` 单入口).
+- 头像形状开关挪进裁剪弹窗 (圆角/圆形/直角), 切形状实时联动裁剪框 (1:1 形状锁方框 + 禁框高/比例按钮); ⚙ 样式弹窗不再管形状. 「正方形」不单列 — 等价于 直角+1:1 比例, 旧 `squareBox` prefs 值兼容 (`avatarShapeIsSquare`).
+- 头像按形状分档阴影 (`--avatar-shadow`): 圆形软大 / 圆角居中 / 直角锐利; 打印与移动端关闭 (纸面发灰, 小图糊边).
 - 教育模块 ⚙ 样式弹窗 (模块级头一个): 「学制 / 统招」字段显隐开关, 存 `prefs.eduHidden` (视图层), 数据与导出照常 — 「学信网可查但不想展示」场景的正式出口.
 - M3 bullet 级分页: 条目塞不进当前页时在业绩列表 (`ul.item-section-list`) 边界剖开 — 条目头 + 放不下的前缀留本页, 剩余 bullet 带「(续)」标记续到下页 (标题/时间保留, 简介/标签云/链接剥掉不重复); 防孤行 (头 + 至少 1 条放不下则整件搬走), 单条超页硬放不死循环; 顺序语义不变, 大空白从页中消失集中到末页. 自检 `test/paginate-split.mjs` (6 场景, 分页首个测试).
 - `start.sh` 静态响应带 `Cache-Control: no-store` (UI 迭代禁浏览器缓存, 全局规则 5 落地).
