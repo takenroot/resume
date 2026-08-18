@@ -7,16 +7,33 @@ let cvPrefs = null;
 // ponytail: THEMES 删 default key 后, 用户初始 prefs 没有 theme 字段. fallback 到 themes 第一个键. 应用时也用 fallback 链 (THEMES[k] || THEMES[first]).
 const FIRST_THEME = Object.keys(THEMES)[0];
 
-function loadPrefs() { const st = localStorage.getItem(PREFS_KEY); if (st) { try { cvPrefs = JSON.parse(st); } catch (e) { cvPrefs = null; } } if (!cvPrefs) cvPrefs = { fontFamily: 'default', fontSize: 'medium', theme: FIRST_THEME }; if (!cvPrefs.theme || !THEMES[cvPrefs.theme]) cvPrefs.theme = FIRST_THEME; if (!FONT_FAMILIES[cvPrefs.fontFamily]) cvPrefs.fontFamily = 'default'; if (!Array.isArray(cvPrefs.profileHidden)) cvPrefs.profileHidden = []; if (typeof cvPrefs.showAvatar !== 'boolean') cvPrefs.showAvatar = true; if (cvPrefs.essentialLayout !== 'grid') cvPrefs.essentialLayout = 'flow'; if (cvPrefs.nameAlign !== 'center') cvPrefs.nameAlign = 'left'; if (['rounded', 'circle', 'square'].indexOf(cvPrefs.avatarShape) < 0) cvPrefs.avatarShape = 'rounded'; if (cvPrefs.pillDensity !== 'loose') cvPrefs.pillDensity = 'compact'; if (typeof cvPrefs.headerRule !== 'boolean') cvPrefs.headerRule = false; if (typeof cvPrefs.essentialIcons !== 'boolean') cvPrefs.essentialIcons = true; if (typeof cvPrefs.plainText !== 'boolean') cvPrefs.plainText = false; }
+function loadPrefs() { const st = localStorage.getItem(PREFS_KEY); if (st) { try { cvPrefs = JSON.parse(st); } catch (e) { cvPrefs = null; } } if (!cvPrefs) cvPrefs = { fontFamily: 'default', fontSize: 'medium', theme: FIRST_THEME }; if (!cvPrefs.theme || !THEMES[cvPrefs.theme]) cvPrefs.theme = FIRST_THEME; if (!FONT_FAMILIES[cvPrefs.fontFamily]) cvPrefs.fontFamily = 'default'; if (!Array.isArray(cvPrefs.profileHidden)) cvPrefs.profileHidden = []; if (!Array.isArray(cvPrefs.eduHidden)) cvPrefs.eduHidden = []; if (typeof cvPrefs.showAvatar !== 'boolean') cvPrefs.showAvatar = true; if (cvPrefs.essentialLayout !== 'grid') cvPrefs.essentialLayout = 'flow'; if (cvPrefs.nameAlign !== 'center') cvPrefs.nameAlign = 'left'; if (['rounded', 'circle', 'square', 'squareBox'].indexOf(cvPrefs.avatarShape) < 0) cvPrefs.avatarShape = 'rounded'; if (cvPrefs.pillDensity !== 'loose') cvPrefs.pillDensity = 'compact'; if (typeof cvPrefs.headerRule !== 'boolean') cvPrefs.headerRule = false; if (typeof cvPrefs.essentialIcons !== 'boolean') cvPrefs.essentialIcons = true; if (typeof cvPrefs.plainText !== 'boolean') cvPrefs.plainText = false; const ac = cvPrefs.avatarCrop; if (ac !== null && ac !== undefined && !(typeof ac === 'object' && ac.iw > 0 && ac.ih > 0 && ac.fw > 0 && ac.fh > 0)) cvPrefs.avatarCrop = null; }
+
+// ponytail: 头像裁剪 — 弹窗原始状态 {ox,oy,iw,ih,fw,fh} (偏移/图片显示宽高/选择框宽高, px) 原样存,
+// 这里换算成 background 变量: S = 图宽占盒宽 %, pos% 对齐公式 p% → 偏移 = -p% × (图−盒).
+function avatarCropVars(crop) {
+  if (!crop || !(crop.iw > 0) || !(crop.ih > 0) || !(crop.fw > 0) || !(crop.fh > 0)) return null;
+  const s = crop.iw / crop.fw;
+  function pct(o, f, img) { const r = img / f; return r <= 1 ? 50 : Math.min(100, Math.max(0, (-o / f) / (r - 1) * 100)); }
+  return { size: (s * 100).toFixed(2) + '% auto', pos: pct(crop.ox, crop.fw, crop.iw).toFixed(2) + '% ' + pct(crop.oy, crop.fh, crop.ih).toFixed(2) + '%', ratio: (crop.fh / crop.fw).toFixed(4) };
+}
 function savePrefs() { localStorage.setItem(PREFS_KEY, JSON.stringify(cvPrefs)); }
 function applyPrefs() { const r = document.documentElement, th = THEMES[cvPrefs.theme] || THEMES[FIRST_THEME], fs = FONT_SIZES[cvPrefs.fontSize] || FONT_SIZES.medium, ff = FONT_FAMILIES[cvPrefs.fontFamily] || FONT_FAMILIES.default; Object.entries(th.vars).forEach(function (kv) { r.style.setProperty(kv[0], kv[1]); }); Object.entries(fs.vars).forEach(function (kv) { r.style.setProperty(kv[0], kv[1]); }); r.style.setProperty('--font-family', ff.value);
   // ponytail: 头部样式开关 — 全走 CSS 变量/类, 不重渲染 DOM. 值在 loadPrefs 已归一.
   r.style.setProperty('--name-align', cvPrefs.nameAlign);
   r.style.setProperty('--lines-justify', cvPrefs.nameAlign === 'center' ? 'center' : '');
   const circle = cvPrefs.avatarShape === 'circle';
-  r.style.setProperty('--avatar-radius', circle ? '50%' : cvPrefs.avatarShape === 'square' ? '0' : '4px');
-  // ponytail: 正圆必须正方形盒子 — 头像默认 5:7 (一寸照), 50% radius 在非方形上是椭圆. 圆形时高度压成宽度.
-  if (circle) r.style.setProperty('--avatar-height', 'var(--avatar-width)'); else r.style.removeProperty('--avatar-height');
+  // ponytail: squareBox(正方形) 与 circle 共用 1:1 盒子规则, 只 radius 不同; 直角/正方形都是 0.
+  r.style.setProperty('--avatar-radius', circle ? '50%' : cvPrefs.avatarShape === 'rounded' ? '4px' : '0');
+  // ponytail: 正圆/正方形必须正方形盒子 — 头像默认 5:7 (一寸照), 50% radius 在非方形上是椭圆. 1:1 时高度压成宽度.
+  const sq = circle || cvPrefs.avatarShape === 'squareBox';
+  const acv = avatarCropVars(cvPrefs.avatarCrop);
+  if (sq) r.style.setProperty('--avatar-height', 'var(--avatar-width)');
+  else if (acv) r.style.setProperty('--avatar-height', 'calc(var(--avatar-width) * ' + acv.ratio + ')');
+  else r.style.removeProperty('--avatar-height');
+  // ponytail: 裁剪 pos/size 与形状正交 — 1:1 形状下盒子比例被压, 但图在盒里的摆法仍吃这两个变量.
+  if (acv) { r.style.setProperty('--avatar-pos', acv.pos); r.style.setProperty('--avatar-size', acv.size); }
+  else { r.style.removeProperty('--avatar-pos'); r.style.removeProperty('--avatar-size'); }
   const loose = cvPrefs.pillDensity === 'loose';
   r.style.setProperty('--pill-gap', loose ? '12px' : '8px');
   r.style.setProperty('--pill-rgap', loose ? '8px' : '4px');
@@ -27,6 +44,9 @@ function applyPrefs() { const r = document.documentElement, th = THEMES[cvPrefs.
 // ponytail: 头部字段显隐 — 存 prefs.profileHidden (视图层偏好, 不进数据/不影响导出与平台填充).
 // 默认「填了就显示」: 空字段渲染层本来就跳过, 开关只管「填了但不想展示」.
 function isProfileShown(k) { return !cvPrefs || cvPrefs.profileHidden.indexOf(k) < 0; }
+
+// ponytail: 教育字段显隐 — 同 profileHidden, 存 prefs.eduHidden (degreeType/isUnified), 视图层不碰数据.
+function isEduShown(k) { return !cvPrefs || !Array.isArray(cvPrefs.eduHidden) || cvPrefs.eduHidden.indexOf(k) < 0; }
 
 function bindPrefChangeEvents() { const ts = document.getElementById('prefTheme'), ss = document.getElementById('prefFontSize'), fs = document.getElementById('prefFontFamily'); if (ts) { ts.removeEventListener('change', onPrefThemeChange); ts.addEventListener('change', onPrefThemeChange); } if (ss) { ss.removeEventListener('change', onPrefSizeChange); ss.addEventListener('change', onPrefSizeChange); } if (fs) { fs.removeEventListener('change', onPrefFontChange); fs.addEventListener('change', onPrefFontChange); } }
 function onPrefThemeChange() { cvPrefs.theme = this.value; savePrefs(); applyPrefs(); }

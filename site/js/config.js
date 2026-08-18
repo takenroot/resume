@@ -8,10 +8,17 @@
 
 // ponytail: education item-head 拼接抽到顶层, 跟 _EXP_SHARED 对称. isUnified 走 item-meta-tag 旁挂不进 h3,
 // 避免 h3 串太长 ("河套学院 · 物联网工程 · 本科 (全日制) 统招" 拥挤).
+// ponytail: 显隐走 prefs.eduHidden (视图层), degreeType/isUnified 可单独关, 数据与导出不动.
+// 合并规则: 全日制 + 统招 → (全日制统招), 不再出独立统招标签; 非全/自考不合并 (必须显眼).
 function buildEduHead(i) {
-  const headParts = [esc(i.school || ''), i.major ? esc(i.major) : null, i.degree ? esc(i.degree) + (i.degreeType ? ' (' + esc(i.degreeType) + ')' : '') : null].filter(Boolean);
+  const shown = typeof isEduShown === 'function' ? isEduShown : function () { return true; };
+  const uni = isYes(i.isUnified), typeOn = shown('degreeType'), uniOn = shown('isUnified');
+  const merged = !!(i.degree && i.degreeType === '全日制' && uni && typeOn && uniOn);
+  let degree = i.degree ? esc(i.degree) : null;
+  if (degree && i.degreeType && typeOn) degree += ' (' + esc(i.degreeType) + (merged ? '统招' : '') + ')';
+  const headParts = [esc(i.school || ''), i.major ? esc(i.major) : null, degree].filter(Boolean);
   let html = '<div class="item-head"><div><h3>' + headParts.join(' · ') + '</h3>';
-  const tags = []; if (isYes(i.isUnified)) tags.push('统招'); if (isYes(i.overseasEdu)) tags.push('海外留学');
+  const tags = []; if (uni && uniOn && !merged) tags.push('统招'); if (isYes(i.overseasEdu)) tags.push('海外留学');
   if (tags.length) html += '<div class="item-meta">' + tags.map(function (t) { return '<span class="item-meta-tag">' + t + '</span>'; }).join('') + '</div>';
   html += '</div><span class="item-time">' + esc(i.period) + '</span></div>';
   return html;
@@ -31,7 +38,9 @@ const _EXP_SHARED = {
   ],
   renderItem: function (i) {
     const a = cE('article', 'timeline-item');
-    let html = '<div class="item-head"><div><h3>' + esc(i.company) + ' · ' + esc(i.position) + (isYes(i.isIntern) ? '（实习）' : '') + '</h3>';
+    // ponytail: 公司/职位可空 (其它经历常见), 空段不拼, 不出裸「·」.
+    const pos = esc(i.position) + (isYes(i.isIntern) ? '（实习）' : '');
+    let html = '<div class="item-head"><div><h3>' + [i.company ? esc(i.company) : '', pos].filter(Boolean).join(' · ') + '</h3>';
     const tags = []; if (i.industry) tags.push(i.industry); if (i.department) tags.push(i.department);
     if (tags.length) html += '<div class="item-meta">' + tags.map(function (t) { return '<span class="item-meta-tag">' + esc(t) + '</span>'; }).join('') + '</div>';
     html += '</div><span class="item-time">' + esc(i.period) + '</span></div>';
@@ -42,7 +51,8 @@ const _EXP_SHARED = {
     return a;
   },
   mdItem: function (i) {
-    let md = '**' + (i.period || '') + '** | ' + (i.company || '') + ' | ' + (i.position || '') + (isYes(i.isIntern) ? '（实习）' : '');
+    const pos = (i.position || '') + (isYes(i.isIntern) ? '（实习）' : '');
+    let md = '**' + (i.period || '') + '** | ' + [i.company, pos].filter(Boolean).join(' | ');
     if (i.industry) md += ' | ' + i.industry;
     if (i.department) md += ' | ' + i.department;
     md += '\n\n' + (i.summary || '');

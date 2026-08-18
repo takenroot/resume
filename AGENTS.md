@@ -9,7 +9,7 @@ This file provides context for AI assistants working on this project.
 No build step — edit source files directly, reload browser.
 
 - **Dev server:** `cd site && python3 -m http.server 8000` (or `bash start.sh`)
-- **Self-checks:** `node test/validate-schema.mjs` / `collect-form.mjs` / `render-tags.mjs` / `markdown-profile.mjs` / `fields-sync.mjs` / `header-visibility.mjs` (frameworkless, 直接跑; 改 config/data/editor/markdown 后必跑; 改字段后必跑 fields-sync; 改头部渲染/装箱后必跑 header-visibility)
+- **Self-checks:** `node test/validate-schema.mjs` / `collect-form.mjs` / `render-tags.mjs` / `markdown-profile.mjs` / `fields-sync.mjs` / `header-visibility.mjs` / `avatar-crop.mjs` / `paginate-split.mjs` (frameworkless, 直接跑; 改 config/data/editor/markdown 后必跑; 改字段后必跑 fields-sync; 改头部渲染/装箱后必跑 header-visibility; 改头像裁剪换算后必跑 avatar-crop; 改分页后必跑 paginate-split)
 - **Syntax:** `node --check site/js/*.js`
 
 ## Project Structure

@@ -27,11 +27,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 修样式弹窗布局: `.editor-field` 表单规则 (label block / input 100%) 权重压过 `.vis-toggle`, radio 被压成独占行、文字挤到下方 — 开关规则提权重 + 弹窗内容分三组 (版式预设/头部显示/细节样式).
 - 修胶囊装箱两处: 桌面端装箱从没跑过 (renderIdentityLine 在 display:none source 上量不到宽, 挪到 paginateResume 末尾对可见克隆重测); 行序按填充宽降序 (塞不进搭档的长胶囊不抢第一行).
 - 修装箱 W 居中虚宽: 原算法 = 最右 child.right − 容器左缘, nameAlign=center 时把左侧空白算进宽度 — 改测 maxRight − minLeft.
+- 修续页测量容量虚大 ~18px: 续页 banner 文本由 `updatePageBanners` 在分页结束后才填, 测量期空 span 不产生行盒 → 分页按 1008px 容量排版, 文本填入后内容区缩到 990px, 内容溢出页脚 — `.resume-page-banner span:empty::before` 占位 nbsp, 空/填文本同高 (存量 bug, 条目级分页时代被条目粒度掩盖).
+- 修经历条目标题裸「·」: 公司为空时 (其它经历常见) 仍拼 ` · ` 分隔 — 公司/职位改 filter 非空再 join, mdItem 同步 (不再出 `|  |` 空段).
+- 修编辑器吸顶缝隙: 吸顶元素停在「编辑简历」标题栏下 24px (= `.editor-content` 上 padding, sticky top 参照内容盒), 缝隙透出滚动内容 — 滚动容器上 padding 改内容的 margin, 吸顶即贴面板头; 顺带「页面设置」区块不再吸顶.
 
 ### Added
 
 - 编辑器条目级折叠: 条目卡片 header 加 ▸ 按钮 (抄模块折叠同模式, class toggle + CSS), header 常驻显示 `#N + 首字段值` (公司/项目名/学校), 折叠后认得出是哪条.
 - 编辑器模块标题吸顶: 模块 header + 区块 h3 `position: sticky`, 滚动时当前模块名常驻面板顶部, 折叠/排序按钮随手可用.
+- 头像裁剪弹窗: 编辑器点头像预览打开, 拖拽调位置 + 滑块缩放 + 选框宽高输入 (证件照 5:7 / 方形 1:1 快捷比例) — 状态存 `prefs.avatarCrop`, applyPrefs 换算成 `--avatar-pos/size/height` 变量, 不进数据/导出; 换新头像自动清裁剪.
+- 头像形状新增「正方形」(1:1 直角盒, 圆形不圆版), 与圆形共用高度=宽度规则; 默认仍为圆角.
+- 教育模块 ⚙ 样式弹窗 (模块级头一个): 「学制 / 统招」字段显隐开关, 存 `prefs.eduHidden` (视图层), 数据与导出照常 — 「学信网可查但不想展示」场景的正式出口.
+- M3 bullet 级分页: 条目塞不进当前页时在业绩列表 (`ul.item-section-list`) 边界剖开 — 条目头 + 放不下的前缀留本页, 剩余 bullet 带「(续)」标记续到下页 (标题/时间保留, 简介/标签云/链接剥掉不重复); 防孤行 (头 + 至少 1 条放不下则整件搬走), 单条超页硬放不死循环; 顺序语义不变, 大空白从页中消失集中到末页. 自检 `test/paginate-split.mjs` (6 场景, 分页首个测试).
 - `start.sh` 静态响应带 `Cache-Control: no-store` (UI 迭代禁浏览器缓存, 全局规则 5 落地).
 
 ### Changed
@@ -40,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 项目经验标题改 `项目名 · 担任角色` (跟工作经历的 `公司 · 职位` 一致), 角色不再套 item-meta-tag 胶囊.
 - 工作描述/项目描述等 `.summary` 段落首行缩进 2em, 跟上方标题行拉出层次.
 - 技能标签/技术栈编辑改单行逗号分隔 (原 textarea 换行是技术惯性, label 写「逗号分隔」实现却按换行 join — 不一致缺陷): `skillTags` / `projects.tags` 去掉 `t:'textarea'`, 存储格式 `string[]` 不变, `arr()` 逗号/换行通吃无迁移.
+- 教育背景「全日制 + 统招」合并显示为 `本科 (全日制统招)`, 不再出独立「统招」标签; 非全日制/自考不合并 (必须显眼); 数据与 mdItem 导出不变.
 
 ### Added
 

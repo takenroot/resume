@@ -27,6 +27,33 @@
       <div class="style-modal-body" id="styleModalBody"></div>
     </div>
   </div>
+
+  <!-- ponytail: 头像裁剪弹窗 — 编辑器点头像预览打开. 拖拽调位置/滑块缩放/输入选框宽高,
+       状态存 prefs.avatarCrop (视图偏好, 不进数据/导出). 交互全在 editor.js openAvatarCrop. -->
+  <div class="style-modal" id="avatarCropModal" hidden>
+    <div class="style-modal-overlay" data-crop-close></div>
+    <div class="style-modal-panel" role="dialog" aria-modal="true" aria-labelledby="cropModalTitle">
+      <div class="style-modal-head">
+        <h3 id="cropModalTitle">调整头像</h3>
+        <button type="button" class="style-modal-close" data-crop-close aria-label="关闭">×</button>
+      </div>
+      <div class="style-modal-body">
+        <div class="crop-stage"><div class="crop-frame" id="cropFrame"><img id="cropImg" alt="" draggable="false"></div></div>
+        <div class="crop-controls">
+          <div class="crop-row"><span>缩放</span><input type="range" id="cropZoom" min="1" max="3" step="0.01" value="1"></div>
+          <div class="crop-row">
+            <span>选框</span><input type="number" id="cropFW" min="160" max="400" step="10"> × <input type="number" id="cropFH" min="160" max="560" step="10">
+            <button type="button" class="editor-btn" data-crop-ratio="5:7">证件照 5:7</button>
+            <button type="button" class="editor-btn" data-crop-ratio="1:1">方形 1:1</button>
+          </div>
+        </div>
+        <div class="crop-actions">
+          <button type="button" class="editor-btn" id="cropResetBtn">恢复默认</button>
+          <button type="button" class="editor-btn" id="cropSaveBtn">保存</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="page-shell">
     <div class="resume-stage">
       <main class="resume-document" id="resumeDocument" data-js-ready="false">

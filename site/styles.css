@@ -199,6 +199,12 @@ html.js .resume-document[data-js-ready="false"] {
   color: var(--text-soft);
 }
 
+/* ponytail: 分页测量期 banner 文本还没填 (updatePageBanners 最后才跑), 空 span 不产生行盒,
+   banner 矮 ~18px → 续页容量测大、文本填入后内容溢出. 占位nbsp让空/填文本同高. */
+.resume-page-banner span:empty::before {
+  content: '\00a0';
+}
+
 .resume-page--continuation .resume-page-content > .resume-section:first-child {
   margin-top: var(--space-after-banner);
 }
@@ -389,9 +395,10 @@ button.identity-pill:hover {
   align-self: start;
   margin-top: var(--avatar-offset-top);
   background-image: var(--avatar-image);
-  background-position: center top;
+  /* ponytail: 裁剪变量 — prefs.avatarCrop 换算 (avatarCropVars); 无裁剪回落 cover 居中顶 */
+  background-position: var(--avatar-pos, center top);
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: var(--avatar-size, cover);
   background-color: #f0f2f5;
   pointer-events: none;
   user-select: none;
@@ -474,6 +481,15 @@ button.identity-pill:hover {
   letter-spacing: -0.01em;
   font-size: var(--fs-h3);
   line-height: 1.4;
+}
+
+/* ponytail: M3 续页标记 — bullet 级剖分后, 续到下页的条目标题挂淡色小字 */
+.item-cont-tag {
+  font-size: var(--fs-meta);
+  color: var(--text-soft);
+  font-weight: 400;
+  letter-spacing: 0;
+  margin-left: 6px;
 }
 
 .item-subtitle,
@@ -821,7 +837,12 @@ button.identity-pill:hover {
 .editor-content {
   flex: 1;
   overflow-y: auto;
-  padding: 24px;
+  padding: 0 24px 24px;
+}
+
+/* ponytail: 上间距走 margin 不走 padding — 滚动容器上 padding 会让 sticky top:0 与面板头之间透出一条缝 */
+.editor-content > :first-child {
+  margin-top: 24px;
 }
 
 /* 页面设置区 */
@@ -901,8 +922,8 @@ button.identity-pill:hover {
 }
 
 /* ponytail: 编辑区吸顶标题 — 滚动时当前模块名常驻面板顶部, 折叠等辅助按钮随手可用.
-   h3 (个人信息/页面设置) 与模块 header 都吸, 后一个模块把前一个顶走 (sticky 标准行为). */
-.editor-section > h3,
+   h3 (个人信息) 与模块 header 都吸, 后一个模块把前一个顶走 (sticky 标准行为); 页面设置不吸. */
+.editor-section:not(.editor-section-prefs) > h3,
 .editor-module-header {
   position: sticky;
   top: 0;
@@ -1058,6 +1079,69 @@ button.identity-pill:hover {
   margin-bottom: 8px;
 }
 
+/* 头像裁剪弹窗 — 骨架复用 .style-modal, 这里只有裁剪区 */
+
+.crop-stage {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 12px;
+}
+
+.crop-frame {
+  position: relative;
+  overflow: hidden;
+  background: #1e293b;
+  border-radius: 4px;
+  touch-action: none;
+}
+
+.crop-frame img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: none;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.crop-frame.dragging img {
+  cursor: grabbing;
+}
+
+.crop-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-soft);
+}
+
+.crop-controls .crop-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.crop-controls input[type="range"] {
+  flex: 1;
+}
+
+.crop-controls input[type="number"] {
+  width: 64px;
+  padding: 5px 8px;
+  font-size: 13px;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+}
+
+.crop-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 14px;
+}
+
 .editor-field input:focus,
 .editor-field textarea:focus {
   outline: none;
@@ -1178,10 +1262,12 @@ button.identity-pill:hover {
   width: 80px;
   height: 112px;
   border-radius: 6px;
-  background-size: cover;
-  background-position: center top;
+  background-size: var(--avatar-size, cover);
+  background-position: var(--avatar-pos, center top);
+  background-repeat: no-repeat;
   background-color: #f0f2f5;
   flex: 0 0 80px;
+  cursor: pointer;
 }
 
 .editor-field-avatar .avatar-upload-inputs {
@@ -1715,7 +1801,11 @@ button.identity-pill:hover {
   }
 
   .editor-content {
-    padding: 16px;
+    padding: 0 16px 16px;
+  }
+
+  .editor-content > :first-child {
+    margin-top: 16px;
   }
 
   .editor-header {

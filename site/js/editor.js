@@ -20,6 +20,8 @@ function buildEditorSectionForm(sec, idx) {
   const cfg = SECTION_CONFIG[sec.type]; if (!cfg) return '';
   let hh = '<div class="editor-section editor-module" data-section-index="' + idx + '">';
   hh += '<div class="editor-module-header"><span class="module-type-label">' + esc(moduleLabel(sec)) + '</span><div class="module-actions">';
+  // ponytail: 模块级样式弹窗 — 目前只有 education 有字段显隐开关, 其它模块不加按钮.
+  if (sec.type === 'education') hh += '<button type="button" class="module-style-btn" data-style-modal="education" aria-label="教育背景样式配置" title="样式配置">⚙</button>';
   hh += '<button type="button" class="module-action-btn collapse-btn" data-action="toggle-section-collapse" data-index="' + idx + '" title="折叠/展开"></button>';
   hh += '<button type="button" class="module-action-btn" data-action="move-section-up" data-index="' + idx + '" title="上移"' + (idx === 0 ? ' disabled' : '') + '>↑</button>';
   hh += '<button type="button" class="module-action-btn" data-action="move-section-down" data-index="' + idx + '" title="下移"' + (idx === (cvData.sections || []).length - 1 ? ' disabled' : '') + '>↓</button>';
@@ -87,6 +89,57 @@ function openStyleModal(title, bodyHtml) {
 }
 function closeStyleModal() { const m = document.getElementById('styleModal'); if (m) m.hidden = true; }
 
+// ponytail: 头像裁剪弹窗 — 状态 {ox,oy,iw,ih,fw,fh} 就是 prefs.avatarCrop 的原型;
+// 拖拽/缩放/改框都只改这组数, 保存时原样存 prefs, 换算成 background 变量在 avatarCropVars (prefs.js).
+let cropState = null;
+function closeAvatarCrop() { const m = document.getElementById('avatarCropModal'); if (m) m.hidden = true; cropState = null; }
+function clampCrop() {
+  cropState.ox = Math.min(0, Math.max(cropState.fw - cropState.iw, cropState.ox));
+  cropState.oy = Math.min(0, Math.max(cropState.fh - cropState.ih, cropState.oy));
+}
+function renderCrop() {
+  const f = document.getElementById('cropFrame'), img = document.getElementById('cropImg');
+  f.style.width = cropState.fw + 'px';
+  f.style.height = cropState.fh + 'px';
+  img.style.width = cropState.iw + 'px';
+  img.style.transform = 'translate(' + cropState.ox + 'px, ' + cropState.oy + 'px)';
+}
+function syncCropFrame() { // 框尺寸或缩放变了: 保持 zoom 倍率, 重算图片宽, 收拢偏移
+  const zoom = parseFloat(document.getElementById('cropZoom').value) || 1;
+  const base = Math.max(cropState.fw, cropState.fh * cropState.nat);
+  cropState.iw = base * zoom;
+  cropState.ih = cropState.iw / cropState.nat;
+  clampCrop();
+  renderCrop();
+}
+function openAvatarCrop(url) {
+  const m = document.getElementById('avatarCropModal'); if (!m) return;
+  const probe = new Image();
+  probe.onload = function () {
+    const nat = probe.naturalWidth / probe.naturalHeight, saved = cvPrefs.avatarCrop;
+    // ponytail: 1:1 形状 (圆形/正方形) 默认框锁方形; 否则默认证件照 5:7.
+    const sq = cvPrefs.avatarShape === 'circle' || cvPrefs.avatarShape === 'squareBox';
+    const fw = saved ? saved.fw : 260, fh = saved ? saved.fh : (sq ? 260 : 364);
+    if (saved) cropState = { ox: saved.ox, oy: saved.oy, iw: saved.iw, ih: saved.ih, fw: fw, fh: fh, nat: nat };
+    else { const base = Math.max(fw, fh * nat); cropState = { iw: base, ih: base / nat, ox: (fw - base) / 2, oy: (fh - base / nat) / 2, fw: fw, fh: fh, nat: nat }; }
+    document.getElementById('cropImg').src = url;
+    document.getElementById('cropFW').value = fw;
+    document.getElementById('cropFH').value = fh;
+    document.getElementById('cropZoom').value = (cropState.iw / Math.max(fw, fh * nat)).toFixed(2);
+    renderCrop();
+    m.hidden = false;
+  };
+  probe.src = url;
+}
+
+// ponytail: 教育背景显隐 — 抄 profileHidden 同模式, 存 prefs.eduHidden (视图层), 数据/导出不动.
+function buildEduToggles() {
+  return '<div class="editor-field"><label>字段显示</label><div class="vis-toggles">' +
+    '<label class="vis-toggle"><input type="checkbox" data-edu-vis="degreeType"' + (isEduShown('degreeType') ? ' checked' : '') + '>学制 (全日制等)</label>' +
+    '<label class="vis-toggle"><input type="checkbox" data-edu-vis="isUnified"' + (isEduShown('isUnified') ? ' checked' : '') + '>统招</label>' +
+    '</div><p class="vis-hint">只控制预览显示, 数据与导出照常; 全日制 + 统招时合并显示为 (全日制统招)</p></div>';
+}
+
 const HEADER_TOGGLES = [['title', '岗位'], ['experience', '工作经验'], ['phone', '电话'], ['email', '邮箱'], ['location', '籍贯'], ['jobStatus', '求职状态'], ['github', 'GitHub'], ['wechat', '微信'], ['expectJobs', '期望职位/薪资/城市'], ['expectIndustry', '期望行业']];
 
 // ponytail: 版式预设 — 只是 ⚙ 开关组合的一键套餐, 派生不存储: 当前开关值全匹配才点亮,
@@ -119,7 +172,7 @@ function buildVisToggles() {
     '<label class="vis-toggle"><input type="radio" name="essentialLayout" data-vis-layout="grid"' + (cvPrefs.essentialLayout === 'grid' ? ' checked' : '') + '>表格对齐</label>' +
     '</div>' +
     styleRadioRow('姓名对齐', 'nameAlign', [['left', '左对齐'], ['center', '居中']]) +
-    styleRadioRow('头像形状', 'avatarShape', [['rounded', '圆角'], ['circle', '圆形'], ['square', '直角']]) +
+    styleRadioRow('头像形状', 'avatarShape', [['rounded', '圆角'], ['circle', '圆形'], ['square', '直角'], ['squareBox', '正方形']]) +
     styleRadioRow('胶囊密度', 'pillDensity', [['compact', '紧凑'], ['loose', '宽松']]) +
     '<div class="vis-toggles"><span class="vis-hint">其它</span>' +
     '<label class="vis-toggle"><input type="checkbox" data-vis-plain' + (cvPrefs.plainText === true ? ' checked' : '') + '>纯文本 (| 分隔)</label>' +
@@ -309,12 +362,40 @@ function bindEditorEvents() {
     if (ev.target.closest('#addSectionBtn')) return;
     if (ev.target.closest('[data-add-type]')) return;
     if (ev.target.closest('[data-dropdown]')) { ev.stopPropagation(); const dd = ev.target.closest('[data-dropdown]'); const p = dd.closest('.dropdown'); const wo = p && p.classList.contains('open'); closeAllDropdowns(); if (p && !wo) p.classList.add('open'); return; }
-    const smb = ev.target.closest('[data-style-modal]'); if (smb) { openStyleModal('个人信息样式', buildVisToggles()); return; }
+    const smb = ev.target.closest('[data-style-modal]'); if (smb) { if (smb.dataset.styleModal === 'education') openStyleModal('教育背景样式', buildEduToggles()); else openStyleModal('个人信息样式', buildVisToggles()); return; }
     if (ev.target.closest('[data-modal-close]')) { closeStyleModal(); return; }
+    // ponytail: 头像裁剪 — 点编辑器头像预览开弹窗; 弹窗内按钮全在这里委托.
+    const apv = ev.target.closest('.avatar-preview');
+    if (apv) { const p = (cvData && cvData.profile) || {}; const url = p.avatar || loadAvatar(p.name || 'default'); if (!url) { showToast('先上传头像', 'info'); return; } openAvatarCrop(url); return; }
+    const crb = ev.target.closest('[data-crop-ratio]');
+    if (crb && cropState) { const pt = crb.dataset.cropRatio.split(':'); cropState.fh = Math.round(cropState.fw * parseInt(pt[1], 10) / parseInt(pt[0], 10)); document.getElementById('cropFH').value = cropState.fh; syncCropFrame(); return; }
+    if (ev.target.closest('#cropSaveBtn')) { if (cropState) { cvPrefs.avatarCrop = { ox: Math.round(cropState.ox), oy: Math.round(cropState.oy), iw: Math.round(cropState.iw), ih: Math.round(cropState.ih), fw: cropState.fw, fh: cropState.fh }; savePrefs(); applyPrefs(); } closeAvatarCrop(); return; }
+    if (ev.target.closest('#cropResetBtn')) { cvPrefs.avatarCrop = null; savePrefs(); applyPrefs(); closeAvatarCrop(); return; }
+    if (ev.target.closest('[data-crop-close]')) { closeAvatarCrop(); return; }
     closeAllDropdowns();
   });
   document.addEventListener('keydown', function (ev) {
-    if (ev.key === 'Escape') closeStyleModal();
+    if (ev.key === 'Escape') { closeStyleModal(); closeAvatarCrop(); }
+  });
+  // ponytail: 裁剪弹窗拖拽/滑块 — 元素是 index.html 静态的, 绑一次; cropState 为 null 时全短路.
+  const cropFrame = document.getElementById('cropFrame');
+  if (cropFrame) {
+    cropFrame.addEventListener('pointerdown', function (ev) { if (!cropState) return; ev.preventDefault(); cropFrame.setPointerCapture(ev.pointerId); cropFrame.classList.add('dragging'); cropState.dx = ev.clientX - cropState.ox; cropState.dy = ev.clientY - cropState.oy; });
+    cropFrame.addEventListener('pointermove', function (ev) { if (!cropState || cropState.dx === undefined) return; cropState.ox = ev.clientX - cropState.dx; cropState.oy = ev.clientY - cropState.dy; clampCrop(); renderCrop(); });
+    const dragEnd = function () { if (cropState) { delete cropState.dx; delete cropState.dy; } cropFrame.classList.remove('dragging'); };
+    cropFrame.addEventListener('pointerup', dragEnd);
+    cropFrame.addEventListener('pointercancel', dragEnd);
+  }
+  document.addEventListener('input', function (ev) {
+    if (!cropState) return;
+    if (ev.target.id === 'cropZoom') { syncCropFrame(); return; }
+    if (ev.target.id === 'cropFW' || ev.target.id === 'cropFH') {
+      const v = parseInt(ev.target.value, 10);
+      if (!(v > 0)) return;
+      if (ev.target.id === 'cropFW') cropState.fw = Math.min(400, Math.max(160, v));
+      else cropState.fh = Math.min(560, Math.max(160, v));
+      syncCropFrame();
+    }
   });
   document.addEventListener('change', function (ev) {
     // ponytail: 头部显示开关 — checkbox 无 name, collectFormData 的白名单 ([name^=...]) 物理碰不到它.
@@ -322,6 +403,14 @@ function bindEditorEvents() {
       const k = ev.target.dataset.vis, i = cvPrefs.profileHidden.indexOf(k);
       if (ev.target.checked && i >= 0) cvPrefs.profileHidden.splice(i, 1);
       if (!ev.target.checked && i < 0) cvPrefs.profileHidden.push(k);
+      savePrefs(); renderCv(); syncResumeLayout();
+      return;
+    }
+    // ponytail: 教育字段显隐 — 同 data-vis 模式, 只是状态存 eduHidden.
+    if (ev.target.dataset && ev.target.dataset.eduVis) {
+      const k = ev.target.dataset.eduVis, i = cvPrefs.eduHidden.indexOf(k);
+      if (ev.target.checked && i >= 0) cvPrefs.eduHidden.splice(i, 1);
+      if (!ev.target.checked && i < 0) cvPrefs.eduHidden.push(k);
       savePrefs(); renderCv(); syncResumeLayout();
       return;
     }
@@ -369,6 +458,8 @@ function bindEditorEvents() {
         const base64 = e.target.result;
         const name = (cvData && cvData.profile && cvData.profile.name) || 'default';
         saveAvatar(name, base64);
+        // ponytail: 换了图旧裁剪无意义, 清掉回落 cover.
+        cvPrefs.avatarCrop = null; savePrefs(); applyPrefs();
         const pv = document.getElementById('avatarPreview');
         if (pv) pv.style.backgroundImage = "url('" + base64 + "')";
         const ai = document.querySelector('input[name="profile.avatar"]');
