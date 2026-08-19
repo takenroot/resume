@@ -65,8 +65,10 @@ class H(SimpleHTTPRequestHandler):
     def end_headers(self):
         self.send_header('Cache-Control', 'no-store')
         super().end_headers()
-
-HTTPServer(('', int(sys.argv[1])), H).serve_forever()
+try:
+    HTTPServer(('', int(sys.argv[1])), H).serve_forever()
+except KeyboardInterrupt:
+    print("\nHTTP 服务器已停止")
 PY
 fi
 
