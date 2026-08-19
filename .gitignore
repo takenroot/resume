@@ -1,7 +1,6 @@
 .DS_Store
 Thumbs.db
 *.log
-site/backup/
 .deepseek/
 chat-images/
 .playwright-mcp

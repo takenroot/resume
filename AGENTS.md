@@ -9,7 +9,7 @@ This file provides context for AI assistants working on this project.
 No build step — edit source files directly, reload browser.
 
 - **Dev server:** `cd site && python3 -m http.server 8000` (or `bash start.sh`)
-- **Self-checks:** `node test/validate-schema.mjs` / `collect-form.mjs` / `render-tags.mjs` / `markdown-profile.mjs` / `fields-sync.mjs` / `header-visibility.mjs` / `avatar-crop.mjs` / `paginate-split.mjs` (frameworkless, 直接跑; 改 config/data/editor/markdown 后必跑; 改字段后必跑 fields-sync; 改头部渲染/装箱后必跑 header-visibility; 改头像裁剪换算后必跑 avatar-crop; 改分页后必跑 paginate-split)
+- **Self-checks:** `node test/validate-schema.mjs` / `collect-form.mjs` / `render-tags.mjs` / `markdown-profile.mjs` / `fields-sync.mjs` / `header-visibility.mjs` / `avatar-crop.mjs` / `paginate-split.mjs` / `migrate-v2.mjs` (frameworkless, 直接跑; 改 config/data/editor/markdown 后必跑; 改字段后必跑 fields-sync; 改头部渲染/装箱后必跑 header-visibility; 改头像裁剪换算后必跑 avatar-crop; 改分页后必跑 paginate-split; 改迁移/归一逻辑后必跑 migrate-v2)
 - **Syntax:** `node --check site/js/*.js`
 
 ## Project Structure
@@ -35,4 +35,4 @@ Two modes available:
 - 字体策略：屏幕 + 打印均使用系统字体（`PingFang SC`、`Microsoft YaHei`、`Segoe UI` 等），不再引入 `@font-face` 自定义字体；早期 NotoSansSC 子集字体方案已在 `027ba5c` 撤回（Chrome print 会把自定义中文字体转路径，导致 PDF 文字层丢失）
 - 头部两层约定：必备行 `.identity-essential` (icon+值： 职位/电话/意向城市/经验) + 胶囊层 `.identity-line` (其余可选字段 + 期望标签, `packPillRows` 装箱排版, 在可见克隆上 `reflowPillRows` 重测); 头部样式开关 (版式预设/显隐/对齐/头像形状/胶囊密度/分隔线/纯文本) 全存 `cv_prefs` localStorage, 永不进 cvData/导出
 - `site/data.json` is initial seed only — after first browser edit, `localStorage` takes over
-- `site/backup/` is gitignored; 个人数据文件一律不进仓库
+- 个人数据文件一律不进仓库 (docs/resume-data*.json 等保持 untracked, 提交显式列路径)

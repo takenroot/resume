@@ -43,7 +43,7 @@ cv/
 │   └── assets/                     # 用户上传的资源文件（头像现优先存浏览器 localStorage）
 ├── docs/
 │   ├── SCHEMA_NAMING.md            # CV 字段 ↔ 平台输入框 命名对照表
-│   └── REFACTOR_PLAN.md            # 重构路线图 (已执行部分标 ✅)
+│   └── SCHEMA_V2.md                # 数据结构 v2 契约 (v1→v2 字段对照 + 迁移规则)
 ├── template/                       # 简历版式研究 (5 种版式 + 头部变体, 选型见 README)
 ├── test/                           # 无框架 node 自检 (*.mjs, 直接 node 跑)
 ├── start.sh / start.bat            # 本地启动脚本 (自动探测可用端口)
