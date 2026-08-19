@@ -99,7 +99,7 @@ python -m http.server 8000
 | 自由文本 | text | 纯文本段落 |
 | 证书 | certificate | 证书名称、颁发机构、获得时间、编号、验证链接 |
 
-> **时间字段约定**：建议使用 `YYYY.MM - YYYY.MM` 或 `YYYY.MM - 至今` 格式（如 `2022.01 - 至今`、`2015.09 - 2019.06`）。这种统一格式便于招聘平台（智联、Boss直聘）智能解析时正确识别。
+> **时间字段约定**：数据存 `startDate` / `endDate`（`YYYY-MM` 月精度，endDate 省略=至今），证书用单个 `date`。渲染仍显示 `2022.01 - 至今` 格式，便于招聘平台（智联、Boss直聘）智能解析。详见 [docs/SCHEMA_V2.md](docs/SCHEMA_V2.md)。
 
 ## 字段详细说明
 
@@ -109,32 +109,30 @@ python -m http.server 8000
 |------|------|----|
 | `name` | string | text |
 | `title` | string | text |
-| `experience` | string | text (工作年限如 "5年") |
-| `jobStatus` | string | select 4 选项 (求职状态) |
-| `location` | string | text (籍贯) |
+| `workYears` | string | text (工作年限如 "5年") |
+| `jobStatus` | string (码: available/open/passive/unavailable) | select 4 选项 (求职状态, 显示中文) |
+| `nativePlace` | string | text (籍贯) |
 | `gender` | string | text (表单保留, 预览不渲染) |
 | `birthDate` | string (YYYY-MM-DD) | date |
 | `phone` / `email` / `github` | string | text/email/url |
 | `wechat` | string | text |
 | `expectIndustry` | string | text |
-| `timeline` | string | text (预留字段, 预览不渲染) |
 | `avatar` | base64 | file (存 localStorage, 导出 JSON 不含) |
-| `expectJobs` | `[{title, jobType, salary:{low,high}, cities[]}]` 单条目 | 复合表单: 职位名 + 工作性质 select + 薪资两框 + 城市 textarea (填写后薪资/城市渲染在头部标签行) |
+| `expectJobs` | `{title, jobType, salary:{low,high}, cities[]}` 单对象 | 复合表单: 职位名 + 工作性质 select + 薪资两框 + 城市 textarea (填写后薪资/城市渲染在头部标签行) |
 | `firstWorkDate` | string (YYYY-MM-DD) | date (首次参加工作时间, 预览不渲染) |
 | `currentSalary` | `{salary, months, secret}` | 隐藏字段, 见下方说明 |
 
 ### 其它 section item 字段
 
-- **experience / experience_other**: company, position, industry, department, period, summary, achievements, skillTags, isIntern
-- **education**: school, major, degree, degreeType, isUnified, overseasEdu, period, courses, campus, honors, thesis
-- **projects**: name, role, period, link, tags, summary, achievements
+- **experience / experience_other**: company, position, industry, department, startDate, endDate, summary, highlights, tags, isIntern
+- **education**: school, major, degree, degreeType (码: fulltime/parttime/selftaught), isUnified, overseasEdu, startDate, endDate, courses, campus, highlights, thesis
+- **projects**: name, role, startDate, endDate, link, tags, summary, highlights
 
 ### 隐藏字段 (UI 不渲染, 数据存)
 
 - `profile.currentSalary` — 当前薪资 (敏感, 永久隐藏, 只能手写 JSON 才能填)
-- `profile.timeline` — 预留字段, 编辑器可填但预览不渲染
 
-> 注意: `expectJobs[0]` 的薪资/城市、`expectIndustry`、`wechat` 填写后**会**渲染在简历头部 (意向城市在必备行, 其余在胶囊层), 不是隐藏字段。2026-08 起 `expectSalary` / `expectCities` 独立字段已删除, 头部展示从 `expectJobs[0]` 派生 (项目开发期不做老数据迁移, 老 localStorage 请「重置默认」重填)。
+> 注意: `expectJobs` 的薪资/城市、`expectIndustry`、`wechat` 填写后**会**渲染在简历头部 (意向城市在必备行, 其余在胶囊层), 不是隐藏字段。2026-08-19 schema v2: `experience→workYears`、`location→nativePlace`、expectJobs 去数组包装、枚举存码、period 拆 startDate/endDate，老数据 load/import 时自动迁移 (见 docs/SCHEMA_V2.md)。空值一律省略（`""`/`[]` 不落数据）。
 
 ### 模块类型选择策略
 

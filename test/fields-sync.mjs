@@ -13,9 +13,8 @@ const fj = JSON.parse(readFileSync(join(root, 'site', 'fields.json'), 'utf8'));
 // ponytail: CV 自有字段白名单 — "这个字段不在上游 fields.json" 是写在这里的决定, 不是没说清楚的漏洞.
 // 上游生成器规则: platforms 为空 / merged 的字段不输出, 故 CV 独有字段必然落在本表.
 const CV_OWN = [
-  'profile.timeline',      // 预留字段, 招聘平台无此概念
-  'timeline.period', 'timeline.heading', 'timeline.tag', 'timeline.summary', 'timeline.highlights', // 时间轴是 CV 自有 section
-  'education.honors',      // 荣誉奖项: 平台口径并入 campus (职务/荣誉/活动), CV 单列
+  'timeline.startDate', 'timeline.endDate', 'timeline.heading', 'timeline.tag', 'timeline.summary', 'timeline.highlights', // 时间轴是 CV 自有 section
+  'education.highlights', // 荣誉奖项: 平台口径并入 campus (职务/荣誉/活动), CV 单列
   'certificate.serial', 'certificate.url' // 证书编号/验证链接: 上游未采集
 ];
 

@@ -37,4 +37,13 @@ assert(v.ratio === '1.0000', '方形盒 → ratio 锁 1, got ' + v.ratio);
 // 按 fh=364 算是 (50/364)/(520/364-1)*100≈32.02 (旧 bug); 按方盒 260 算才是 19.23
 assert(v.pos === '50.00% 19.23%', '方形盒 Y% 按 fw 算, got ' + v.pos);
 
-console.log('avatar-crop self-check OK (11 assertions)');
+// 6. 主题切换清残留 — 学术设过 --paper-bg, 切现代 (vars 无此键) 必须 removeProperty, 否则纸永远黄
+const styleLog = [];
+globalThis.document = { documentElement: { style: { setProperty: function (k, v) { styleLog.push('set:' + k); }, removeProperty: function (k) { styleLog.push('rm:' + k); } } }, body: { classList: { toggle: function () {} } } };
+globalThis.localStorage = { setItem: function () {}, getItem: function () { return null; } };
+const themeApi = new Function(src + '; return { apply: function () { cvPrefs = { theme: "modern", fontSize: "medium", fontFamily: "default", profileHidden: [], eduHidden: [] }; applyPrefs(); } };')();
+themeApi.apply();
+assert(styleLog.indexOf('rm:--paper-bg') >= 0 && styleLog.indexOf('rm:--line-soft') >= 0, '切主题清掉其它主题设过的变量 (--paper-bg/--line-soft)');
+assert(styleLog.indexOf('set:--paper-bg') < 0, '现代主题不再设 --paper-bg (回落样式表纯白)');
+
+console.log('avatar-crop self-check OK (14 assertions)');

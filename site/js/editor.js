@@ -41,17 +41,20 @@ function buildEditorSectionForm(sec, idx) {
 function renderItemFieldInput(f, v, name) {
   if (f.t === 'select') {
     // ponytail: 是/否字段归一后存 boolean, 比较前映射回 '是'/'否', 否则 false 时浏览器回退显示第一项 (是) 误导用户.
+    // ponytail: 枚举存码字段 (degreeType 等) value=码, 显示走 codeLabel; 无映射的选项 (是/否, 语种) 原样显示.
+    // ponytail: 值未设置时补空占位 option — 否则浏览器默认选中第一项, 一次保存就把「是」/fulltime 污染进数据 (空值省略的对称面).
     const sv = typeof v === 'boolean' ? (v ? '是' : '否') : v;
-    const opts = (f.options || []).map(function (o) { return '<option value="' + esc(o) + '"' + (sv === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('');
+    const has = (f.options || []).indexOf(sv) >= 0;
+    const opts = (has ? '' : '<option value="" selected>—</option>') + (f.options || []).map(function (o) { return '<option value="' + esc(o) + '"' + (sv === o ? ' selected' : '') + '>' + esc(codeLabel(f.n, o)) + '</option>'; }).join('');
     return '<select name="' + name + '">' + opts + '</select>';
   }
   if (f.t === 'textarea') {
     const dv = f.a ? (Array.isArray(v) ? v.join('\n') : v) : v;
-    return '<textarea name="' + name + '">' + esc(dv || '') + '</textarea>';
+    return '<textarea name="' + name + '"' + (f.p ? ' placeholder="' + f.p + '"' : '') + '>' + esc(dv || '') + '</textarea>';
   }
-  // ponytail: 短标签类 (tags/skillTags) 单行逗号分隔, 长列表 (achievements 等) textarea 每行一条. 收集都走 arr() 逗号/换行通吃.
+  // ponytail: 短标签类 (tags) 单行逗号分隔走 arrTok, 长列表 (highlights 等) textarea 每行一条走 arr (只按行拆, 不碰文中顿号).
   const dv = f.a ? (Array.isArray(v) ? v.join(/tags/i.test(f.n) ? ', ' : '\n') : v) : v;
-  return '<input name="' + name + '" value="' + esc(dv || '') + '">';
+  return '<input name="' + name + '" value="' + esc(dv || '') + '"' + (f.p ? ' placeholder="' + f.p + '"' : '') + '>';
 }
 
 function buildItemCard(si, ii, fields, item) {
@@ -156,7 +159,7 @@ function buildEduToggles() {
     '</div><p class="vis-hint">只控制预览显示, 数据与导出照常; 全日制 + 统招时合并显示为 (全日制统招)</p></div>';
 }
 
-const HEADER_TOGGLES = [['title', '岗位'], ['experience', '工作经验'], ['phone', '电话'], ['email', '邮箱'], ['location', '籍贯'], ['jobStatus', '求职状态'], ['github', 'GitHub'], ['wechat', '微信'], ['expectJobs', '期望职位/薪资/城市'], ['expectIndustry', '期望行业']];
+const HEADER_TOGGLES = [['title', '岗位'], ['workYears', '工作经验'], ['phone', '电话'], ['email', '邮箱'], ['nativePlace', '籍贯'], ['jobStatus', '求职状态'], ['github', 'GitHub'], ['wechat', '微信'], ['expectJobs', '期望职位/薪资/城市'], ['expectIndustry', '期望行业']];
 
 // ponytail: 版式预设 — 只是 ⚙ 开关组合的一键套餐, 派生不存储: 当前开关值全匹配才点亮,
 // 改任何细节后两个预设都不亮 (= 自定义), 零状态同步问题.
@@ -206,9 +209,9 @@ function buildProfileFields(profile) {
   let hh = '';
   hh += '<div class="editor-field editor-field-avatar"><label>头像</label><div class="avatar-upload"><div class="avatar-preview" id="avatarPreview" title="点击调整裁剪" style="' + (localAvatar ? "background-image: url('" + esc(localAvatar) + "')" : '') + '"></div><div class="avatar-upload-inputs"><input type="file" id="avatarFileInput" accept="image/*">' + (hasLocalAvatar ? '<button type="button" class="editor-btn" id="clearAvatarBtn" style="font-size:12px;padding:4px 8px">清除头像</button>' : '') + '<input type="text" name="profile.avatar" value="' + esc(av) + '" placeholder="留空则使用浏览器本地头像"><p style="font-size:11px;color:var(--text-soft);margin:0">选择图片后自动转为 base64 存入浏览器本地，导出 JSON/Markdown 时不含头像；点击左侧图片可拖拽调整裁剪</p></div></div>'; // ponytail: hint 必须在 inputs 列内 — 放 .avatar-upload 直接子级会变成 flex 行第三项挤扁输入列.
   hh += PROFILE_FIELDS.filter(function (f) { return !f.custom; }).map(function (f) { return '<div class="editor-field"><label>' + f.l + '</label>' + renderProfileFieldInput(f, profile) + '</div>'; }).join('');
-  // ponytail: expectJobs 单条目 (猎聘/智联期望职位), schema 是单元素数组 [{title, jobType, salary:{low,high}, cities[]}], 编辑器拍平.
-  // 2026-08: expectSalary/expectCities 独立字段已删, 头部展示从 expectJobs[0] 派生 (renderer.js renderHeaderExtra).
-  const ej = (profile && Array.isArray(profile.expectJobs) && profile.expectJobs[0]) || {};
+  // ponytail: expectJobs 单对象 (schema v2 去掉 wrap1 数组包装), 编辑器拍平.
+  // 2026-08: expectSalary/expectCities 独立字段已删, 头部展示从 expectJobs 派生 (renderer.js renderHeaderExtra).
+  const ej = (profile && profile.expectJobs) || {};
   const ejs = ej.salary || {};
   hh += '<div class="editor-field"><label>期望职位</label><div class="expect-salary-row">' +
     '<input type="text" name="expectJobs.title" value="' + esc(ej.title || '') + '" placeholder="职位名">' +
@@ -226,7 +229,8 @@ function buildProfileFields(profile) {
 function renderProfileFieldInput(f, profile) {
   const v = profile && profile[f.n];
   if (f.t === 'select') {
-    const opts = (f.options || []).map(function (o) { return '<option value="' + esc(o) + '"' + (v === o ? ' selected' : '') + '>' + esc(o) + '</option>'; }).join('');
+    const has = (f.options || []).indexOf(v) >= 0;
+    const opts = (has ? '' : '<option value="" selected>—</option>') + (f.options || []).map(function (o) { return '<option value="' + esc(o) + '"' + (v === o ? ' selected' : '') + '>' + esc(codeLabel(f.n, o)) + '</option>'; }).join('');
     return '<select name="profile.' + f.n + '">' + opts + '</select>';
   }
   if (f.t === 'textarea') {
@@ -245,7 +249,7 @@ function collectComposite(name, spec, root) {
     const el = root.querySelector('[name="' + name + '.' + fd[0] + '"]'); if (!el) return;
     let v = el.value;
     if (fd[1] === 'n') { if (v === '') return; v = Number(v); }
-    else if (fd[1] === 'lines') { v = arr(v); if (v.length === 0) return; }
+    else if (fd[1] === 'lines') { v = arrTok(v); if (v.length === 0) return; } // ponytail: 城市名不含顿号, tok 拆法兼容「北京、上海」粘贴
     if (v === '' || v === undefined) return;
     const path = (fd[2] || fd[0]).split('.');
     let cur = out; for (let i = 0; i < path.length - 1; i++) { cur[path[i]] = cur[path[i]] || {}; cur = cur[path[i]]; }
@@ -253,7 +257,7 @@ function collectComposite(name, spec, root) {
     any = true;
   });
   if (!any) return undefined;
-  return spec.wrap1 ? [out] : out;
+  return out;
 }
 
 function collectFormData(opts) {
@@ -303,12 +307,15 @@ function collectFormData(opts) {
     if (!cfg || cfg.contentField) return;
     const arrKeys = arrFieldsOf(cfg);
     (s.items || []).forEach(function (item) {
-      arrKeys.forEach(function (k) { if (item[k] && typeof item[k] === 'string') item[k] = arr(item[k]); });
+      arrKeys.forEach(function (f) { if (item[f.n] && typeof item[f.n] === 'string') item[f.n] = (f.tok ? arrTok : arr)(item[f.n]); });
     });
   });
   cvData = nd;
   // ponytail: 统一归一 select 是/否 → boolean, 跟 loadCvData 一致, 避免老 string / 新 boolean 混在 localStorage.
   normalizeYesNoFields(cvData);
+  // ponytail: 空值省略 (同 normalizeSavedData 收尾) — 编辑器清空字段后数据里立即消失, 不等下次 load.
+  if (cvData.profile) stripEmpties(cvData.profile);
+  (cvData.sections || []).forEach(function (s) { (s.items || []).forEach(function (it) { if (it && typeof it === 'object') stripEmpties(it); }); });
   if (!(opts && opts.skipSave)) saveCvData();
 }
 let liveSyncTimer = null;

@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Schema v2** (契约 [docs/SCHEMA_V2.md](docs/SCHEMA_V2.md), schemaVersion `2026-08-19`): 简历数据结构全量重构 — `period` 文本拆 `startDate`/`endDate` (YYYY-MM 月精度, endDate 省略=至今; certificate 用单点 `date`); `achievements`/`honors`→`highlights`, `skillTags`→`tags`; `profile.experience`→`workYears` (消除与 section type 撞名), `profile.location`→`nativePlace` (名实合一, 标签本是籍贯); `degreeType`/`jobStatus` 存码 (fulltime/parttime/selftaught, available/open/passive/unavailable), 中文展示走单一映射表 `CODE_LABELS`; `expectJobs` 去掉 v1 的单元素数组包装 (wrap1) 变单对象; `courses` 字符串改数组; 删 `profile.timeline` 僵尸字段; **空值省略** — `""`/`[]` 一律不落数据 (渲染层本来就是真值判断). 词汇向 JSON Resume 对齐 (startDate/endDate/highlights/tags), 顶层保持 `profile + sections`.
+- 老数据自动迁移: `migrateV1toV2` 在 load/import/恢复备份时内存升级 (下次保存落盘), period 解析失败 startDate 保原文 + toast warning, 不丢数据; `cv_prefs.profileHidden` 旧键 (experience/location) 同步改名.
+- 数组字段拆法分家: 散文列表 (highlights/campus) 走 `arr()` 只按行拆; token 列表 (tags/courses/期望城市, 字段声明 `tok: true`) 走 `arrTok()` 逗号/顿号/换行通吃 — Markdown 导出的「、」join 往返可拆回.
+- 自检更新: 8 套件全量过 v2 断言; 新增 `test/migrate-v2.mjs` (21 assertions, 迁移+空值省略+幂等).
+
+### Fixed
+
+- 修主题切换残留: `applyPrefs` 只设当前主题的变量从不清旧的, 学术设过的 `--paper-bg` 切回现代后残留在 `:root` 内联样式上 (纸一直黄) — 切主题前按钥匙串清掉所有主题管过的变量.
+- 修业绩被顿号切碎: v2 初版 `arr()` 把顿号/逗号当分隔符套在所有数组字段上, 编辑器任何保存 (含移动条目/模块) 都把 highlights 散文按「、」拆成碎片 — 拆法按字段分家 (见上), 回归测试锁死.
+- 修字符串空格污染: 收集/加载/导入收尾统一 trim, 纯空格串当空删 (防误触), false/0 仍保留.
+- 修 select 未设置即污染: 是/否与枚举 select 在值缺失时浏览器默认显示第一项, 一次保存就把「是」/fulltime 写进数据 — 值未设置时补空占位 option (`—`), 未触碰不落数据 (空值省略的对称面).
+
 ### Added
 
 - 个人信息 ⚙ 样式弹窗 (`openStyleModal` 通用弹窗, 各模块可复用): 头部字段显隐开关迁入弹窗 + 5 个样式开关 (姓名对齐 / 头像形状圆角-圆形-直角 / 胶囊密度 / 头部分隔线 / 必备行图标显隐) + 必备行布局开关, 全走 CSS 变量不重渲染, 状态存 `cv_prefs` (localStorage) 不进数据/导出.

@@ -1,5 +1,5 @@
 {
-  "version": "2026-08-15",
+  "version": "2026-08-19",
   "fields": {
     "certificate.issuer": {
       "platforms": [
@@ -15,7 +15,7 @@
       ],
       "tier": "core"
     },
-    "certificate.period": {
+    "certificate.date": {
       "platforms": [
         "boss",
         "liepin"
@@ -71,7 +71,15 @@
       ],
       "tier": "longtail"
     },
-    "education.period": {
+    "education.startDate": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core"
+    },
+    "education.endDate": {
       "platforms": [
         "boss",
         "liepin",
@@ -99,7 +107,7 @@
       ],
       "tier": "longtail"
     },
-    "experience.achievements": {
+    "experience.highlights": {
       "platforms": [
         "boss",
         "liepin"
@@ -140,7 +148,15 @@
       ],
       "tier": "common"
     },
-    "experience.period": {
+    "experience.startDate": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core"
+    },
+    "experience.endDate": {
       "platforms": [
         "boss",
         "liepin",
@@ -156,7 +172,7 @@
       ],
       "tier": "core"
     },
-    "experience.skillTags": {
+    "experience.tags": {
       "platforms": [
         "boss"
       ],
@@ -267,7 +283,7 @@
       ],
       "tier": "common"
     },
-    "profile.experience": {
+    "profile.workYears": {
       "platforms": [
         "boss",
         "liepin",
@@ -311,6 +327,14 @@
       ],
       "tier": "core"
     },
+    "profile.nativePlace": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core"
+    },
     "profile.name": {
       "platforms": [
         "boss",
@@ -347,7 +371,7 @@
       ],
       "tier": "longtail"
     },
-    "projects.achievements": {
+    "projects.highlights": {
       "platforms": [
         "boss",
         "liepin",
@@ -369,7 +393,15 @@
       ],
       "tier": "core"
     },
-    "projects.period": {
+    "projects.startDate": {
+      "platforms": [
+        "boss",
+        "liepin",
+        "zhaopin"
+      ],
+      "tier": "core"
+    },
+    "projects.endDate": {
       "platforms": [
         "boss",
         "liepin",

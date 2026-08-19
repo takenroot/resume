@@ -10,11 +10,12 @@ const parseMarkdown = new Function(src + '; return parseMarkdown;')();
 
 function assert(cond, msg) { if (!cond) { console.error('FAIL: ' + msg); process.exit(1); } }
 
-const d = parseMarkdown('## 个人信息\n- **姓名**：李四\n- **岗位**：前端工程师\n- **籍贯**：北京\n- **求职状态**：随时到岗\n- **电话**：13800000000');
+const d = parseMarkdown('## 个人信息\n- **姓名**：李四\n- **岗位**：前端工程师\n- **籍贯**：北京\n- **求职状态**：随时到岗\n- **工作经验**：5年\n- **电话**：13800000000');
 assert(d.profile.name === '李四', '中文 label 姓名 → name');
-assert(d.profile.location === '北京', '籍贯 → location');
-assert(d.profile.jobStatus === '随时到岗', '求职状态 → jobStatus');
+assert(d.profile.nativePlace === '北京', '籍贯 → nativePlace (v2)');
+assert(d.profile.jobStatus === '随时到岗', '求职状态 → jobStatus (中文值由 migrateV1toV2 转码)');
+assert(d.profile.workYears === '5年', '工作经验 → workYears (v2)');
 assert(d.profile.title === '前端工程师' && d.profile.phone === '13800000000', 'title/phone 别名');
 assert(!('姓名' in d.profile) && !('籍贯' in d.profile), '中文 key 不残留');
 
-console.log('markdown-profile self-check OK (5 assertions)');
+console.log('markdown-profile self-check OK (6 assertions)');

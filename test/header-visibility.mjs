@@ -23,7 +23,7 @@ globalThis.document = {
 globalThis.localStorage = { getItem: function () { return null; }, setItem: function () {} };
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', 'site', 'js');
-const src = ['utils.js', 'prefs.js', 'renderer.js'].map(function (f) { return readFileSync(join(root, f), 'utf8'); }).join('\n');
+const src = ['utils.js', 'config.js', 'prefs.js', 'renderer.js'].map(function (f) { return readFileSync(join(root, f), 'utf8'); }).join('\n');
 const api = new Function(src + '; loadPrefs(); return { renderIdentityEssential: renderIdentityEssential, renderIdentityLine: renderIdentityLine, packPillRows: packPillRows, setHidden: function (a) { cvPrefs.profileHidden = a; }, setLayout: function (v) { cvPrefs.essentialLayout = v; }, setPlain: function (v) { cvPrefs.plainText = v; }, getPrefs: function () { return cvPrefs; } };')();
 
 function itemText(c) { return c.children.map(function (n) { return n.__text || ''; }).join(''); }
@@ -31,8 +31,8 @@ function essTexts() { return els.identityEssential.children.map(itemText); }
 function pillTexts() { return els.identityLine.children.map(function (c) { return c.textContent || c.innerHTML; }); }
 function assert(cond, msg) { if (!cond) { console.error('FAIL: ' + msg); process.exit(1); } }
 
-const FULL = { title: '全栈工程师', experience: '5年', phone: '138', email: 'a@b.com', location: '北京', jobStatus: '随时到岗', github: 'github.com/x', wechat: 'wx1',
-  expectJobs: [{ title: '全栈开发', jobType: '全职', salary: { low: 15, high: 20 }, cities: ['北京', '上海'] }], expectIndustry: '互联网' };
+const FULL = { title: '全栈工程师', workYears: '5年', phone: '138', email: 'a@b.com', nativePlace: '北京', jobStatus: 'available', github: 'github.com/x', wechat: 'wx1',
+  expectJobs: { title: '全栈开发', jobType: '全职', salary: { low: 15, high: 20 }, cities: ['北京', '上海'] }, expectIndustry: '互联网' };
 
 // 1. 必备行: 职位/电话/意向城市/经验, 顺序固定, 带 icon (邮箱长值在胶囊层)
 api.setHidden([]);

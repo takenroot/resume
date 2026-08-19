@@ -16,13 +16,13 @@
 |---|---|---|---|
 | `company` | string | 公司名称 | 全平台 |
 | `position` | string | 职位 | 全平台 |
-| `period` | string | 在职时间 / 起止时间 | 字符串 `YYYY.MM - YYYY.MM/至今`, 引擎 splitPeriod 拆双框 |
+| `startDate` / `endDate` | string (YYYY-MM) | 在职时间 / 起止时间 | 2026-08-19 起 period 拆双字段, endDate 省略=至今; 引擎填双框 |
 | `summary` | string | 工作内容 / 职责描述 / 工作简介 | 全平台, 名称略不同语义一致 |
-| `achievements` | string[] | 工作业绩 / 业绩成果 (Boss 独立框 1000 字 / 猎聘"职责业绩"合并框) | ⚠️ 原 `highlights` 2026-08 改名; 猎聘合并框用 `summary + achievements` 拼接 |
+| `highlights` | string[] | 工作业绩 / 业绩成果 (Boss 独立框 1000 字 / 猎聘"职责业绩"合并框) | ⚠️ 猎聘合并框用 `summary + highlights` 拼接 |
 | `industry` | string | 所属行业 (下拉) | Boss |
 | `department` | string | 部门 | Boss, 选填 |
 | `isIntern` | boolean | 本段经历是实习经历 checkbox | 猎聘/智联; 误勾比不填更糟, 不确定就留 false |
-| `skillTags` | string[] | 技能标签 (每段经历可挂) | Boss |
+| `tags` | string[] | 技能标签 (每段经历可挂) | Boss |
 
 ### 2. 教育经历 (CV type=`education`)
 
@@ -31,13 +31,13 @@
 | `school` | string | 学校名称 | 全平台 |
 | `major` | string | 专业 | 全平台 |
 | `degree` | string | 学历 (本科/硕士/...) | 全平台 |
-| `degreeType` | string | 学制类型 (全日制/非全日制/自考) | Boss, 跟 degree 是组合选择器 |
+| `degreeType` | string (码: fulltime/parttime/selftaught) | 学制类型 (全日制/非全日制/自考) | Boss, 跟 degree 是组合选择器; 2026-08-19 起存码, 中文走 CODE_LABELS |
 | `isUnified` | boolean | 是否统招 checkbox | 猎聘; 存 boolean |
 | `overseasEdu` | boolean | 海外留学经历 | 存 boolean |
-| `period` | string | 就读时间 | 全平台 |
-| `courses` | string | 主修课程 | 各平台 |
+| `startDate` / `endDate` | string (YYYY-MM) | 就读时间 | 全平台 |
+| `courses` | string[] | 主修课程 | 各平台; 2026-08-19 起字符串改数组 |
 | `campus` | string[] | 校园经历 / 在校经历 (职务/荣誉/活动) | ⚠️ 平台口径比 CV 宽, CV 只存文本列表 |
-| `honors` | string[] | 荣誉奖项 | 原 `experience` 字段 2026-08 改名 (消除跟 section type 撞名) |
+| `highlights` | string[] | 荣誉奖项 | 2026-08-19 起 honors 并入 highlights (与工作经历/项目同词汇) |
 | `thesis` | string | 毕设/论文描述 | Boss |
 
 ### 3. 项目经验 (CV type=`projects`)
@@ -46,11 +46,11 @@
 |---|---|---|---|
 | `name` | string | 项目名称 | 全平台 |
 | `role` | string | 担任角色 | Boss |
-| `period` | string | 项目时间 | 全平台 |
+| `startDate` / `endDate` | string (YYYY-MM) | 项目时间 | 全平台 |
 | `link` | string | 项目链接 | Boss |
 | `tags` | string[] | ⚠️ 技术栈 / 技能标签 (平台从不叫 tags) | 各平台 |
 | `summary` | string | 项目描述 / 项目介绍 | 各平台 |
-| `achievements` | string[] | 项目亮点 / 项目职责 / 项目业绩 | 原 `highlights` 2026-08 改名 |
+| `highlights` | string[] | 项目亮点 / 项目职责 / 项目业绩 | 各平台 |
 
 ### 4. 专业技能 (CV type=`skills`)
 
@@ -71,7 +71,7 @@
 ### 6. 自我评价 (CV type=`summary`) / 证书 (CV type=`certificate`)
 
 - `summary.items[]` (string[]) ↔ 自我评价 / 个人评价 / 自我介绍, 各平台
-- `certificate`: `name` / `issuer` / `period` / `serial` / `url` ↔ 证书名 / 颁发机构 / 获得时间 / 编号 / 验证链接
+- `certificate`: `name` / `issuer` / `date` / `serial` / `url` ↔ 证书名 / 颁发机构 / 获得时间 (YYYY-MM 单点) / 编号 / 验证链接
 
 ### 7. 个人信息 (CV `profile`)
 
@@ -80,19 +80,18 @@
 | `name` | string | 姓名 | 全平台 |
 | `phone` | string | 手机号 / 联系电话 | 全平台 |
 | `email` | string | 邮箱 | 全平台 |
-| `location` | string | 现居地 / 居住地 / 所在城市 | 各平台; 2026-08 英文化 (原中文 key「所在地」) |
+| `nativePlace` | string | 籍贯 | 2026-08-19 起 location 改名 (名实合一); ⚠️ 平台的「现居地/所在城市」框引擎曾拿它填, 语义错位在 cv-autofill Phase B 修 |
 | `title` | string | 期望岗位 / 求职意向 | 各平台 |
-| `experience` | string | 工作年限 (如 "5年") | 各平台 |
-| `jobStatus` | string (select) | 求职状态 | Boss/智联; 2026-08 英文化 (原中文 key「求职状态」) |
+| `workYears` | string | 工作年限 (如 "5年") | 各平台; 2026-08-19 起 experience 改名 (消除跟 section type 撞名) |
+| `jobStatus` | string (码: available/open/passive/unavailable) | 求职状态 | Boss/智联; 存码, 中文走 CODE_LABELS |
 | `gender` | string | 性别 | 各平台选填; CV 预览不渲染 |
 | `birthDate` | string (YYYY-MM-DD) | 出生日期 / 生日 | Boss/猎聘; 平台要年龄时自动算 |
 | `firstWorkDate` | string (YYYY-MM-DD) | 首次参加工作时间 | 智联; CV 预览不渲染 |
 | `github` | string (URL) | GitHub / 个人主页 | 部分平台 |
 | `wechat` | string | 微信号 | 猎聘 |
 | `expectIndustry` | string | 期望行业 | 猎聘 |
-| `expectJobs` | `[{title, jobType, salary:{low,high}, cities[]}]` 单条目 | 期望职位 / 工作性质 / 期望薪资 / 期望城市 | ⚠️ 三平台都是这套复合结构; 2026-08 起 CV 唯一事实源 (原 `expectSalary`/`expectCities` 独立字段已删除并入, `months` 月数无去向) |
+| `expectJobs` | `{title, jobType, salary:{low,high}, cities[]}` 单对象 | 期望职位 / 工作性质 / 期望薪资 / 期望城市 | ⚠️ 三平台都是这套复合结构; 2026-08-19 起去掉 v1 的单元素数组包装 |
 | `avatar` | string | 头像 | 全平台; CV 存 base64 在 localStorage (非 JSON), 导出清空, 引擎永不自动上传 |
-| `timeline` | string | — | CV 自有预留字段, 预览不渲染, 平台无 |
 | `currentSalary` | `{salary, months, secret}` | 当前薪资 (敏感) | 永久隐藏字段, 只能手写 JSON 填 |
 
 ---
@@ -109,5 +108,6 @@
 
 ## 三、变更历史
 
+- **2026-08-19**: schema v2 (契约见 [SCHEMA_V2.md](SCHEMA_V2.md)) — period 拆 `startDate`/`endDate` (certificate 用单 `date`); `achievements`/`honors`→`highlights`, `skillTags`→`tags`; `experience`→`workYears`, `location`→`nativePlace`; degreeType/jobStatus 存码 (中文走 CODE_LABELS); expectJobs 去 wrap1 数组包装; courses 字符串改数组; 删 profile.timeline 僵尸字段; 空值省略 (""/[] 不落数据)。老数据 load/import 时自动迁移 (migrateV1toV2)
 - **2026-08-15**: 全表刷新到现役状态 — `highlights`→`achievements` (experience/projects), `所在地`→`location`, `求职状态`→`jobStatus`, `expectSalary`/`expectCities` 并入 `expectJobs`, 补 isIntern/industry/department/skillTags/degreeType/isUnified/overseasEdu/thesis/role/link/wechat/expectIndustry/firstWorkDate 等已落地字段; 删"缺口清单" (原 CV_SCHEMA_FEEDBACK.md 建议全部落地, 文档已删除归档进 CHANGELOG)
 - **2026-08-13**: 删除 projects `challenges` 字段; 新建本文档
